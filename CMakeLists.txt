@@ -1,0 +1,6 @@
+project(BdUI LANGUAGE c_plus_plus VERSION 0.1.0.0)
+include_directories(./include)
+option("2D" "2D module" ON)
+option("IsShared" "Compile to Shared lib" ON)
+aux_source_directory(./src SRC)
+add_library(${PROJECT_NAME} SHARED ${SRC})
