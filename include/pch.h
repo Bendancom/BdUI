@@ -15,22 +15,47 @@ using namespace std;
 #define GetLow_Order(variable) (variable & ((long)pow(2,sizeof(variable)/2) - 1))
 #define GetHigh_Order(variable) (variable << (sizeof(variable)/2))
 
-template<class T>
-class Event{
-public:
-    typedef void (*EventCallBack)(T);
+template<typename Return,typename... Param> class Delegate;
+template<typename Return,typename... Param>
+class Delegate<Return(Param...)> : private std::function<Return(Param...)>{
 private:
-    vector<EventCallBack> EventList;
+    using F = Return(*)(Param...);
+    template<typename T>
+    using F = Return(T::*)(Param...);
+    template<int N, int...I> struct MakeSeqs : MakeSeqs<N - 1, N - 1, I...> {};
+    template<int...I> struct MakeSeqs<1, I...>{
+	    template<typename T, typename R, typename...Args>
+	    static auto bind(T* obj, R(T::*_Func)(Args...)) -> decltype(std::bind(_Func, obj, PlaceHolder<I>{}...)){
+		    return std::bind(_Func, obj, PlaceHolder<I>{}...);
+	    }
+    };
+    template <typename T, typename R, typename...Args>
+    auto Bind(R(T::*f)(Args...), T* t) -> decltype(MakeSeqs<sizeof...(Args)+1>::bind(t, f)){
+	    return MakeSeqs<sizeof...(Args)+1>::bind(t, f);
+    }
 public:
-    Event();
-    ~Event();
-    void CarryOut(const T&);
-    operator Event() => return EventList;
-    EventCallBack operator[](int) => return EventList[i];
-    void operator+=(const EventCallBack&) => EventList += e;
-    void operator-=(const EventCallBack&) => EventList -= e;
-    void operator=(const EventCallBack&);
-    const vector<EventCallBack>* operator->() => return &EventList;
+    using std::function<Return(Param...)>::function;
+    using std::function<Return(Param...)>::operator=;
+    using std::function<Return(Param...)>::swap;
+    template<typename T>
+    Delegate(F<T> f,T *t) {
+        this->operator=(Bind(f,t));
+    }
+    template<typename T>
+    Delegate(T *t,F<T> f) {
+        this->operator=(Bind(f,t));
+    }
+};
+
+template<typename Return,typename... Param>
+class Event;
+
+template<typename Return,typename... Param>
+class Event<Return(Param...)>{
+private:
+    vector<Delegate<Return(Param...)>> EventList;
+public:
+    Return operator();
 };
 template<class T>
 class Attribute{
