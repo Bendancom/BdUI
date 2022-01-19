@@ -5,11 +5,11 @@
 
 class Window{
 public:
-    Window(string,string,Point,Size);
+    Window(std::string,std::string,Point,Size);
     ~Window();
 
-    Attribute<string> ClassName = NULL;    //窗体类名
-    Attribute<string> Name = NULL;         //窗体名
+    Attribute<std::string> ClassName = NULL;    //窗体类名
+    Attribute<std::string> Name = NULL;         //窗体名
     Attribute<bool> Border = true;         //窗体是否有边框
     Attribute<bool> Caption = true;        //窗体是否有标题栏
     Attribute<bool> Visible = true;        //窗体是否可见
@@ -34,5 +34,5 @@ private:
 
 #ifdef _WIN32
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-vector<Window*> WindowsList;
+std::vector<Window*> WindowsList;
 #endif
