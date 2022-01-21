@@ -6,12 +6,23 @@
 #include <any>
 #include <algorithm>
 #include <map>
+#include <typeindex>
+#include <thread>
+#include <mutex>
+#include <future>
 #include "glad/glad.h"
+
 #ifdef _WIN32
 #include "glad/glad_wgl.h"
 #endif
 #ifdef LINUX
 #include "glad/glad_glx.h"
+#endif
+
+#if _MSC_VER
+#define PlaceHolder std::_Ph
+#else
+#define PlaceHolder std::_Placeholder
 #endif
 
 #define GetLow_Order(variable) (variable & ((long)pow(2,sizeof(variable)/2) - 1))
@@ -66,8 +77,7 @@ public:
     std::map<std::type_index,Return> operator()(Param... args){
         std::map<std::type_index,Return> temp;
         for (auto iter = this->cbegin(); iter != this->cend(); iter++){
-            Delegate<Return(Param...)> d(*iter);
-            temp.insert(std::pair<std::type_index,Return>(std::type_index(d.target_type()),d(args...)));
+            temp.insert(std::pair<std::type_index,Return>(std::type_index((*iter).target_type()),(*iter)(args...)));
         }
         return temp;
     }
@@ -107,17 +117,30 @@ class Attribute{
 public:
     Event<void(T)> Changed;
     Attribute(const T &value) : Value(value) {}
+    Attribute(const Attribute<T> &a) : Value(a.Value) {}
     operator T() { return Value; }
     const T* operator->() { return &Value; }
     Attribute<T> &operator=(const T &value){
         if(Value != value){
-            Changed(value);
+            Mutex.lock();
             Value = value;
+            Changed(Value);
+            Mutex.unlock();
+        }
+        return *this;
+    }
+    Attribute<T> &operator=(const Attribute<T> &a){
+        if(this != &a && this->Value != a.Value){
+            Mutex.lock();
+            Value = a.Value;
+            Changed(Value);
+            Mutex.unlock();
         }
         return *this;
     }
 private:
     T Value;
+    std::mutex Mutex;
 };
 
 struct Point{
@@ -129,30 +152,4 @@ struct Size{
     Size(long w = 0,long h = 0) : Width(w),Heigth(h) {}
     long Width;
     long Heigth;
-};
-
-struct MouseEvent{
-    Point MousePoint;
-    bool MouseKeyDown_Or_Up;
-    int Mouse_Wheel;
-    int MouseKey = Mouse_NULL;
-};
-
-struct KeyBoardEvent{
-    int value_key;
-    bool KeyDown_Or_Up;
-    int Shift;          //0b0:NULL; 0b1:LShift; 0b10:RShift; 0b11:AllShift
-    int Ctrl;          //0b0:NULL; 0b1:LCtrl; 0b10:RCtrl; 0b11:AllCtrl
-    int Alt;           //0b0:NULL; 0b1:LAlt; 0b10:RAlt; 0b11:AllAlt
-};
-
-enum MouseKey{
-    Mouse_NULL = 0,
-    Mouse_Left = 1,
-    Mouse_Right = 2,
-    Muuse_Middle = 3,
-};
-
-enum Key{
-    
 };
