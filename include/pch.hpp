@@ -46,13 +46,14 @@ private:
     }
     std::type_index type;
 public:
+    using std::function<Return(Param...)>::operator();
     Delegate() {}
     Delegate(Return (*f)(Param...)) : type(typeid(f)) { std::function(f).swap(*this); }
     template<typename T>
     Delegate(Return (T::*f)(Param...),T *t) : type(typeid(f)) { std::function(Bind(f,t)).swap(*this); }
     template<typename T>
     Delegate(T *t,Return (T::*f)(Param...)) : type(typeid(f)) { std::function(Bind(f,t)).swap(*this); }
-    const std::type_info &target_type() const {return type;}
+    const std::type_index &target_type() const {return type;}
 
     void swap(const Delegate<Return(Param...)> &d){
         std::any a = std::move(this->type);
@@ -78,7 +79,7 @@ public:
     std::map<std::type_index,Return> operator()(Param... args){
         std::map<std::type_index,Return> temp;
         for (auto iter = this->cbegin(); iter != this->cend(); iter++){
-            temp.insert(std::pair<std::type_index,Return>(std::type_index((*iter).target_type()),(*iter)(args...)));
+            temp.insert(std::pair<std::type_index,Return>((*iter).target_type(),(*iter)(args...)));
         }
         return temp;
     }
