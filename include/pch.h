@@ -10,6 +10,7 @@
 #include <thread>
 #include <mutex>
 #include <future>
+#include <atomic>
 #include "glad/glad.h"
 
 #ifdef _WIN32
@@ -30,7 +31,7 @@
 
 template<typename Return,typename... Param> class Delegate;
 template<typename Return,typename... Param>
-class Delegate<Return(Param...)> : public std::function<Return(Param...)>{
+class Delegate<Return(Param...)> : private std::function<Return(Param...)>{
 private:
     template<int N, int...I> struct MakeSeqs : MakeSeqs<N - 1, N - 1, I...> {};
     template<int...I> struct MakeSeqs<1, I...>{
@@ -43,29 +44,29 @@ private:
     auto Bind(R(T::*f)(Args...), T* t) -> decltype(MakeSeqs<sizeof...(Args)+1>::bind(t, f)){
 	    return MakeSeqs<sizeof...(Args)+1>::bind(t, f);
     }
-    std::any FuncPtr;
+    std::type_index type;
 public:
     Delegate() {}
-    Delegate(Return (*f)(Param...)) : FuncPtr(std::make_any<Return(*)(Param...)>(f)) { std::function(f).swap(*this); }
+    Delegate(Return (*f)(Param...)) : type(typeid(f)) { std::function(f).swap(*this); }
     template<typename T>
-    Delegate(Return (T::*f)(Param...),T *t) : FuncPtr(std::make_any<Return(T::*)(Param...)>(f)) { std::function(Bind(f,t)).swap(*this); }
+    Delegate(Return (T::*f)(Param...),T *t) : type(typeid(f)) { std::function(Bind(f,t)).swap(*this); }
     template<typename T>
-    Delegate(T *t,Return (T::*f)(Param...)) : FuncPtr(std::make_any<Return(T::*)(Param...)>(f)) { std::function(Bind(f,t)).swap(*this); }
-    const std::type_info &target_type() const {return FuncPtr.type();}
-    auto target() -> Return(*)(Param...) {return std::any_cast<Return(*)(Param...)>(FuncPtr);}
-    template<typename T>
-    auto target() -> Return(T::*)(Param...) {return std::any_cast<Return (T::*)(Param...)>(FuncPtr);}
+    Delegate(T *t,Return (T::*f)(Param...)) : type(typeid(f)) { std::function(Bind(f,t)).swap(*this); }
+    const std::type_info &target_type() const {return type;}
+
     void swap(const Delegate<Return(Param...)> &d){
-        this->FuncPtr = d.FuncPtr;
+        std::any a = std::move(this->type);
+        this->type = std::move(type);
+        d.type = std::move(a);
         this->swap(d);
     }
     Delegate<Return(Param...)> &operator=(Return (*f)(Param...)){
-        FuncPtr = std::make_any<Return(*)(Param...)>(f);
+        type = typeid(f);
         std::function(f).swap(*this);
         return *this;
     }
-    bool operator==(const Delegate<Return(Param...)> &d){ return d.target_type() == this->target_type(); }
-    bool operator!=(const Delegate<Return(Param...)> &d){ return d.target_type() != this->target_type(); }
+    bool operator==(const Delegate<Return(Param...)> &d){ return d.type == this->type; }
+    bool operator!=(const Delegate<Return(Param...)> &d){ return d.type != this->type; }
 };
 
 template<typename Return,typename... Param> class Event;
@@ -97,7 +98,7 @@ class Event<void(Param...)> : public std::vector<Delegate<void(Param...)>>{
     public:
     using std::vector<Delegate<void(Param...)>>::vector;
     using std::vector<Delegate<void(Param...)>>::operator=;
-    void operator()(Param... args){
+    void operator()(const Param &... args){
         for (auto iter = this->begin();iter != this->end();iter++) (*iter)(args...);
     }
     Event<void(Param...)> &operator+=(const Delegate<void(Param...)> &d){
@@ -113,34 +114,24 @@ class Event<void(Param...)> : public std::vector<Delegate<void(Param...)>>{
 };
 
 template<typename T>
-class Attribute{
+class Attribute : public std::atomic<T>{
 public:
     Event<void(T)> Changed;
-    Attribute(const T &value) : Value(value) {}
-    Attribute(const Attribute<T> &a) : Value(a.Value) {}
-    operator T() { return Value; }
-    const T* operator->() { return &Value; }
-    Attribute<T> &operator=(const T &value){
-        if(Value != value){
-            Mutex.lock();
-            Value = value;
-            Changed(Value);
-            Mutex.unlock();
-        }
+    Attribute(T value) {this->store(value);}
+    Attribute(const Attribute<T> &a) : Changed(a.Changed) {this->store(a.load());}
+    operator T() { return this->load(); }
+    const T operator->() { return this->load(); }
+    Attribute<T> &operator=(T value){
+        this->store(value);
+        Changed(value);
         return *this;
     }
     Attribute<T> &operator=(const Attribute<T> &a){
-        if(this != &a && this->Value != a.Value){
-            Mutex.lock();
-            Value = a.Value;
-            Changed(Value);
-            Mutex.unlock();
-        }
+        T value = a.load();
+        this->store(value);
+        Changed(value);
         return *this;
     }
-private:
-    T Value;
-    std::mutex Mutex;
 };
 
 struct Point{
