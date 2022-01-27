@@ -44,40 +44,48 @@ private:
     auto Bind(R(T::*f)(Args...), T* t) -> decltype(MakeSeqs<sizeof...(Args)+1>::bind(t, f)){
 	    return MakeSeqs<sizeof...(Args)+1>::bind(t, f);
     }
-    std::type_index type;
+    void *Ptr = nullptr;
+    std::type_index *type = nullptr;
 public:
     using std::function<Return(Param...)>::operator();
     Delegate() {}
-    Delegate(Return (*f)(Param...)) : type(typeid(f)) { std::function(f).swap(*this); }
+    Delegate(Return (*f)(Param...)) : Ptr(reinterpret_cast<void*>(f)),type(new std::type_index(typeid(f))) { std::function<Return(Param...)>(f).swap(*this); }
     template<typename T>
-    Delegate(Return (T::*f)(Param...),T *t) : type(typeid(f)) { std::function(Bind(f,t)).swap(*this); }
+    Delegate(Return (T::*f)(Param...),T *t) : Ptr(reinterpret_cast<void*>(f)),type(new std::type_index(typeid(f))) { std::function<Return(Param...)>(Bind(f,t)).swap(*this); }
     template<typename T>
-    Delegate(T *t,Return (T::*f)(Param...)) : type(typeid(f)) { std::function(Bind(f,t)).swap(*this); }
-    const std::type_index &target_type() const {return type;}
-
+    Delegate(T *t,Return (T::*f)(Param...)) : Ptr(reinterpret_cast<void*>(f)),type(new std::type_index(typeid(f))) { std::function<Return(Param...)>(Bind(f,t)).swap(*this); }
+    Delegate(const Delegate<Return(Param...)> &d) : Ptr(d.Ptr) { if (d.type != nullptr) { type = new std::type_index(*d.type); } }
+    const std::type_index target_type() {return *type;}
     void swap(const Delegate<Return(Param...)> &d){
-        std::any a = std::move(this->type);
-        this->type = std::move(type);
-        d.type = std::move(a);
         this->swap(d);
+        void *temp = std::move(Ptr);
+        Ptr = std::move(d.Ptr); 
+        d.Ptr = std::move(temp);
+        if (type != nullptr || d.type != nullptr){
+            std::type_index *temp_type = type;
+            type = d.type;
+            d.type = temp_type;
+        }
     }
-    Delegate<Return(Param...)> &operator=(Return (*f)(Param...)){
-        type = typeid(f);
-        std::function(f).swap(*this);
+    Delegate &operator=(const Delegate<Return(Param...)> &d){
+        Ptr = d.Ptr;
+        if (d.type != nullptr){
+            type = new std::type_index(*d.type);
+        }
         return *this;
     }
-    bool operator==(const Delegate<Return(Param...)> &d){ return d.type == this->type; }
-    bool operator!=(const Delegate<Return(Param...)> &d){ return d.type != this->type; }
+    bool operator==(const Delegate<Return(Param...)> &d){ return d.Ptr == this->Ptr; }
+    bool operator!=(const Delegate<Return(Param...)> &d){ return d.Ptr != this->Ptr; }
 };
 
 template<typename Return,typename... Param> class Event;
 template<typename Return,typename... Param>
 class Event<Return(Param...)> : public std::vector<Delegate<Return(Param...)>>{
 public:
+    bool (*check)(const Param &...) = nullptr;
+    void (*returnCallback)(const std::map<std::type_index,Return>&) = nullptr;
     using std::vector<Delegate<Return(Param...)>>::vector;
     using std::vector<Delegate<Return(Param...)>>::operator=;
-    void SetCheckFunc(bool (*checkptr)(Param...)) { check = checkptr; };
-    void SetReturnCallBackFunc(void (*returncallbackptr)(const std::map<std::type_index,Return>&)) { returncallback = returncallbackptr; }
     void operator()(Param... args){
         if (check != nullptr){
             if (!check(args...)) return;
@@ -87,7 +95,7 @@ public:
         for (auto iter = this->cbegin(); iter != this->cend(); iter++){
             temp.insert(std::pair<std::type_index,Return>((*iter).target_type(),(*iter)(args...)));
         }
-        if (returncallback != nullptr) returncallback(temp);
+        if (returnCallback != nullptr) returnCallback(temp);
         else ReturnCallBack(temp);
     }
     Event<Return(Param...)> &operator+=(const Delegate<Return(Param...)> &d){
@@ -101,18 +109,16 @@ public:
         return *this;
     }
 private:
-    virtual bool Check(Param...) { return true; }
+    virtual bool Check(const Param &...) { return true; }
     virtual void ReturnCallBack(const std::map<std::type_index,Return>&) { return; }
-    bool (*check)(Param...) = nullptr;
-    void (*returncallback)(const std::map<std::type_index,Return>&) = nullptr;
 };
 template<typename... Param>
 class Event<void(Param...)> : public std::vector<Delegate<void(Param...)>>{
-    public:
+public:
+    bool (*check)(const Param &...) = nullptr;
     using std::vector<Delegate<void(Param...)>>::vector;
     using std::vector<Delegate<void(Param...)>>::operator=;
-    void SetCheckFunc(bool (*checkptr)(Param...)) { check = checkptr; };
-    void operator()(const Param &... args){
+    void operator()(Param... args){
         if (check != nullptr){
             if (!check(args...)) return;
         }
@@ -130,24 +136,23 @@ class Event<void(Param...)> : public std::vector<Delegate<void(Param...)>>{
         return *this;
     }
 private:
-    virtual bool Check(Param...) { return true; }
-    bool (*check)(Param...) = nullptr;
+    virtual bool Check(const Param &...) { return true; }
 };
 
-template<typename Return,typename... Param> class EventList;
+template<typename Return,typename... Param> class EventArray;
 template<typename Return,typename... Param>
-class EventList<Return(Param...)> : public std::vector<Event<Return(Param...)>>{
+class EventArray<Return(Param...)> : public std::vector<Event<Return(Param...)>>{
 public:
     using std::vector<Event<Return(Param...)>>::vector;
     using std::vector<Event<Return(Param...)>>::operator=;
     void operator()(Param... args){
         for (auto iter = this->begin();iter != this->end();iter++) (*iter)(args...);
     }
-    EventList<Return(Param...)> &operator+=(const Event<Return(Param...)> &e){
+    EventArray<Return(Param...)> &operator+=(const Event<Return(Param...)> &e){
         if (this->size() == 0 || (*(std::find(this->begin(),this->end(),e))) != e) this->push_back(e);
         return *this;
     }
-    EventList<Return(Param...)> &operator-=(const Event<Return(Param...)> &e){
+    EventArray<Return(Param...)> &operator-=(const Event<Return(Param...)> &e){
         if(this->size() == 0) return *this;
         auto iter = std::find(this->begin(),this->end(),e);
         if ((*iter) == e) this->erase(iter);
@@ -158,36 +163,36 @@ public:
 template<typename T>
 class Attribute : private std::atomic<T>{
 public:
-    EventList<void(T)> Eventlist;
-    Attribute(T value,T (*get)(T) = nullptr,bool (*set)(T&) = nullptr) : 
-        getptr(get),setptr(set) {this->store(value);}
-    Attribute(const Attribute<T> &a,T (*get)(T) = nullptr,bool (*set)(T&) = nullptr) : 
-        Eventlist(a.Eventlist),getptr(get),setptr(set) {this->store(a.load());}
+    EventArray<void(T)> EventList;
+    T (*get)(T);
+    bool (*set)(T&);
+    Attribute(T value,T (*getptr)(T) = nullptr,bool (*setptr)(T&) = nullptr) : 
+        get(getptr),set(setptr) {this->store(value);}
+    Attribute(const Attribute<T> &a,T (*getptr)(T) = nullptr,bool (*setptr)(T&) = nullptr) : 
+        EventList(a.EventList),get(getptr),set(setptr) {this->store(a.load());}
     operator T() { 
-        if (getptr != nullptr) return getptr(this->load());
-        else return get(this->load());
+        if (get != nullptr) return get(this->load());
+        else return Get(this->load());
     }
     const T operator->() { return this->load(); }
     Attribute<T> &operator=(T value){
-        if (setptr != nullptr) { if (!setptr(value)) return *this; }
-        else { if (!set(value)) return *this; }
+        if (set != nullptr) { if (!set(value)) return *this; }
+        else { if (!Set(value)) return *this; }
         this->store(value);
-        Eventlist(value);
+        EventList(value);
         return *this;
     }
     Attribute<T> &operator=(const Attribute<T> &a){
         T value = a.load();
-        if (setptr != nullptr) { if (!setptr(value)) return *this; }
-        else { if (!set(value)) return *this; }
+        if (set != nullptr) { if (!set(value)) return *this; }
+        else { if (!Set(value)) return *this; }
         this->store(value);
-        Eventlist(value);
+        EventList(value);
         return *this;
     }
 private:
-    virtual T get(T t) { return t; };
-    virtual bool set(T&) { return true; };
-    T (*getptr)(T);
-    bool (*setptr)(T&);
+    virtual T Get(T t) { return t; };
+    virtual bool Set(T&) { return true; };
 };
 
 struct Point{
