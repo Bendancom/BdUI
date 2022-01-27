@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(BdUI LANGUAGES "CXX" VERSION 0.1.0.0)
+project(BdUI LANGUAGES "CXX")
 include_directories(./include)
 option("3D" "2D module" ON)
 option("Shared" "Compile to Shared lib" ON)
