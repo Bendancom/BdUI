@@ -1,4 +1,4 @@
-#include "pch.hpph"
+#include "pch.hpp"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -8,8 +8,8 @@ public:
     Window(std::string,std::string,Point,Size);
     ~Window();
 
-    Attribute<std::string> ClassName = NULL;    //窗体类名
-    Attribute<std::string> Name = NULL;         //窗体名
+    Attribute<std::string> ClassName = std::string("");    //窗体类名
+    Attribute<std::string> Name = std::string("");         //窗体名
     Attribute<bool> Border = true;         //窗体是否有边框
     Attribute<bool> Caption = true;        //窗体是否有标题栏
     Attribute<bool> Visible = true;        //窗体是否可见

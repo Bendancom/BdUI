@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-Window::Window(string classname,string name,Point location,struct Size size){
+Window::Window(std::string classname,std::string name,Point location,struct Size size){
     ClassName = classname;
     name = name;
     Location = location;
@@ -34,7 +34,7 @@ void Window::Rendering(){
 void Window::Initializatoin(){
     #ifdef _WIN32
     OpenGL_Context = wglCreateContext(wglGetCurrentDC());
-    hWnd = CreateWindowEx (dwExstyle,(LPCWSTR)ClassName->c_str(),(LPCWSTR)Name->c_str(),
+    hWnd = CreateWindowEx (dwExstyle,(LPCSTR)ClassName->c_str(),(LPCSTR)Name->c_str(),
                     dwstyle,Location->X,Location->Y,Size->Width,Size->Heigth,NULL,NULL,GetModuleHandle(NULL),NULL);
     Rendering();
     #endif

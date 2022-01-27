@@ -166,6 +166,8 @@ public:
     EventArray<void(T)> EventList;
     T (*get)(T);
     bool (*set)(T&);
+
+    Attribute() {}
     Attribute(T value,T (*getptr)(T) = nullptr,bool (*setptr)(T&) = nullptr) : 
         get(getptr),set(setptr) {this->store(value);}
     Attribute(const Attribute<T> &a,T (*getptr)(T) = nullptr,bool (*setptr)(T&) = nullptr) : 
@@ -174,7 +176,7 @@ public:
         if (get != nullptr) return get(this->load());
         else return Get(this->load());
     }
-    const T operator->() { return this->load(); }
+    const T* operator->() { return &(this->load()); }
     Attribute<T> &operator=(T value){
         if (set != nullptr) { if (!set(value)) return *this; }
         else { if (!Set(value)) return *this; }
