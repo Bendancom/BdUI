@@ -1,7 +1,7 @@
 #include "window.hpp"
 namespace BdUI
 {
-    Window::Window(std::string classname,std::string name,Point location,struct Size size){
+    Window::Window(std::string classname,std::string name,Point location,BdUI::Size size){
         ClassName = classname;
         name = name;
         Location = location;
@@ -29,12 +29,13 @@ namespace BdUI
             this->dwExstyle = dwExstyle;
             SetWindowLong(hWnd,GWL_EXSTYLE,dwExstyle);
         }
-        glViewport(0,0,Size->Width,Size->Heigth);
+        //glViewport(0,0,Size->Width,Size->Heigth);
     }
 
     void Window::Initializatoin(){
         #ifdef _WIN32
-        OpenGL_Context = wglCreateContext(wglGetCurrentDC());
+        WNDCLASSEX window{sizeof(WNDCLASSEX),};
+        //OpenGL_Context = wglCreateContext(wglGetCurrentDC());
         hWnd = CreateWindowEx (dwExstyle,(LPCSTRING)ClassName->c_str(),(LPCSTRING)Name->c_str(),
                         dwstyle,Location->X,Location->Y,Size->Width,Size->Heigth,NULL,NULL,GetModuleHandle(NULL),NULL);
         Rendering();
@@ -44,7 +45,6 @@ namespace BdUI
     void Window::MessageLoop(){
         #ifdef _WIN32
         MSG msg;
-        bool res;
         while(true){
             if(PeekMessage(&msg,hWnd,0,0,PM_REMOVE)){
                 if(msg.message == WM_QUIT) break;

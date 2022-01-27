@@ -26,13 +26,13 @@ namespace BdUI
         Attribute<Point> Location;             //窗体位置(以左上角为窗体基点)
         Attribute<bool> DragFile = false;      //窗体是否可以接受拖拽文件    
         #ifdef _WIN32
-        HWND hWnd;
+        HWND hWnd = nullptr;
         #endif
 
         void Rendering();
     private:
         #ifdef _WIN32
-        HGLRC OpenGL_Context;
+        HGLRC OpenGL_Context = nullptr;
         int dwstyle = 0;
         int dwExstyle = WS_EX_LAYERED;
         #endif
