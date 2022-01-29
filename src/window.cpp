@@ -33,12 +33,23 @@ namespace BdUI
 
     void Window::Initializatoin(){
         #ifdef _WIN32
-        Wndclass = WNDCLASSEX{ sizeof(WNDCLASSEX),CS_VREDRAW | CS_HREDRAW ,WndProc, 0, 0, hInstance,Icon,Cursor,BackgroundColor,MenuName->c_str(),WindowClassName.c_str(),};
+        Wndclass.cbSize = sizeof(WNDCLASSEX);
+        Wndclass.cbClsExtra = 0;
+        Wndclass.cbWndExtra = 0;
+        Wndclass.hCursor = LoadCursor(hInstance,IDC_ARROW);
+        Wndclass.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
+        Wndclass.hIconSm = LoadIcon(hInstance,IDI_APPLICATION);
+        Wndclass.hIcon = LoadIcon(hInstance,IDI_APPLICATION);
+        Wndclass.lpszMenuName = (STRING)"Menu";
+        Wndclass.lpszClassName = (STRING)ClassName.c_str();
+        Wndclass.lpfnWndProc = WndProc;
+        Wndclass.style = CS_VREDRAW|CS_HREDRAW;
         RegisterClassEx(&Wndclass);
         //OpenGL_Context = wglCreateContext(wglGetCurrentDC());
-        hWnd = CreateWindowEx (dwExstyle,WindowClassName.c_str(),Name->c_str(),
+        hWnd = CreateWindowEx (dwExstyle,ClassName.c_str(),Name->c_str(),
                         dwstyle,Location->X,Location->Y,Size->Width,Size->Heigth,NULL,NULL,hInstance,NULL);
-        Rendering();
+        ShowWindow(hWnd,SW_SHOW);
+        //Rendering();
         #endif
     }
 
@@ -55,6 +66,8 @@ namespace BdUI
         }
         #endif
     }
+
+    Window::~Window(){}
 
     #ifdef _WIN32
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam){

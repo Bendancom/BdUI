@@ -3,23 +3,39 @@
 namespace BdUI
 {
     #ifdef _WIN32
+    LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
     const HINSTANCE hInstance = GetModuleHandle(0);
-    const std::string WindowClassName = "BdUI_WindowClass";
     template<typename HandleType>
-    class Resource : public Attribute<std::string,HandleType,std::string>{
+    class Resource : public Attribute<HandleType,HandleType,STRING>{
     public:
-        using Attribute<std::string,HandleType,std::string>::Attribute;
-        using Attribute<std::string,HandleType,std::string>::operator=;
+        using Attribute<HandleType,HandleType,STRING>::Attribute;
+        using Attribute<HandleType,HandleType,STRING>::operator=;
     private:
-        HandleType Get(const std::string &s) {
-            if (s.empty()) return NULL;
-            if (typeid(HandleType) == typeid(HICON)) return (HandleType)LoadIcon(hInstance,s.c_str());
-            if (typeid(HandleType) == typeid(HCURSOR)) return (HandleType)LoadCursor(hInstance,s.c_str());
-            if (typeid(HandleType) == typeid(HBITMAP)) return (HandleType)LoadBitmap(hInstance,s.c_str());
-            if (typeid(HandleType) == typeid(HMENU)) return (HandleType)LoadMenu(hInstance,s.c_str());
+        bool Set(HandleType &h,STRING& s){
+            if (typeid(HandleType) == typeid(HICON)) h = LoadIcon(hInstance,s);
+            if (typeid(HandleType) == typeid(HCURSOR)) h = LoadCursor(hInstance,s);
+            if (typeid(HandleType) == typeid(HBITMAP)) h = LoadBitmap(hInstance,s);
+            if (typeid(HandleType) == typeid(HMENU)) h = LoadMenu(hInstance,s);
+            return true;
+        }
+    };
+    template<typename HandleType>
+    class Resource<HandleType&> : public Attribute<HandleType&,HandleType,STRING>{
+    public:
+        using Attribute<HandleType&,HandleType,STRING>::Attribute;
+        using Attribute<HandleType&,HandleType,STRING>::operator=;
+    private:
+        bool Set(HandleType &h,STRING& s){
+            if (typeid(HandleType) == typeid(HICON)) h = LoadIcon(hInstance,s);
+            if (typeid(HandleType) == typeid(HCURSOR)) h = LoadCursor(hInstance,s);
+            if (typeid(HandleType) == typeid(HBITMAP)) h = LoadBitmap(hInstance,s);
+            if (typeid(HandleType) == typeid(HMENU)) h = LoadMenu(hInstance,s);
+            return true;
         }
     };
     #endif
+
+    const std::string ClassName = "BdUI_WindowClass";
 
     class Window{
     public:
@@ -35,13 +51,12 @@ namespace BdUI
         Attribute<bool> DragFile = false;       //窗体是否可以接受拖拽文件    
         #ifdef _WIN32
         HWND hWnd = nullptr;
-        Resource<HICON> Icon;                   //窗体图标
-        Resource<HICON> IconSm;                 //窗体标题栏图标
-        Resource<HCURSOR> Cursor = std::string(IDC_ARROW);   //窗体光标
+        Resource<HICON&> Icon = Wndclass.hIcon;         //窗体图标
+        Resource<HICON&> IconSm = Wndclass.hIconSm;     //窗体标题栏图标
+        Resource<HCURSOR&> Cursor = Wndclass.hCursor;   //窗体光标
         Resource<HMENU> Menu;
-        Attribute<HBRUSH> BackgroundColor = (HBRUSH)COLOR_BACKGROUND;
-        Attribute<std::string> MenuName = std::string("Menu");
-        static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+        Attribute<HBRUSH&> BackgroundColor = Wndclass.hbrBackground;
+        Attribute<STRING&> MenuName = Wndclass.lpszMenuName;
         #endif
         void Rendering();
     private:

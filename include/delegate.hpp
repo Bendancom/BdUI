@@ -57,13 +57,13 @@ namespace BdUI{
             return *this;
         }
         bool operator==(const Delegate<Return(Param...)> &d) { return d.Ptr == this->Ptr; }
-        bool operator==(Return (*f)(Param...)) { return d.Ptr == reinterpret_cast<void*>(f); }
+        bool operator==(Return (*f)(Param...)) { return this->Ptr == reinterpret_cast<void*>(f); }
         template<typename T>
-        bool operator==(Return (T::*f)(Param...)) { return d.Ptr == reinterpret_cast<void*>(f); }
+        bool operator==(Return (T::*f)(Param...)) { return this->Ptr == reinterpret_cast<void*>(f); }
         bool operator!=(const Delegate<Return(Param...)> &d) { return d.Ptr != this->Ptr; }
-        bool operator!=(Return (*f)(Param...)) { return d.Ptr != reinterpret_cast<void*>(f); }
+        bool operator!=(Return (*f)(Param...)) { return this->Ptr != reinterpret_cast<void*>(f); }
         template<typename T>
-        bool operator!=(Return (T::*f)(Param...)) { return d.Ptr != reinterpret_cast<void*>(f); }
+        bool operator!=(Return (T::*f)(Param...)) { return this->Ptr != reinterpret_cast<void*>(f); }
     };
 }
 #endif
