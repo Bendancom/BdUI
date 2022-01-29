@@ -3,6 +3,6 @@
 using namespace BdUI;
 
 int main(){
-    Window window("HHHaaaaaaa",Point(100,100),Size(1000,1000));
+    Window window("HHHaaaaaaa",{100,100},{500,800});
     std::cin.get();
 }
