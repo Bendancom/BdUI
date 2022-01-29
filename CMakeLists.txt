@@ -18,6 +18,4 @@ else()
 add_library(${PROJECT_NAME} STATIC ${SRC})
 endif()
 
-if(CMAKE_CONFIGURATION_TYPES EQUAL Debug)
 add_subdirectory(${PROJECT_SOURCE_DIR}/Test)
-endif()
