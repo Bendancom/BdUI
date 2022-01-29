@@ -16,6 +16,8 @@
 #define STRING LPCSTR
 #endif
 
+
+
 #ifndef BDUI_PCH
 #define BDUI_PCH
 namespace BdUI

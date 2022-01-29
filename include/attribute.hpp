@@ -1,6 +1,8 @@
 #include <mutex>
 #include "event.hpp"
 
+#define debug printf("%s : %d\n",__FUNCTION__,__LINE__);
+
 #ifndef BDUI_ATTRIBUTE
 #define BDUI_ATTRIBUTE
 namespace BdUI{
@@ -10,14 +12,10 @@ namespace BdUI{
         EventArray<void(Data)> EventList;
         GetData (*get)(const Data&);
         bool (*set)(Data&,const SetData&);
-        Attribute(GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) :
-        get(getptr),set(setptr) {}
-        Attribute(const Data &t,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) :
-        Value(t),get(getptr),set(setptr) {}
-        Attribute(const Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
-        Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) :
-        EventList(e),get(getptr),set(setptr) {}
+        Attribute(GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : get(getptr),set(setptr) {}
+        Attribute(const Data &t,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : Value(t),get(getptr),set(setptr) {}
+        Attribute(const Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : Value(t),EventList(e),get(getptr),set(setptr) {}
+        Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : EventList(e),get(getptr),set(setptr) {}
         Attribute(const Attribute<Data,GetData,SetData> &a) : Value(a.Value),set(a.set),get(a.get),EventList(a.EventList) {}
         operator GetData() {
             Mutex.lock();
@@ -30,8 +28,18 @@ namespace BdUI{
         const Data *operator->() { return &Value; }
         Attribute<Data,GetData,SetData> &operator=(SetData value){
             Mutex.lock();
-            if (set != nullptr) { if (!set(Value,value)) { return *this; } }
-            else { if (!Set(Value,value)) { return *this; } }
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else{
+                if (!Set(Value,value)){
+                    Mutex.unlock();
+                    return *this;
+                }
+            }
             Mutex.unlock();
             EventList(Value);
             return *this;
@@ -47,9 +55,10 @@ namespace BdUI{
     private:
         Data Value;
         std::mutex Mutex;
-        virtual GetData Get(const Data &t) {}
-        virtual bool Set(Data&,const SetData&) { return true; };
+        virtual GetData Get(const Data &t) { return (GetData)t; }
+        virtual bool Set(Data& d,const SetData& sd) { d = (Data)sd; return true; }
     };
+
     template<typename Data,typename GetData>
     class Attribute<Data,GetData,GetData>{
     public:
@@ -79,8 +88,18 @@ namespace BdUI{
         const Data *operator->() { return &Value; }
         Attribute<Data,GetData,GetData> &operator=(Data value){
             Mutex.lock();
-            if (set != nullptr) { if (!set(Value,value)) return *this; }
-            else { if (!Set(Value,value)) return *this; }
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else{
+                if (!Set(Value,value)){
+                    Mutex.unlock();
+                    return *this;
+                }
+            }
             Mutex.unlock();
             EventList(value);
             return *this;
@@ -96,8 +115,8 @@ namespace BdUI{
     private:
         Data Value;
         std::mutex Mutex;
-        virtual GetData Get(const Data &t) {}
-        virtual bool Set(Data&,const GetData&) { return true; };
+        virtual GetData Get(const Data &t) { return (GetData)t; }
+        virtual bool Set(Data& d1,const GetData& d2) { d1 = (Data)d2; return true; }
     };
 
     template<typename Data,typename GetData>
@@ -122,8 +141,18 @@ namespace BdUI{
         const Data *operator->() { return &Value; }
         Attribute<Data&,GetData,GetData> &operator=(GetData value){
             Mutex.lock();
-            if (set != nullptr) { if (!set(Value,value)) { return *this; } }
-            else { if (!Set(Value,value)) { return *this; } }
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else{
+                if (!Set(Value,value)){
+                    Mutex.unlock();
+                    return *this;
+                }
+            }
             Mutex.unlock();
             EventList(Value);
             return *this;
@@ -139,9 +168,10 @@ namespace BdUI{
     private:
         Data &Value;
         std::mutex Mutex;
-        virtual GetData Get(const Data &t) {}
-        virtual bool Set(Data&,const GetData&) { return true; };
+        virtual GetData Get(const Data &t) {return (GetData)t; }
+        virtual bool Set(Data& d1,const GetData& d2) { d1 = (Data)d2; return true; };
     };
+
     template<typename Data,typename GetData,typename SetData>
     class Attribute<Data&,GetData,SetData>{
         public:
@@ -164,8 +194,18 @@ namespace BdUI{
         const Data *operator->() { return &Value; }
         Attribute<Data&,GetData,SetData> &operator=(SetData value){
             Mutex.lock();
-            if (set != nullptr) { if (!set(Value,value)) { return *this; } }
-            else { if (!Set(Value,value)) { return *this; } }
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else{
+                if (!Set(Value,value)){
+                    Mutex.unlock();
+                    return *this;
+                }
+            }
             Mutex.unlock();
             EventList(Value);
             return *this;
@@ -181,9 +221,10 @@ namespace BdUI{
     private:
         Data &Value;
         std::mutex Mutex;
-        virtual GetData Get(const Data &t) {}
-        virtual bool Set(Data&,const SetData&) { return true; };
+        virtual GetData Get(const Data &t) { return (GetData)t; }
+        virtual bool Set(Data& d1,const SetData& d2) { d1 = (Data)d2; return true; };
     };
+
     template<typename Data>
     class Attribute<Data&,Data,Data>{
         public:
@@ -206,8 +247,18 @@ namespace BdUI{
         const Data *operator->() { return &Value; }
         Attribute<Data&,Data,Data> &operator=(Data value){
             Mutex.lock();
-            if (set != nullptr) { if (!set(Value,value)) { return *this; } }
-            else { if (!Set(Value,value)) { return *this; } }
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else{
+                if (!Set(Value,value)){
+                    Mutex.unlock();
+                    return *this;
+                }
+            }
             Mutex.unlock();
             EventList(Value);
             return *this;
@@ -223,8 +274,8 @@ namespace BdUI{
     private:
         Data &Value;
         std::mutex Mutex;
-        virtual Data Get(const Data &t) {}
-        virtual bool Set(Data&,const Data&) { return true; };
+        virtual Data Get(const Data &t) { return t; }
+        virtual bool Set(Data& d1,const Data& d2) { d1 = d2; return true; };
     };
 }
 #endif

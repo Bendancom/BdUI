@@ -1,5 +1,8 @@
 #include "pch.hpp"
 
+#define debug printf("%s : %d\n",__FUNCTION__,__LINE__);
+#ifndef BDUI_WINDOW
+#define BDUI_WINDOW
 namespace BdUI
 {
     #ifdef _WIN32
@@ -50,7 +53,7 @@ namespace BdUI
         Attribute<Point> Location;              //窗体位置(以左上角为窗体基点)
         Attribute<bool> DragFile = false;       //窗体是否可以接受拖拽文件    
         #ifdef _WIN32
-        HWND hWnd = nullptr;
+        HWND hWnd;
         Resource<HICON&> Icon = Wndclass.hIcon;         //窗体图标
         Resource<HICON&> IconSm = Wndclass.hIconSm;     //窗体标题栏图标
         Resource<HCURSOR&> Cursor = Wndclass.hCursor;   //窗体光标
@@ -62,15 +65,17 @@ namespace BdUI
     private:
         #ifdef _WIN32
         WNDCLASSEX Wndclass;
+        std::thread *Thread;
         HGLRC OpenGL_Context = nullptr;
-        Attribute<int> dwstyle = 0;
-        Attribute<int> dwExstyle = WS_EX_LAYERED;
+        Attribute<int> dwstyle = WS_OVERLAPPEDWINDOW;
+        Attribute<int> dwExstyle = 0;
         #endif
         void MessageLoop();
         void Initializatoin();
     };
 
     #ifdef _WIN32
-    std::vector<Window*> WindowsList;
+    std::map<HWND,Window*> WindowList;
     #endif
 }
+#endif

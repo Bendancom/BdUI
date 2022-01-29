@@ -5,9 +5,8 @@ namespace BdUI
         name = name;
         Location = location;
         Size = size;
-        WindowsList.push_back(this);
-        Initializatoin();
-        MessageLoop();
+        Thread = new std::thread(&Window::Initializatoin,this);
+        Thread->detach();
     }
 
     void Window::Rendering(){
@@ -44,11 +43,14 @@ namespace BdUI
         Wndclass.lpszClassName = (STRING)ClassName.c_str();
         Wndclass.lpfnWndProc = WndProc;
         Wndclass.style = CS_VREDRAW|CS_HREDRAW;
+        Wndclass.hInstance = hInstance;
         RegisterClassEx(&Wndclass);
         //OpenGL_Context = wglCreateContext(wglGetCurrentDC());
-        hWnd = CreateWindowEx (dwExstyle,ClassName.c_str(),Name->c_str(),
-                        dwstyle,Location->X,Location->Y,Size->Width,Size->Heigth,NULL,NULL,hInstance,NULL);
+        hWnd = CreateWindowEx (dwExstyle,(STRING)ClassName.c_str(),(STRING)Name->c_str(),dwstyle,Location->X,Location->Y,Size->Width,Size->Heigth,NULL,NULL,hInstance,NULL);
         ShowWindow(hWnd,SW_SHOW);
+        UpdateWindow(hWnd);
+        WindowList.insert(std::make_pair(hWnd,this));
+        MessageLoop();
         //Rendering();
         #endif
     }
@@ -56,46 +58,42 @@ namespace BdUI
     void Window::MessageLoop(){
         #ifdef _WIN32
         MSG msg;
-        while(true){
-            if(PeekMessage(&msg,hWnd,0,0,PM_REMOVE)){
-                if(msg.message == WM_QUIT) break;
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-            else WaitMessage();
+        while (GetMessage(&msg, nullptr, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
         #endif
     }
 
-    Window::~Window(){}
+    Window::~Window(){
+        delete Thread;
+    }
 
     #ifdef _WIN32
-    static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam){
-        Window* window;
-        for(Window* iter : WindowsList){
-            if(iter->hWnd == hWnd){
-                window = iter;
-                break;
-            }
-        }
-
+    LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam){
+        Window *window = WindowList[hWnd];
         switch(msg){
+            /*
             case WM_SIZE:{
-                window->Size = Size(LOWORD(lParam),HIWORD(lParam));
                 break;
             }
             case WM_MOVE:{
-                window->Location = Point(LOWORD(lParam),HIWORD(lParam));
+                break;
             }
             case WM_PAINT:{
-                window->Rendering();
+                break;
+            }
+            */
+            case WM_DESTROY:{
+                DestroyWindow(hWnd);
+                window->~Window();
                 break;
             }
             default:{
                 return DefWindowProc(hWnd, msg, wParam, lParam);
             }
         }
-        return CallNextHookEx(NULL,msg,wParam,lParam);
     }
     #endif
 }
