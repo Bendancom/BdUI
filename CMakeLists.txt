@@ -10,11 +10,6 @@ else()
 set(LIBRARY_OUTPUT_PATH ./bin/lib)
 endif()
 
-
-set(EXECUTABLE_OUTPUT_PATH ./bin)
-link_directories(${PROJECT_SOURCE_DIR}/build/bin/lib)
-
-
 aux_source_directory(./src SRC)
 
 if(Shared)
@@ -22,5 +17,7 @@ add_library(${PROJECT_NAME} SHARED ${SRC})
 else()
 add_library(${PROJECT_NAME} STATIC ${SRC})
 endif()
-add_executable(Try ./Debug/try.cpp)
-target_link_libraries(Try BdUI)
+
+if(CMAKE_CONFIGURATION_TYPES EQUAL Debug)
+add_subdirectory(${PROJECT_SOURCE_DIR}/Test)
+endif()

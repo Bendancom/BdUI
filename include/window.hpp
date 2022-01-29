@@ -1,6 +1,5 @@
 #include "pch.hpp"
 
-#define debug printf("%s : %d\n",__FUNCTION__,__LINE__);
 #ifndef BDUI_WINDOW
 #define BDUI_WINDOW
 namespace BdUI
@@ -75,7 +74,7 @@ namespace BdUI
     };
 
     #ifdef _WIN32
-    std::map<HWND,Window*> WindowList;
+    static std::map<HWND,Window*> WindowList;
     #endif
 }
 #endif
