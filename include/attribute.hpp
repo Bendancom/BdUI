@@ -65,8 +65,7 @@ namespace BdUI{
         EventArray<void(Data)> EventList;
         Data (*get)(const Data&);
         bool (*set)(Data&,const GetData&);
-        Attribute(GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :
-        get(getptr),set(setptr) {}
+        Attribute(GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) : get(getptr),set(setptr) {}
         Attribute(const Data &t,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :
         Value(t),get(getptr),set(setptr) {}
         Attribute(const Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :

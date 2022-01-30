@@ -76,27 +76,27 @@ namespace BdUI
             case WM_SETCURSOR:{
                 switch(LOWORD(lParam)){
                     case HTCLIENT:{
-                        SetCursor(window->Cursor->ClientCursor);
+                        SetCursor(window->Cursor->Client);
                         break;
                     }
                     case HTCAPTION:{
-                        SetCursor(window->Cursor->CaptionCursor);
+                        SetCursor(window->Cursor->Caption);
                         break;
                     }
                     case HTLEFT:{
-                        SetCursor(window->Cursor->LeftBorderCursor);
+                        SetCursor(window->Cursor->LeftBorder);
                         break;
                     }
                     case HTRIGHT:{
-                        SetCursor(window->Cursor->RightBorderCursor);
+                        SetCursor(window->Cursor->RightBorder);
                         break;
                     }
                     case HTTOP:{
-                        SetCursor(window->Cursor->TopBorderCursor);
+                        SetCursor(window->Cursor->TopBorder);
                         break;
                     }
                     case HTBOTTOM:{
-                        SetCursor(window->Cursor->BottomBorderCursor);
+                        SetCursor(window->Cursor->BottomBorder);
                         break;
                     }
                 }
