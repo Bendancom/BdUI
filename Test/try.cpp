@@ -4,6 +4,11 @@ using namespace BdUI;
 
 int main()
 {
-    Window *window = new Window("HHHaaaaaaa", {100, 100}, {500, 800});
-    std::cin.get();
+    Window window;
+    window.CaptionName = "HHaaaaaa";
+    window.BackgroundColor = (HBRUSH)COLOR_BACKGROUND;
+    window.Create();
+    window.Show();
+    window.Block();
+    exit(0);
 }

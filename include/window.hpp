@@ -1,53 +1,66 @@
 #include "pch.hpp"
+#include "ui.hpp"
 
 #ifndef BDUI_WINDOW
 #define BDUI_WINDOW
 namespace BdUI
 {
-    #ifdef _WIN32
-    LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-    const HINSTANCE hInstance = GetModuleHandle(0);
-    #endif
-
-    const std::string ClassName = "BdUI_WindowClass";
-
     class Window{
     public:
-        Window(std::string,Point,Size);
-        ~Window();
-        Attribute<std::string> Name;            //窗体名
-        Attribute<bool> Border = true;          //窗体是否有边框
-        Attribute<bool> Caption = true;         //窗体是否有标题栏
-        Attribute<bool> Visible = true;         //窗体是否可见
-        Attribute<bool> ContextHelp = false;    //窗体标题栏是否有 '?' 帮助
-        Attribute<Size> Size;                   //窗体大小
-        Attribute<Point> Location;              //窗体位置(以左上角为窗体基点)
-        Attribute<bool> DragFile = false;       //窗体是否可以接受拖拽文件    
-        Attribute<Cursor> Cursor;               //窗体光标
         #ifdef _WIN32
-        HWND hWnd;
-        Attribute<HICON&> Icon = Wndclass.hIcon;        //窗体图标
-        Attribute<HICON&> IconSm = Wndclass.hIconSm;    //窗体标题栏图标
-        
-        Attribute<HMENU> Menu;
-        Attribute<HBRUSH&> BackgroundColor = Wndclass.hbrBackground;
-        Attribute<STRING&> MenuName = Wndclass.lpszMenuName;
+        Window() : Style(&AttributeGetStyle,[](BdUI::Style &s,const BdUI::Style &cs){ s = cs; return true; }),
+        Size({CW_USEDEFAULT,CW_USEDEFAULT}),Location({CW_USEDEFAULT,CW_USEDEFAULT}),CaptionName(""),
+        BackgroundColor(Wndclass.hbrBackground),Icon(Wndclass.hIcon),IconSm(Wndclass.hIconSm) {}
         #endif
+        ~Window() { mutex.unlock();delete Thread; }
+        bool Create();
+        bool Show();
+        void Block() { mutex.lock(); }
+
+        Attribute<std::string> CaptionName;
+        Attribute<Cursor> Cursor;
+        Attribute<Size> Size;
+        Attribute<Point> Location;
+        #ifdef _WIN32
+        Attribute<BdUI::Style,std::pair<int,int>,BdUI::Style> Style;
+        Attribute<HICON&> Icon;
+        Attribute<HICON&> IconSm;
+        Attribute<HMENU> PopMenu;
+        Attribute<HBRUSH&> BackgroundColor;
+        HWND hWnd;
+        #endif
+        
         void Rendering();
     private:
         #ifdef _WIN32
-        WNDCLASSEX Wndclass;
+        const HINSTANCE hInstance = GetModuleHandle(0);
+        WNDCLASSEX Wndclass = {
+            sizeof(WNDCLASSEX),
+            CS_VREDRAW|CS_HREDRAW,
+            WndProc,
+            0,
+            0,
+            hInstance,
+            LoadIcon(hInstance,IDI_APPLICATION),
+            NULL,
+            NULL,
+            (STRING)"Menu",
+            (STRING)ClassName.c_str(),
+            LoadIcon(hInstance,IDI_APPLICATION),
+        };
         std::thread *Thread;
         HGLRC OpenGL_Context = nullptr;
-        Attribute<int> dwstyle = WS_OVERLAPPEDWINDOW;
-        Attribute<int> dwExstyle = 0;
+        Attribute<int> dwstyle;
+        Attribute<int> dwExstyle;
+        std::promise<HWND> _hWnd;
+        std::mutex mutex;
         #endif
         void MessageLoop();
-        void Initializatoin();
+        void Initialization();
     };
 
     #ifdef _WIN32
-    static std::map<HWND,Window*> WindowList;
+    static std::map<HWND,BdUI::Window*> WindowList;
     #endif
 }
 #endif

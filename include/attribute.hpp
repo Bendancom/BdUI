@@ -6,245 +6,210 @@
 #ifndef BDUI_ATTRIBUTE
 #define BDUI_ATTRIBUTE
 namespace BdUI{
-    template<typename Data,typename GetData = Data,typename SetData = Data>
-    class Attribute{
+    template<typename... T> class Attribute; 
+
+    template<typename Data,typename GetData,typename SetData>
+    class Attribute<Data,GetData,SetData>{
     public:
         EventArray<void(Data)> EventList;
         GetData (*get)(const Data&);
         bool (*set)(Data&,const SetData&);
-        Attribute(GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : get(getptr),set(setptr) {}
-        Attribute(const Data &t,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : Value(t),get(getptr),set(setptr) {}
-        Attribute(const Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : Value(t),EventList(e),get(getptr),set(setptr) {}
-        Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) : EventList(e),get(getptr),set(setptr) {}
-        Attribute(const Attribute<Data,GetData,SetData> &a) : Value(a.Value),set(a.set),get(a.get),EventList(a.EventList) {}
+        Attribute(GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) : get(getptr),set(setptr) {}
+        Attribute(const Data &t,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
+        Value(t),get(getptr),set(setptr) {}
+        Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
+        EventList(e),get(getptr),set(setptr) {}
+        Attribute(const Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
+        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Attribute(const Attribute<Data,GetData,SetData>&) = delete;
         operator GetData() {
             Mutex.lock();
-            GetData data;
-            if (get != nullptr) data = get(Value);
-            else data = Get(Value);
+            GetData &&data = (*get)(Value);
             Mutex.unlock();
             return data;
         }
-        const Data *operator->() { return &Value; }
+        GetData Get(){
+            Mutex.lock();
+            GetData &&data = (*get)(Value);
+            Mutex.unlock();
+            return data;
+        }
+        void Set(SetData value){
+            Mutex.lock();
+            if (!(*set)(Value,value)){
+                Mutex.unlock();
+                return;
+            }
+            EventList(Value);
+            Mutex.unlock();
+        }
         Attribute<Data,GetData,SetData> &operator=(SetData value){
             Mutex.lock();
-            if (set != nullptr){ 
-                if (!(*set)(Value,value)) {
-                    Mutex.unlock();
-                    return *this; 
-                }
+            if (!(*set)(Value,value)){
+                Mutex.unlock();
+                return *this; 
             }
-            else{
-                if (!Set(Value,value)){
-                    Mutex.unlock();
-                    return *this;
-                }
-            }
-            Mutex.unlock();
             EventList(Value);
+            Mutex.unlock();
             return *this;
         }
-        Attribute<Data,GetData,SetData> &operator=(const Attribute<Data,GetData,SetData> &a){
-            Mutex.lock();
-            Value = a.Value;
-            get = a.get;
-            set = a.set;
-            EventList = a.EventList;
-            Mutex.unlock();
-        }
+        Attribute<Data,GetData,SetData> &operator=(const Attribute<Data,GetData,SetData>&) = delete;
     private:
         Data Value;
         std::mutex Mutex;
-        virtual GetData Get(const Data &t) { return (GetData)t; }
-        virtual bool Set(Data& d,const SetData& sd) { d = (Data)sd; return true; }
     };
-
-    template<typename Data,typename GetData>
-    class Attribute<Data,GetData,GetData>{
-    public:
-        EventArray<void(Data)> EventList;
-        Data (*get)(const Data&);
-        bool (*set)(Data&,const GetData&);
-        Attribute(GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) : get(getptr),set(setptr) {}
-        Attribute(const Data &t,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :
-        Value(t),get(getptr),set(setptr) {}
-        Attribute(const Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
-        Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :
-        EventList(e),get(getptr),set(setptr) {}
-        Attribute(const Attribute<Data,GetData,GetData> &a) {
-            Mutex.lock();
-            Value = a.Value;
-            set = a.set;
-            get = a.get;
-            EventList = a.EventList;
-            Mutex.unlock();
-        }
-        operator GetData() { 
-            if (get != nullptr) return get(Value);
-            else return Get(Value);
-        }
-        const Data *operator->() { return &Value; }
-        Attribute<Data,GetData,GetData> &operator=(Data value){
-            Mutex.lock();
-            if (set != nullptr){ 
-                if (!(*set)(Value,value)) {
-                    Mutex.unlock();
-                    return *this; 
-                }
-            }
-            else{
-                if (!Set(Value,value)){
-                    Mutex.unlock();
-                    return *this;
-                }
-            }
-            Mutex.unlock();
-            EventList(value);
-            return *this;
-        }
-        Attribute<Data,GetData,GetData> &operator=(const Attribute<Data,GetData,GetData> &a){
-            Mutex.lock();
-            Value = a.Value;
-            get = a.get;
-            set = a.set;
-            EventList = a.EventList;
-            Mutex.unlock();
-        }
-    private:
-        Data Value;
-        std::mutex Mutex;
-        virtual GetData Get(const Data &t) { return (GetData)t; }
-        virtual bool Set(Data& d1,const GetData& d2) { d1 = (Data)d2; return true; }
-    };
-
-    template<typename Data,typename GetData>
-    class Attribute<Data&,GetData,GetData>{
+    template<typename Data,typename GetData,typename SetData>
+    class Attribute<Data*,GetData,SetData>{
         public:
-        EventArray<void(Data)> EventList;
-        GetData (*get)(const Data&);
-        bool (*set)(Data&,const GetData&);
-        Attribute(Data &t,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :
+        EventArray<void(Data*)> EventList;
+        Data* (*get)(Data* const&);
+        bool (*set)(Data*&,Data* const&);
+        Attribute(Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) : get(getptr),set(setptr) {}
+        Attribute(Data* const &t,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
         Value(t),get(getptr),set(setptr) {}
-        Attribute(Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const GetData&) = nullptr) :
+        Attribute(const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
+        EventList(e),get(getptr),set(setptr) {}
+        Attribute(Data* const &t,const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
         Value(t),EventList(e),get(getptr),set(setptr) {}
-        Attribute(const Attribute<Data&,GetData,GetData> &a) : Value(a.Value),set(a.set),get(a.get),EventList(a.EventList) {}
-        operator GetData() {
+        Attribute(const Attribute<Data*,GetData,SetData>&) = delete;
+        operator Data*() {
+            Data *data;
             Mutex.lock();
-            GetData data;
-            if (get != nullptr) data = get(Value);
-            else data = Get(Value);
+            data = (*get)(Value);
             Mutex.unlock();
             return data;
         }
-        const Data *operator->() { return &Value; }
-        Attribute<Data&,GetData,GetData> &operator=(GetData value){
+        Data* Get() {
+            Data *data;
             Mutex.lock();
-            if (set != nullptr){ 
-                if (!(*set)(Value,value)) {
-                    Mutex.unlock();
-                    return *this; 
-                }
-            }
-            else{
-                if (!Set(Value,value)){
-                    Mutex.unlock();
-                    return *this;
-                }
-            }
+            data = (*get)(Value);
             Mutex.unlock();
+            return data;
+        }
+        void Set(Data *value){
+            Mutex.lock();
+            if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return; 
+            }
             EventList(Value);
+            Mutex.unlock();
+        }
+        Attribute<Data*,GetData,SetData> &operator=(Data *value){
+            Mutex.lock();
+            if (!(*set)(Value,value)) {
+                Mutex.unlock();
+                return *this; 
+            }
+            EventList(Value);
+            Mutex.unlock();
             return *this;
         }
-        Attribute<Data&,GetData,GetData> &operator=(const Attribute<Data&,GetData,GetData> &a){
-            Mutex.lock();
-            Value = a.Value;
-            get = a.get;
-            set = a.set;
-            EventList = a.EventList;
-            Mutex.unlock();
-        }
+        Attribute<Data*,GetData,SetData> &operator=(const Attribute<Data*,GetData,SetData>&) = delete;
     private:
-        Data &Value;
+        Data *Value;
         std::mutex Mutex;
-        virtual GetData Get(const Data &t) {return (GetData)t; }
-        virtual bool Set(Data& d1,const GetData& d2) { d1 = (Data)d2; return true; };
     };
-
     template<typename Data,typename GetData,typename SetData>
     class Attribute<Data&,GetData,SetData>{
         public:
         EventArray<void(Data)> EventList;
         GetData (*get)(const Data&);
         bool (*set)(Data&,const SetData&);
-        Attribute(Data &t,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) :
+        Attribute(GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) : get(getptr),set(setptr) {}
+        Attribute(Data &t,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
         Value(t),get(getptr),set(setptr) {}
-        Attribute(Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const SetData&) = nullptr) :
+        Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
+        EventList(e),get(getptr),set(setptr) {}
+        Attribute(Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
         Value(t),EventList(e),get(getptr),set(setptr) {}
-        Attribute(const Attribute<Data&,GetData,SetData> &a) : Value(a.Value),set(a.set),get(a.get),EventList(a.EventList) {}
+        Attribute(const Attribute<Data&,GetData,SetData> &a) = delete;
         operator GetData() {
             Mutex.lock();
-            GetData data;
-            if (get != nullptr) data = get(Value);
-            else data = Get(Value);
+            GetData &&data = get(Value);
             Mutex.unlock();
             return data;
         }
-        const Data *operator->() { return &Value; }
+        GetData Get(){ 
+            Mutex.lock();
+            GetData &&data = get(Value);
+            Mutex.unlock();
+            return data;
+        }
+        void Set(SetData value){
+            Mutex.lock();
+            if (!(*set)(Value,value)){
+                Mutex.unlock();
+                return;
+            }
+            EventList(Value);
+            Mutex.unlock();
+        }
         Attribute<Data&,GetData,SetData> &operator=(SetData value){
             Mutex.lock();
-            if (set != nullptr){ 
-                if (!(*set)(Value,value)) {
-                    Mutex.unlock();
-                    return *this; 
-                }
+            if (!(*set)(Value,value)) {
+                Mutex.unlock();
+                return *this; 
             }
-            else{
-                if (!Set(Value,value)){
-                    Mutex.unlock();
-                    return *this;
-                }
-            }
-            Mutex.unlock();
             EventList(Value);
+            Mutex.unlock();
             return *this;
         }
-        Attribute<Data&,GetData,SetData> &operator=(const Attribute<Data&,GetData,SetData> &a){
-            Mutex.lock();
-            Value = a.Value;
-            get = a.get;
-            set = a.set;
-            EventList = a.EventList;
-            Mutex.unlock();
-        }
+        Attribute<Data&,GetData,SetData> &operator=(const Attribute<Data&,GetData,SetData>&) = delete;
     private:
         Data &Value;
         std::mutex Mutex;
-        virtual GetData Get(const Data &t) { return (GetData)t; }
-        virtual bool Set(Data& d1,const SetData& d2) { d1 = (Data)d2; return true; };
     };
-
     template<typename Data>
-    class Attribute<Data&,Data,Data>{
+    class Attribute<Data>{
         public:
         EventArray<void(Data)> EventList;
         Data (*get)(const Data&);
         bool (*set)(Data&,const Data&);
-        Attribute(Data &t,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Attribute(Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) : get(getptr),set(setptr) {}
+        Attribute(bool (*setptr)(Data&,const Data&)) : set(setptr),get(nullptr) {}
+        Attribute(const Data &t,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
         Value(t),get(getptr),set(setptr) {}
-        Attribute(Data &t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Attribute(const Data &t,bool (*setptr)(Data&,const Data&)) :
+        Value(t),set(setptr),get(nullptr) {}
+        Attribute(const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        EventList(e),get(getptr),set(setptr) {}
+        Attribute(const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
+        EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Data &t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
         Value(t),EventList(e),get(getptr),set(setptr) {}
-        Attribute(const Attribute<Data&,Data,Data> &a) : Value(a.Value),set(a.set),get(a.get),EventList(a.EventList) {}
+        Attribute(const Data &t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
+        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Attribute<Data>&) = delete;
         operator Data() {
-            Mutex.lock();
             Data data;
+            Mutex.lock();
             if (get != nullptr) data = get(Value);
-            else data = Get(Value);
+            else data = Value;
             Mutex.unlock();
             return data;
         }
-        const Data *operator->() { return &Value; }
-        Attribute<Data&,Data,Data> &operator=(Data value){
+        Data Get() {
+            Data data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        void Set(Data value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return; 
+                }
+            }
+            else Value = value;
+            EventList(Value);
+            Mutex.unlock();
+        }
+        Attribute<Data> &operator=(Data value){
             Mutex.lock();
             if (set != nullptr){ 
                 if (!(*set)(Value,value)) {
@@ -252,29 +217,332 @@ namespace BdUI{
                     return *this; 
                 }
             }
-            else{
-                if (!Set(Value,value)){
-                    Mutex.unlock();
-                    return *this;
-                }
-            }
-            Mutex.unlock();
+            else Value = value;
             EventList(Value);
+            Mutex.unlock();
             return *this;
         }
-        Attribute<Data&,Data,Data> &operator=(const Attribute<Data&,Data,Data> &a){
+        Attribute<Data> &operator=(const Attribute<Data>&) = delete;
+    private:
+        Data Value;
+        std::mutex Mutex;
+    };
+    template<typename Data>
+    class Attribute<Data*>{
+        public:
+        EventArray<void(Data*)> EventList;
+        Data* (*get)(Data* const&);
+        bool (*set)(Data*&,Data* const&);
+        Attribute(Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) : get(getptr),set(setptr) {}
+        Attribute(bool (*setptr)(Data*&,Data* const&)) : set(setptr),get(nullptr) {}
+        Attribute(Data* const &t,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
+        Value(t),get(getptr),set(setptr) {}
+        Attribute(Data* const &t,bool (*setptr)(Data*&,Data* const&)) :
+        Value(t),set(setptr),get(nullptr) {}
+        Attribute(const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
+        EventList(e),get(getptr),set(setptr) {}
+        Attribute(const EventArray<void(Data)> &e,bool (*setptr)(Data*&,Data* const&)) :
+        EventList(e),set(setptr),get(nullptr) {}
+        Attribute(Data* const &t,const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
+        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Attribute(Data* const &t,const EventArray<void(Data)> &e,bool (*setptr)(Data*&,Data* const&)) :
+        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Attribute<Data*>&) = delete;
+        operator Data*() {
+            Data *data;
             Mutex.lock();
-            Value = a.Value;
-            get = a.get;
-            set = a.set;
-            EventList = a.EventList;
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        Data* Get() {
+            Data *data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        void Set(Data *value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return; 
+                }
+            }
+            else Value = value;
+            EventList(Value);
             Mutex.unlock();
         }
+        Attribute<Data*> &operator=(Data *value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else Value = value;
+            EventList(Value);
+            Mutex.unlock();
+            return *this;
+        }
+        Attribute<Data*> &operator=(const Attribute<Data*>&) = delete;
+    private:
+        Data *Value;
+        std::mutex Mutex;
+    };
+    template<typename Data>
+    class Attribute<Data&>{
+        public:
+        EventArray<void(Data)> EventList;
+        Data (*get)(const Data&);
+        bool (*set)(Data&,const Data&);
+        Attribute(const Data &t,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Value(t),get(getptr),set(setptr) {}
+        Attribute(const Data &t,bool (*setptr)(Data&,const Data&)) :
+        Value(t),set(setptr),get(nullptr) {}
+        Attribute(const Data &t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Attribute(const Data &t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
+        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Attribute<Data&>&) = delete;
+        operator Data() {
+            Data data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        Data Get() {
+            Data data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        void Set(Data value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return; 
+                }
+            }
+            else Value = value;
+            Mutex.unlock();
+            EventList(value);
+        }
+        Attribute<Data&> &operator=(Data value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else Value = value;
+            Mutex.unlock();
+            EventList(value);
+            return *this;
+        }
+        Attribute<Data&> &operator=(const Attribute<Data&>&) = delete;
     private:
         Data &Value;
         std::mutex Mutex;
-        virtual Data Get(const Data &t) { return t; }
-        virtual bool Set(Data& d1,const Data& d2) { d1 = d2; return true; };
+    };
+    template<typename Data>
+    class Attribute<Data*&>{
+        public:
+        EventArray<void(Data*)> EventList;
+        Data* (*get)(Data* const&);
+        bool (*set)(Data*&,Data* const&);
+        Attribute(Data*&t,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
+        Value(t),get(getptr),set(setptr) {}
+        Attribute(Data*&t,bool (*setptr)(Data*&,Data* const&)) :
+        Value(t),set(setptr),get(nullptr) {}
+        Attribute(Data*&t,const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
+        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Attribute(Data*&t,const EventArray<void(Data)> &e,bool (*setptr)(Data*&,const Data*)) :
+        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Attribute<Data*&>&) = delete;
+        operator Data*() {
+            Data *data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        Data* Get() {
+            Data *data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        void Set(Data* value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return; 
+                }
+            }
+            else Value = value;
+            Mutex.unlock();
+            EventList(value);
+        }
+        Attribute<Data*&> &operator=(Data* value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else Value = value;
+            Mutex.unlock();
+            EventList(value);
+            return *this;
+        }
+        Attribute<Data*&> &operator=(const Attribute<Data*&>&) = delete;
+    private:
+        Data* &Value;
+        std::mutex Mutex;
+    };
+    template<typename Data>
+    class Attribute<const Data*>{
+        public:
+        EventArray<void(const Data*)> EventList;
+        Data (*get)(const Data&);
+        bool (*set)(Data&,const Data&);
+        Attribute(Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) : get(getptr),set(setptr) {}
+        Attribute(bool (*setptr)(Data&,const Data&)) : set(setptr),get(nullptr) {}
+        Attribute(const Data *t,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Value(t),get(getptr),set(setptr) {}
+        Attribute(const Data *t,bool (*setptr)(Data&,const Data&)) :
+        Value(t),set(setptr),get(nullptr) {}
+        Attribute(const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        EventList(e),get(getptr),set(setptr) {}
+        Attribute(const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
+        EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Data *t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Attribute(const Data *t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
+        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Attribute<const Data*>&) = delete;
+        operator Data*() const {
+            const Data *data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        const Data *Get() {
+            const Data *data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        void Set(const Data *value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return; 
+                }
+            }
+            else Value = value;
+            Mutex.unlock();
+            EventList(value);
+        }
+        Attribute<const Data*> &operator=(const Data *value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else Value = value;
+            EventList(Value);
+            Mutex.unlock();
+            return *this;
+        }
+        Attribute<const Data*> &operator=(const Attribute<const Data*>&) = delete;
+    private:
+        const Data *Value;
+        std::mutex Mutex;
+    };
+    template<typename Data>
+    class Attribute<Data* const&>{
+        public:
+        EventArray<void(Data)> EventList;
+        Data (*get)(const Data&);
+        bool (*set)(Data&,const Data&);
+        Attribute(Data* const &t,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Value(t),get(getptr),set(setptr) {}
+        Attribute(Data* const &t,bool (*setptr)(Data&,const Data&)) :
+        Value(t),set(setptr),get(nullptr) {}
+        Attribute(Data* const &t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
+        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Attribute(Data* const &t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
+        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Attribute(const Attribute<Data* const&>&) = delete;
+        operator Data*() const {
+            const Data *data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        Data* Get() const {
+            const Data *data;
+            Mutex.lock();
+            if (get != nullptr) data = get(Value);
+            else data = Value;
+            Mutex.unlock();
+            return data;
+        }
+        void Set(const Data *value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return; 
+                }
+            }
+            else Value = value;
+            Mutex.unlock();
+            EventList(value);
+        }
+        Attribute<Data* const&> &operator=(const Data *value){
+            Mutex.lock();
+            if (set != nullptr){ 
+                if (!(*set)(Value,value)) {
+                    Mutex.unlock();
+                    return *this; 
+                }
+            }
+            else Value = value;
+            Mutex.unlock();
+            EventList(value);
+            return *this;
+        }
+        Attribute<Data* const&> &operator=(const Attribute<Data* const&>&) = delete;
+    private:
+        Data* const &Value;
+        std::mutex Mutex;
     };
 }
 #endif

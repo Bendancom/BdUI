@@ -1,102 +1,141 @@
 #include "window.hpp"
 namespace BdUI
 {
-    Window::Window(std::string name,Point location,BdUI::Size size){
-        Name = name;
-        Location = location;
-        Size = size;
-        Thread = new std::thread(&Window::Initializatoin,this);
+    bool Window::Create(){
+        Thread = new std::thread(&Window::Initialization,this);
         Thread->detach();
+        #ifdef _WIN32
+        if (_hWnd.get_future().get()) return true;
+        else{
+            delete Thread;
+            return false;
+        }
+        #endif
     }
 
-    void Window::Initializatoin(){
+    void Window::Initialization(){
         #ifdef _WIN32
-        Wndclass.cbSize = sizeof(WNDCLASSEX);
-        Wndclass.cbClsExtra = 0;
-        Wndclass.cbWndExtra = 0;
-        Wndclass.hCursor = NULL;
-        Wndclass.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
-        Wndclass.hIconSm = LoadIcon(hInstance,IDI_APPLICATION);
-        Wndclass.hIcon = LoadIcon(hInstance,IDI_APPLICATION);
-        Wndclass.lpszMenuName = (STRING)"Menu";
-        Wndclass.lpszClassName = (STRING)ClassName.c_str();
-        Wndclass.lpfnWndProc = WndProc;
-        Wndclass.style = CS_VREDRAW|CS_HREDRAW;
-        Wndclass.hInstance = hInstance;
         RegisterClassEx(&Wndclass);
-        hWnd = CreateWindowEx (dwExstyle,(STRING)ClassName.c_str(),(STRING)Name->c_str(),dwstyle,Location->X,Location->Y,Size->Width,Size->Heigth,NULL,NULL,hInstance,NULL);
-        ShowWindow(hWnd,SW_SHOW);
-        UpdateWindow(hWnd);
+        std::pair<int,int> style = Style;
+        Point loca = Location.Get();
+        BdUI::Size size = Size.Get(); 
+        hWnd = CreateWindowEx (style.second,(STRING)ClassName.c_str(),(STRING)CaptionName.Get().c_str(),style.first,loca.X,loca.Y,size.Width,size.Height,NULL,NULL,hInstance,NULL);
+        _hWnd.set_value(hWnd);
+        if (hWnd == 0) return;
         WindowList[hWnd] = this;
         #endif
-
-        #ifdef _WIN32
-        Cursor = {LoadCursor(NULL,IDC_ARROW),
-                LoadCursor(NULL,IDC_ARROW),
-                LoadCursor(NULL,IDC_SIZEWE),
-                LoadCursor(NULL,IDC_SIZEWE),
-                LoadCursor(NULL,IDC_SIZENS),
-                LoadCursor(NULL,IDC_SIZENS)};
-
-        #endif
         MessageLoop();
+    }
+
+    bool Window::Show(){
+        if (ShowWindow(hWnd,SW_SHOW)) return false;
+        if (UpdateWindow(hWnd)) return false;
+        return true;
     }
 
     void Window::MessageLoop(){
         #ifdef _WIN32
         MSG msg;
+        mutex.lock();
         while (GetMessage(&msg, nullptr, 0, 0) > 0)
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        mutex.unlock();
         this->~Window();
         #endif
-    }
-
-    Window::~Window(){
-        delete Thread;
     }
 
     #ifdef _WIN32
     LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam){
         Window *window = WindowList[hWnd];
         switch(msg){
-            /*
-            case WM_SIZE:{
+            case WM_RBUTTONDBLCLK:{
+                TrackPopupMenuEx(window->PopMenu,TPM_LEFTALIGN | TPM_TOPALIGN,LOWORD(lParam),HIWORD(lParam),window->hWnd,nullptr);
                 break;
             }
-            case WM_MOVE:{
-                break;
-            }
-            case WM_PAINT:{
-                break;
-            }
-            */
             case WM_SETCURSOR:{
+                Cursor cursor = window->Cursor.Get();
                 switch(LOWORD(lParam)){
                     case HTCLIENT:{
-                        SetCursor(window->Cursor->Client);
+                        SetCursor(cursor.Client);
                         break;
                     }
                     case HTCAPTION:{
-                        SetCursor(window->Cursor->Caption);
+                        SetCursor(cursor.Caption);
                         break;
                     }
                     case HTLEFT:{
-                        SetCursor(window->Cursor->LeftBorder);
+                        SetCursor(cursor.LeftBorder);
                         break;
                     }
                     case HTRIGHT:{
-                        SetCursor(window->Cursor->RightBorder);
+                        SetCursor(cursor.RightBorder);
                         break;
                     }
                     case HTTOP:{
-                        SetCursor(window->Cursor->TopBorder);
+                        SetCursor(cursor.TopBorder);
                         break;
                     }
                     case HTBOTTOM:{
-                        SetCursor(window->Cursor->BottomBorder);
+                        SetCursor(cursor.BottomBorder);
+                        break;
+                    }
+                    case HTBOTTOMLEFT:{
+                        SetCursor(cursor.BottomLeft);
+                        break;
+                    }
+                    case HTTOPLEFT:{
+                        SetCursor(cursor.TopLeft);
+                        break;
+                    }
+                    case HTTOPRIGHT:{
+                        SetCursor(cursor.TopRight);
+                        break;
+                    }
+                    case HTCLOSE:{
+                        SetCursor(cursor.Close);
+                        break;
+                    }
+                    case HTSIZE:{
+                        SetCursor(cursor.Size);
+                        break;
+                    }
+                    case HTSYSMENU:{
+                        SetCursor(cursor.SystemMenu);
+                        break;
+                    }
+                    case HTMENU:{
+                        SetCursor(cursor.Menu);
+                        break;
+                    }
+                    case HTZOOM:{
+                        SetCursor(cursor.Zoom);
+                        break;
+                    }
+                    case HTREDUCE:{
+                        SetCursor(cursor.Reduce);
+                        break;
+                    }
+                    case HTHELP:{
+                        SetCursor(cursor.Help);
+                        break;
+                    }
+                    case HTVSCROLL:{
+                        SetCursor(cursor.VScroll);
+                        break;
+                    }
+                    case HTHSCROLL:{
+                        SetCursor(cursor.HScroll);
+                        break;
+                    }
+                    case HTERROR:{
+                        SetCursor(cursor.Error);
+                        break;
+                    }
+                    case HTTRANSPARENT:{
+                        SetCursor(cursor.Transparent);
                         break;
                     }
                 }
