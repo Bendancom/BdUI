@@ -1,3 +1,6 @@
+#ifndef BDUI_PCH
+#define BDUI_PCH
+
 #include <string>
 #include <typeinfo>
 #include <future>
@@ -5,6 +8,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <semaphore>
+#include <list>
 #include <glad/glad.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -20,8 +24,6 @@
 #include "delegate.hpp"
 #include "event.hpp"
 
-#ifndef BDUI_PCH
-#define BDUI_PCH
 namespace BdUI
 {
     struct Point{
@@ -34,7 +36,15 @@ namespace BdUI
     };
     struct Mouse{
         Point Location;
-
+        enum Button{
+            None = 0,
+            Right = 1,
+            Left = 2,
+            Middle = 3,
+            X1 = 4,
+            X2 = 5,
+        }Button;
+        int WheelDelta;
     };
     struct Cursor{
         #ifdef _WIN32
