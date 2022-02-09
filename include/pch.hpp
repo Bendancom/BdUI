@@ -9,10 +9,8 @@
 #include <condition_variable>
 #include <semaphore>
 #include <list>
-#include <glad/glad.h>
 #ifdef _WIN32
 #include <windows.h>
-#include <glad/glad_wgl.h>
 #ifdef UNICODE
 #define STRING LPCWSTR
 #else
@@ -101,7 +99,26 @@ namespace BdUI
         bool AcceptFiles = false;
         bool ContextHelp = false;    //不与MaxSizeBox或MinSizeBox共存
         #endif
-    };//WindowStyle Default
+    }const WindowDefaultStyle;//WindowStyle Default
+    const Style UIDefaultStyle{
+        Style::Child,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false
+    };
 
     const std::string ClassName = "BdUI_WindowClass";
     #ifdef _WIN32

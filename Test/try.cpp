@@ -6,7 +6,9 @@ int main()
 {
     Window window;
     window.CaptionName = "HHaaaaaa";
-    window.BackgroundColor = (HBRUSH)COLOR_BACKGROUND;
+    Size size = window.Size;
+    Point loca = window.Location;
+    
     window.Create();
     window.Show();
     window.Block();

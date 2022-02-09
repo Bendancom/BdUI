@@ -36,6 +36,20 @@ namespace BdUI{
             if ((*iter) == d) this->erase(iter);
             return *this;
         }
+        bool operator==(const Event<Return(Param...)> &e){
+            if (e.check == check && e.returnCallback == returnCallback &&
+            std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
+                return true;
+            }
+            else return false;
+        }
+        bool operator!=(const Event<Return(Param...)> &e){
+            if (e.check != check || e.returnCallback != returnCallback ||
+            std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
+                return true;
+            }
+            else return false;
+        }
     private:
         virtual bool Check(const Param &...) { return true; }
         virtual void ReturnCallBack(const std::map<std::type_index,Return>&) { return; }
@@ -52,7 +66,7 @@ namespace BdUI{
                 if (!check(args...)) return;
             }
             else if (!Check(args...)) return;
-            for (auto iter = this->begin();iter != this->end();iter++) (*iter)(args...);
+            if(this->size() != 0) for (auto iter = this->begin();iter != this->end();iter++) (*iter)(args...);
         }
         Event<void(Param...)> &operator+=(const Delegate<void(Param...)> &d){
             if (this->size() == 0 || (*(std::find(this->begin(),this->end(),d))) != d) this->push_back(d);
@@ -63,6 +77,20 @@ namespace BdUI{
             auto iter = std::find(this->begin(),this->end(),d);
             if ((*iter) == d) this->erase(iter);
             return *this;
+        }
+        bool operator==(const Event<void(Param...)> &e){
+            if (e.check == check && e.returnCallback == returnCallback &&
+            std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
+                return true;
+            }
+            else return false;
+        }
+        bool operator!=(const Event<void(Param...)> &e){
+            if (e.check != check || e.returnCallback != returnCallback ||
+            std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
+                return true;
+            }
+            else return false;
         }
     private:
         virtual bool Check(const Param &...) { return true; }
@@ -79,7 +107,7 @@ namespace BdUI{
             for (auto iter = this->begin();iter != this->end();iter++) (*iter)(args...);
         }
         EventArray<Return(Param...)> &operator+=(const Event<Return(Param...)> &e){
-            if (this->size() == 0 || (*(std::find(this->begin(),this->end(),e))) != e) this->push_back(e);
+            this->push_back(e);
             return *this;
         }
         EventArray<Return(Param...)> &operator-=(const Event<Return(Param...)> &e){

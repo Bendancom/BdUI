@@ -1,26 +1,27 @@
 #ifndef BDUI_UI
 #define BDUI_UI
 #include "pch.hpp"
-#include "window.hpp"
 
 namespace BdUI
 {
-    class UI : public Window{
+    class UI{
     public:
-        UI(Window* parent) : Style(UIStyle,&AttributeGetStyle,[](BdUI::Style &s,const BdUI::Style &cs){ s = cs; return true; }),
-        ParentWindow(parent){
-            parent->UIList.push_back(this);
+        UI(UI* parent = nullptr) : Style(UIDefaultStyle,&AttributeGetStyle,
+        [](BdUI::Style &s,const BdUI::Style &cs){ s = cs; return true; }),Size({100,20}),Parent(parent) {
+            UIEventBind();
+            #ifdef _WIN32
+            MouseHoverTime = HOVER_DEFAULT;
+            #endif
         }
-        UI(UI* parent) : Style(UIStyle,&AttributeGetStyle,[](BdUI::Style &s,const BdUI::Style &cs){ s = cs; return true; }),
-        ParentWindow(parent) {
-            parent->UIList.push_back(this);
-        }
-        ~UI();
-        bool Create();
+        virtual ~UI() {}
+        virtual bool Create();
         bool Show();
-        Window* ParentWindow = nullptr;
-        UI* ParentUI = nullptr;
+        Attribute<std::vector<UI*>> UIList;
 
+        #ifdef _WIN32
+        void OnMouseHoverAndLeave();    //Automatic
+        void ResetMouseHoverAndLeave(); //Automatic
+        #endif
         Attribute<Cursor> Cursor;
         Attribute<Size> Size;
         Attribute<Point> Location;
@@ -30,7 +31,7 @@ namespace BdUI
         Attribute<HMENU> PopMenu;
         HWND hWnd;
         #endif
-        std::vector<UI*> UIList;
+        Attribute<UI*> Parent;
         
         Event<void(Mouse)> MouseWheel;
 
@@ -51,12 +52,13 @@ namespace BdUI
         Event<void(BdUI::Size)> SizeChanged;
         Event<void(Point)> LocationChanged;
         Event<void(BdUI::Cursor)> CursorChanged;
-        Event<void(std::string)> CaptionNameChanged;
 
+        void Rendering();
     private:
         #ifdef _WIN32
-        const HINSTANCE hInstance = GetModuleHandle(0);
-        WNDCLASSEX UIclass = {
+        Attribute<bool> IsOnMouseHoverAndLeave;
+        const HINSTANCE hInstance = GetModuleHandle(NULL);
+        const WNDCLASSEX UIclass = {
             sizeof(WNDCLASSEX),
             CS_VREDRAW|CS_HREDRAW|CS_DBLCLKS,
             WndProc,
@@ -66,30 +68,12 @@ namespace BdUI
             NULL,
             NULL,
             NULL,
-            (STRING)"Menu",
+            NULL,
             (STRING)ClassName.c_str(),
             NULL,
         };
-        BdUI::Style UIStyle = {
-            Style::Child,
-            true,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            true,
-            false,
-            true,
-            false,
-            false,
-        };
         #endif
+        void UIEventBind();
     };
 }
 #endif
