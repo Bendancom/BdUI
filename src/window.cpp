@@ -180,67 +180,65 @@ namespace BdUI{
                 ui->NCMouseDoubleClick(mouse);
                 break;
             }
-            /*
             case WM_NCRBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
                 ui->NCMouseDown(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCLBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Left,0};
                 ui->NCMouseDown(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCMBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,0};
                 ui->NCMouseDown(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCXBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
                 ui->NCMouseDown(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCRBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
                 ui->NCMouseUp(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCLBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Left,0};
                 ui->NCMouseUp(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCMBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,0};
                 ui->NCMouseUp(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCXBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
                 ui->NCMouseUp(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCMOUSEMOVE:{
                 ui->OnMouseHoverAndLeave();
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::None,0};
                 ui->NCMouseMove(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCMOUSEHOVER:{
                 ui->ResetMouseHoverAndLeave();
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::None,0};
                 ui->NCMouseHover(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             case WM_NCMOUSELEAVE:{
                 ui->ResetMouseHoverAndLeave();
                 Mouse &&mouse{{},Mouse::None,0};
                 ui->NCMouseLeave(mouse);
-                break;
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             #pragma endregion
-            */
             case WM_SETCURSOR:{
                 Cursor cursor = ui->Cursor.Get();
                 switch(LOWORD(lParam)){
