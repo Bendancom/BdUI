@@ -21,6 +21,7 @@
 #include "attribute.hpp"
 #include "delegate.hpp"
 #include "event.hpp"
+#include "readonly.hpp"
 
 namespace BdUI
 {
@@ -31,6 +32,12 @@ namespace BdUI
     struct Size{
         long Width = 0;
         long Height = 0;
+    };
+    struct Margin{
+        int Left = 0;
+        int Right = 0;
+        int Top = 0;
+        int Bottom = 0;
     };
     struct Mouse{
         Point Location;

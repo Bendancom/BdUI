@@ -1,9 +1,9 @@
+#ifndef BDUI_EVENT
+#define BDUI_EVENT
 #include <vector>
 #include <map>
 #include "delegate.hpp"
 
-#ifndef BDUI_EVENT
-#define BDUI_EVENT
 namespace BdUI{
     template<typename Return,typename... Param> class Event;
     template<typename Return,typename... Param>

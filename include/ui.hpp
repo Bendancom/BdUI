@@ -22,6 +22,7 @@ namespace BdUI
         void OnMouseHoverAndLeave();    //Automatic
         void ResetMouseHoverAndLeave(); //Automatic
         #endif
+        Attribute<Margin> Margin;
         Attribute<Cursor> Cursor;
         Attribute<Size> Size;
         Attribute<Point> Location;
@@ -29,7 +30,7 @@ namespace BdUI
         #ifdef _WIN32
         Attribute<BdUI::Style,std::pair<int,int>,BdUI::Style> Style;
         Attribute<HMENU> PopMenu;
-        HWND hWnd;
+        ReadOnly<HWND> hWnd;
         #endif
         Attribute<UI*> Parent;
         

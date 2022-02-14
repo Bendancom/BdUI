@@ -1,10 +1,8 @@
+#ifndef BDUI_ATTRIBUTE
+#define BDUI_ATTRIBUTE
 #include <mutex>
 #include "event.hpp"
 
-#define debug printf("%s : %d\n",__FUNCTION__,__LINE__);
-
-#ifndef BDUI_ATTRIBUTE
-#define BDUI_ATTRIBUTE
 namespace BdUI{
     template<typename... T> class Attribute; 
 
@@ -27,6 +25,9 @@ namespace BdUI{
             GetData &&data = (*get)(Value);
             Mutex.unlock();
             return data;
+        }
+        operator Data(){
+            return Value;
         }
         GetData Get(){
             Mutex.lock();
@@ -62,7 +63,7 @@ namespace BdUI{
     class Attribute<Data*,GetData,SetData>{
         public:
         EventArray<void(Data*)> EventList;
-        Data* (*get)(Data* const&);
+        GetData (*get)(Data* const&);
         bool (*set)(Data*&,Data* const&);
         Attribute(Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) : get(getptr),set(setptr) {}
         Attribute(Data* const &t,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
@@ -72,12 +73,15 @@ namespace BdUI{
         Attribute(Data* const &t,const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
         Value(t),EventList(e),get(getptr),set(setptr) {}
         Attribute(const Attribute<Data*,GetData,SetData>&) = delete;
-        operator Data*() {
-            Data *data;
+        operator GetData() {
+            GetData data;
             Mutex.lock();
             data = (*get)(Value);
             Mutex.unlock();
             return data;
+        }
+        operator Data*(){
+            return Value;
         }
         Data* Get() {
             Data *data;
@@ -129,6 +133,9 @@ namespace BdUI{
             GetData &&data = get(Value);
             Mutex.unlock();
             return data;
+        }
+        operator Data(){
+            return Value;
         }
         GetData Get(){ 
             Mutex.lock();

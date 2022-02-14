@@ -17,5 +17,7 @@ add_library(${PROJECT_NAME} SHARED ${SRC})
 else()
 add_library(${PROJECT_NAME} STATIC ${SRC})
 endif()
-
+if(WIN32)
+target_link_libraries(${PROJECT_NAME} dwmapi)
+endif()
 add_subdirectory(${PROJECT_SOURCE_DIR}/Test)

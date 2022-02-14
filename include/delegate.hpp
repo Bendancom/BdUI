@@ -1,9 +1,9 @@
+#ifndef BDUI_DELEGATE
+#define BDUI_DELEGATE
 #include <functional>
 #include <algorithm>
 #include <typeindex>
 
-#ifndef BDUI_DELEGATE
-#define BDUI_DELEGATE
 #if _MSC_VER
 #define PlaceHolder std::_Ph
 #else
