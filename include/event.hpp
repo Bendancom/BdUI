@@ -2,15 +2,16 @@
 #define BDUI_EVENT
 #include <vector>
 #include <map>
+#include <memory_resource>
 #include "delegate.hpp"
 
 namespace BdUI{
     template<typename Return,typename... Param> class Event;
     template<typename Return,typename... Param>
-    class Event<Return(Param...)> : public std::vector<Delegate<Return(Param...)>>{
+    class Event<Return(Param...)> : public std::vector<Delegate<Return(Param...)>*>{
     public:
         bool (*check)(const Param &...) = nullptr;
-        void (*returnCallback)(const std::map<std::type_index,Return>&) = nullptr;
+        void (*returnCallback)(Return[],const Event<Return(Param...)>&) = nullptr;
         using std::vector<Delegate<Return(Param...)>>::vector;
         using std::vector<Delegate<Return(Param...)>>::operator=;
         Event(const Delegate<Return(Param...)> &d) { this->push_back(d); }
@@ -19,12 +20,14 @@ namespace BdUI{
                 if (!check(args...)) return;
             }
             else if (!Check(args...)) return;
-            std::map<std::type_index,Return> temp;
-            for (auto iter = this->cbegin(); iter != this->cend(); iter++){
-                temp.insert(std::pair<std::type_index,Return>((*iter).target_type(),(*iter)(args...)));
+            Return temp[this->size()];
+            if (this->size() != 0){
+                for(int i = 0;i<this->size();i++){
+                    temp[i] = (this->operator[](i))(args...);
+                }
             }
-            if (returnCallback != nullptr) returnCallback(temp);
-            else ReturnCallBack(temp);
+            if (returnCallback != nullptr) returnCallback(temp,*this);
+            else ReturnCallBack(temp,*this);
         }
         Event<Return(Param...)> &operator+=(const Delegate<Return(Param...)> &d){
             if (this->size() == 0 || (*(std::find(this->begin(),this->end(),d))) != d) this->push_back(d);
@@ -52,10 +55,10 @@ namespace BdUI{
         }
     private:
         virtual bool Check(const Param &...) { return true; }
-        virtual void ReturnCallBack(const std::map<std::type_index,Return>&) { return; }
+        virtual void ReturnCallBack(Return[],const Event<Return(Param...)>&) { return; }
     };
     template<typename... Param>
-    class Event<void(Param...)> : public std::vector<Delegate<void(Param...)>>{
+    class Event<void(Param...)> : public std::vector<Delegate<void(Param...)>,std::allocator<Delegate<void(Param...)>>>{
     public:
         bool (*check)(const Param &...) = nullptr;
         using std::vector<Delegate<void(Param...)>>::vector;
@@ -66,10 +69,14 @@ namespace BdUI{
                 if (!check(args...)) return;
             }
             else if (!Check(args...)) return;
-            if(this->size() != 0) for (auto iter = this->begin();iter != this->end();iter++) (*iter)(args...);
+            if(this->size() != 0){
+                for(auto i : *this){
+                    i(args...);
+                }
+            }
         }
         Event<void(Param...)> &operator+=(const Delegate<void(Param...)> &d){
-            if (this->size() == 0 || (*(std::find(this->begin(),this->end(),d))) != d) this->push_back(d);
+            this->push_back(d);
             return *this;
         }
         Event<void(Param...)> &operator-=(const Delegate<void(Param...)> &d){
@@ -104,7 +111,11 @@ namespace BdUI{
         using std::vector<Event<Return(Param...)>>::operator=;
         EventArray(const Event<Return(Param...)> &e) { this->push_back(e); }
         void operator()(Param... args){
-            for (auto iter = this->begin();iter != this->end();iter++) (*iter)(args...);
+            if (this->size() != 0){
+                for(auto i : *this){
+                    i(args...);
+                }
+            }
         }
         EventArray<Return(Param...)> &operator+=(const Event<Return(Param...)> &e){
             this->push_back(e);

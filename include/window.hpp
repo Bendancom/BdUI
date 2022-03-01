@@ -8,42 +8,26 @@ namespace BdUI{
     public:
         Window();
         ~Window();
-        virtual bool Create();
-        void Block() { mutex.lock(); }
+        bool Create();
+        void Block();
+        
 
-        Attribute<std::string> CaptionName;
-        #ifdef _WIN32
-        Attribute<HICON> Icon;
-        Attribute<HICON> IconSm;
-        #endif
-
-        Event<void(std::string)> CaptionNameChanged;
     private:
-        const HINSTANCE hInstance = GetModuleHandle(NULL);
-        const WNDCLASSEX Windowclass{
-            sizeof(WNDCLASSEX),
-            CS_VREDRAW|CS_HREDRAW|CS_DBLCLKS,
-            WndProc,
-            0,
-            0,
-            hInstance,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            (STRING)ClassName.c_str(),
-            NULL,
-        };
-        std::promise<bool> IsCreate;
-        #ifdef _WIN32
         std::thread *Thread;
-        std::mutex mutex;
+        std::mutex Mutex;
+        std::promise<bool>  IsCreation;
+        void VisibleEvent(bool);
+        void WindowDefaultEventBind();
+        
+        #ifdef _WIN32
+        int dwExStyle = NULL;
+        int dwStyle = WS_OVERLAPPEDWINDOW;
+        HWND hWnd;
+        std::promise<bool> Creation;
+        static LRESULT CALLBACK __WndProc(HWND,UINT,WPARAM,LPARAM);
+        void WindThread();
         #endif
-        void WindowEventBind();
-        void Initialization();
     };
-    #ifdef _WIN32
-    static std::map<HWND,BdUI::Window*> WindowList;
-    #endif
+    
 }
 #endif

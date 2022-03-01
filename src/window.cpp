@@ -2,245 +2,183 @@
 
 namespace BdUI{
     Window::Window(){
-        this->Style = WindowDefaultStyle;
         #ifdef _WIN32
         Size = {CW_USEDEFAULT,CW_USEDEFAULT};
         Location = {CW_USEDEFAULT,CW_USEDEFAULT};
-        CaptionName = "";
         #endif
-        WindowEventBind();
     }
     Window::~Window(){
-        mutex.unlock();
+        Mutex.unlock();
         delete Thread;
-        WindowList.erase(hWnd); 
     }
     bool Window::Create(){
-        Thread = new std::thread(&Window::Initialization,this);
+        Thread = new std::thread(&Window::WindThread,this);
         Thread->detach();
-        #ifdef _WIN32
-        if (IsCreate.get_future().get()) return true;
-        else{
+        if(!Creation.get_future().get()){
             delete Thread;
+            Thread = nullptr;
             return false;
         }
-        #endif
+        return true;
     }
-    void Window::Initialization(){
-        #ifdef _WIN32
-        RegisterClassEx(&Windowclass);
-        std::pair<int,int> style = Style;
-        Point loca = Location;
-        BdUI::Size size = Size;
-        hWnd = CreateWindowEx(style.second,(STRING)ClassName.c_str(),(STRING)CaptionName.Get().c_str(),style.first,loca.X,loca.Y,size.Width,size.Height,NULL,NULL,hInstance,NULL);
-        if (hWnd == NULL){
-            IsCreate.set_value(false);
-            return;
-        }
-        else IsCreate.set_value(true);
-        WindowList[hWnd] = this;
-        MSG msg;
-        mutex.lock();
-        while (GetMessage(&msg, nullptr, 0, 0) > 0)
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        mutex.unlock();
-        this->~Window();
-        #endif
+    void Window::Block(){
+        Mutex.lock();
     }
-
-    void Window::WindowEventBind(){
-        CaptionName.EventList += CaptionNameChanged;
+    void Window::WindowDefaultEventBind(){
+        VisibleChanged += Delegate<void(bool)>(&Window::VisibleEvent,this);
     }
 
     #ifdef _WIN32
-    LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam){
-        /*
-        std::vector<HWND> hWndlist;
-        HWND _hWnd = hWnd;
-        while(_hWnd != NULL){
-            hWndlist.push_back(_hWnd);
-            _hWnd = GetParent(_hWnd);
+    void Window::WindThread(){
+        const WNDCLASSEX Windowclass{
+            sizeof(WNDCLASSEX),
+            CS_VREDRAW|CS_HREDRAW|CS_DBLCLKS,
+            Window::__WndProc,
+            0,
+            8,
+            GetModuleHandle(NULL),
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            TEXT("BdUI_WindowClass"),
+            NULL,
+        };
+        if (!RegisterClassEx(&Windowclass)) { //注册窗口类
+		    MessageBox(NULL, TEXT("Register Class Failed!"), NULL, MB_OK);
+            Creation.set_value(false);
+            return;
+	    }
+        Point location = Location;
+        BdUI::Size size = Size;
+        hWnd = CreateWindowEx(dwExStyle,Windowclass.lpszClassName,NULL,dwStyle,location.X,location.Y,size.Width,size.Height,NULL,NULL,Windowclass.hInstance,NULL);
+        if(hWnd == NULL){
+            MessageBox(NULL, TEXT("Creating Window Failed"), NULL, MB_OK);
+            Creation.set_value(false);
+            return;
         }
-        UI *ui = WindowList[_hWnd];
-        std::vector<UI*> uilist = ui->UIList.Get();
-        for(int i = hWndlist.size() - 1; i >= 0;i--){
-            for(std::vector<UI*>::iterator iter = uilist.begin();iter != uilist.end(); iter++){
-                if((*iter)->hWnd == hWndlist[i]){
-                    ui = *iter;
-                    break;
-                }
-            }
-        }*/
-        UI* ui = WindowList[hWnd];
-        switch(msg){
-            #pragma region MouseMessage
+        SetWindowWord(hWnd,0,reinterpret_cast<long>(this));
+        WindowDefaultEventBind();
+        Creation.set_value(true);
+        Mutex.lock();
+        MSG msg;
+        while(GetMessage(&msg,NULL,0,0) > 0){
+            TranslateMessage(&msg);
+		    DispatchMessageA(&msg);
+        }
+        Mutex.unlock();
+    }
+    #endif
+
+
+    #pragma region WindowEvent
+    void Window::VisibleEvent(bool visible){
+        if (visible){
+            #ifdef _WIN32
+            ShowWindow(hWnd,SW_SHOW);
+            UpdateWindow(hWnd);
+            #endif
+        }
+        else{
+            #ifdef _WIN32
+            ShowWindow(hWnd,SW_HIDE);
+            #endif
+        }
+    }
+
+    #ifdef _WIN32
+    LRESULT Window::__WndProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam){
+        Window *w = reinterpret_cast<Window*>(GetWindowWord(hWnd,0));
+        printf("%p\n",w);
+        printf("%d\n",msg);
+        switch(msg){/*
+            #pragma region Mouse
             case WM_MOUSEMOVE:{
-                ui->OnMouseHoverAndLeave();
+                //OnMouseHoverAndLeave();
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::None,0};
-                ui->MouseMove(mouse);
+                MouseMove(mouse);
                 break;
             }
             case WM_MOUSEHOVER:{
-                ui->ResetMouseHoverAndLeave();
+                //ResetMouseHoverAndLeave();
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::None,0};
-                ui->MouseHover(mouse);
+                MouseHover(mouse);
                 break;
             }
             case WM_MOUSELEAVE:{
-                ui->ResetMouseHoverAndLeave();
+                //ResetMouseHoverAndLeave();
                 Mouse &&mouse{{},Mouse::None,0};
-                ui->MouseLeave(mouse);
+                MouseLeave(mouse);
                 break;
             }
             case WM_MOUSEWHEEL:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,GET_WHEEL_DELTA_WPARAM(wParam)};
-                ui->MouseWheel(mouse);
+                MouseWheel(mouse);
                 break;
             }
             case WM_RBUTTONDBLCLK:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->MouseDoubleClick(mouse);
+                MouseDoubleClick(mouse);
                 break;
             }
             case WM_LBUTTONDBLCLK:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->MouseDoubleClick(mouse);
+                MouseDoubleClick(mouse);
                 break;
             }
             case WM_MBUTTONDBLCLK:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->MouseDoubleClick(mouse);
+                MouseDoubleClick(mouse);
                 break;
             }
             case WM_XBUTTONDBLCLK:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
-                ui->MouseDoubleClick(mouse);
+                MouseDoubleClick(mouse);
                 break;
             }
             case WM_RBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->MouseDown(mouse);
+                MouseDown(mouse);
                 break;
             }
             case WM_LBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Left,0};
-                ui->MouseDown(mouse);
+                MouseDown(mouse);
                 break;
             }
             case WM_MBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,0};
-                ui->MouseDown(mouse);
+                MouseDown(mouse);
                 break;
             }
             case WM_XBUTTONDOWN:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
-                ui->MouseDown(mouse);
+                MouseDown(mouse);
                 break;
             }
             case WM_RBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->MouseUp(mouse);
+                MouseUp(mouse);
                 break;
             }
             case WM_LBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Left,0};
-                ui->MouseUp(mouse);
+                MouseUp(mouse);
                 break;
             }
             case WM_MBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,0};
-                ui->MouseUp(mouse);
+                MouseUp(mouse);
                 break;
             }
             case WM_XBUTTONUP:{
                 Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
-                ui->MouseUp(mouse);
+                MouseUp(mouse);
                 break;
-            }
-            case WM_NCRBUTTONDBLCLK:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->NCMouseDoubleClick(mouse);
-                break;
-            }
-            case WM_NCLBUTTONDBLCLK:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Left,0};
-                ui->NCMouseDoubleClick(mouse);
-                break;
-            }
-            case WM_NCMBUTTONDBLCLK:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,0};
-                ui->NCMouseDoubleClick(mouse);
-                break;
-            }
-            case WM_NCXBUTTONDBLCLK:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
-                ui->NCMouseDoubleClick(mouse);
-                break;
-            }
-            case WM_NCRBUTTONDOWN:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->NCMouseDown(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCLBUTTONDOWN:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Left,0};
-                ui->NCMouseDown(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCMBUTTONDOWN:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,0};
-                ui->NCMouseDown(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCXBUTTONDOWN:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
-                ui->NCMouseDown(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCRBUTTONUP:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Right,0};
-                ui->NCMouseUp(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCLBUTTONUP:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Left,0};
-                ui->NCMouseUp(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCMBUTTONUP:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::Middle,0};
-                ui->NCMouseUp(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCXBUTTONUP:{
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},(wParam & XBUTTON1) ? Mouse::X1 : Mouse::X2,0};
-                ui->NCMouseUp(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCMOUSEMOVE:{
-                ui->OnMouseHoverAndLeave();
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::None,0};
-                ui->NCMouseMove(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCMOUSEHOVER:{
-                ui->ResetMouseHoverAndLeave();
-                Mouse &&mouse{{MAKEPOINTS(lParam).x,MAKEPOINTS(lParam).y},Mouse::None,0};
-                ui->NCMouseHover(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-            case WM_NCMOUSELEAVE:{
-                ui->ResetMouseHoverAndLeave();
-                Mouse &&mouse{{},Mouse::None,0};
-                ui->NCMouseLeave(mouse);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
             #pragma endregion
             case WM_SETCURSOR:{
-                Cursor cursor = ui->Cursor.Get();
+                struct Cursor cursor = Cursor.Get();
                 switch(LOWORD(lParam)){
                     case HTCLIENT:{
                         SetCursor(cursor.Client);
@@ -325,8 +263,9 @@ namespace BdUI{
                 }
                 break;
             }
+            */
             case WM_DESTROY:{
-                delete ui;
+                w->~Window();
                 break;
             }
             default:{
@@ -336,4 +275,5 @@ namespace BdUI{
         return 0;
     }
     #endif
+    #pragma endregion
 }

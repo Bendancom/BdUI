@@ -6,33 +6,20 @@ namespace BdUI
 {
     class UI{
     public:
-        UI(UI* parent = nullptr) : Style(UIDefaultStyle,&AttributeGetStyle,
-        [](BdUI::Style &s,const BdUI::Style &cs){ s = cs; return true; }),Size({100,20}),Parent(parent) {
-            UIEventBind();
-            #ifdef _WIN32
-            MouseHoverTime = HOVER_DEFAULT;
-            #endif
-        }
+        UI();
         virtual ~UI() {}
-        virtual bool Create();
-        bool Show();
-        Attribute<std::vector<UI*>> UIList;
+        std::vector<UI*> UIList;
 
         #ifdef _WIN32
-        void OnMouseHoverAndLeave();    //Automatic
-        void ResetMouseHoverAndLeave(); //Automatic
         #endif
         Attribute<Margin> Margin;
         Attribute<Cursor> Cursor;
         Attribute<Size> Size;
         Attribute<Point> Location;
         Attribute<int> MouseHoverTime;
-        #ifdef _WIN32
-        Attribute<BdUI::Style,std::pair<int,int>,BdUI::Style> Style;
+        Attribute<bool> Visible;
         Attribute<HMENU> PopMenu;
-        ReadOnly<HWND> hWnd;
-        #endif
-        Attribute<UI*> Parent;
+        ReadOnly<UI*> Parent;
         
         Event<void(Mouse)> MouseWheel;
 
@@ -53,27 +40,9 @@ namespace BdUI
         Event<void(BdUI::Size)> SizeChanged;
         Event<void(Point)> LocationChanged;
         Event<void(BdUI::Cursor)> CursorChanged;
-
+        Event<void(bool)> VisibleChanged;
         void Rendering();
     private:
-        #ifdef _WIN32
-        Attribute<bool> IsOnMouseHoverAndLeave;
-        const HINSTANCE hInstance = GetModuleHandle(NULL);
-        const WNDCLASSEX UIclass = {
-            sizeof(WNDCLASSEX),
-            CS_VREDRAW|CS_HREDRAW|CS_DBLCLKS,
-            WndProc,
-            0,
-            0,
-            hInstance,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            (STRING)ClassName.c_str(),
-            NULL,
-        };
-        #endif
         void UIEventBind();
     };
 }

@@ -7,15 +7,13 @@
 #include <thread>
 #include <chrono>
 #include <condition_variable>
-#include <semaphore>
 #include <list>
+#include <iostream>
+#include <deque>
+#include <memory_resource>
+
 #ifdef _WIN32
-#include <windows.h>
-#ifdef UNICODE
-#define STRING LPCWSTR
-#else
-#define STRING LPCSTR
-#endif
+#include <Windows.h>
 #endif
 
 #include "attribute.hpp"
@@ -77,60 +75,5 @@ namespace BdUI
         //Windows：https://docs.microsoft.com/zh-cn/windows/win32/inputdev/wm-nchittest
         #endif
     };
-    
-    struct Style{
-        #ifdef _WIN32
-        //Windows Style
-        enum WindowType{
-        Window = 0,
-        PopUp = 1,
-        Child = 2,
-        LayerdWindow = 3
-        }Type = Window;
-        bool Border = true;
-        bool Caption = true;
-        bool Disable = false;
-        bool HScroll = false;
-        bool VScroll = false;
-        bool MinSizeInit = false;
-        bool MaxSizeInit = false;
-        bool Size = true;           //从属于SysMenu
-        bool MaxSize = true;        //从属于SysMenu
-        bool MinSize = true;        //从属于SysMenu
-        bool SysMenu = true;        //从属于Caption
-        bool Tabs_Top = false;
-        bool Visible = false;
-        bool ClipChildren = true;
-
-        //Windows ExStyle
-        bool AcceptFiles = false;
-        bool ContextHelp = false;    //不与MaxSizeBox或MinSizeBox共存
-        #endif
-    }const WindowDefaultStyle;//WindowStyle Default
-    const Style UIDefaultStyle{
-        Style::Child,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        false,
-        false
-    };
-
-    const std::string ClassName = "BdUI_WindowClass";
-    #ifdef _WIN32
-    LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-    std::pair<int,int> AttributeGetStyle(const Style&);
-    #endif
 }
 #endif

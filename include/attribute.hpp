@@ -74,7 +74,7 @@ namespace BdUI{
         Value(t),EventList(e),get(getptr),set(setptr) {}
         Attribute(const Attribute<Data*,GetData,SetData>&) = delete;
         operator GetData() {
-            GetData data;
+            GetData *data;
             Mutex.lock();
             data = (*get)(Value);
             Mutex.unlock();
@@ -93,8 +93,8 @@ namespace BdUI{
         void Set(Data *value){
             Mutex.lock();
             if (!(*set)(Value,value)) {
-                    Mutex.unlock();
-                    return; 
+                Mutex.unlock();
+                return;
             }
             EventList(Value);
             Mutex.unlock();
@@ -221,7 +221,7 @@ namespace BdUI{
             if (set != nullptr){ 
                 if (!(*set)(Value,value)) {
                     Mutex.unlock();
-                    return *this; 
+                    return *this;
                 }
             }
             else Value = value;
