@@ -12,38 +12,33 @@ namespace BdUI
 
         #ifdef _WIN32
         #endif
-        Attribute<Margin> Margin;
         Attribute<Cursor> Cursor;
-        Attribute<Size> Size;
+        Attribute<Margin> Margin;
+        Attribute<BdUI::Size> Size;
         Attribute<Point> Location;
         Attribute<int> MouseHoverTime;
         Attribute<bool> Visible;
         Attribute<HMENU> PopMenu;
         ReadOnly<UI*> Parent;
         
-        Event<void(Mouse)> MouseWheel;
+        
+        EventArray<void(Mouse)> MouseWheel;
 
-        Event<void(Mouse)> MouseDown;
-        Event<void(Mouse)> MouseUp;
-        Event<void(Mouse)> MouseDoubleClick;
-        Event<void(Mouse)> MouseHover;
-        Event<void(Mouse)> MouseMove;
-        Event<void(Mouse)> MouseLeave;
+        EventArray<void(Mouse)> MouseDown;
+        EventArray<void(Mouse)> MouseUp;
+        EventArray<void(Mouse)> MouseDoubleClick;
+        EventArray<void(Mouse)> MouseHover;
+        EventArray<void(Mouse)> MouseMove;
+        EventArray<void(Mouse)> MouseLeave;
 
-        Event<void(Mouse)> NCMouseDown;
-        Event<void(Mouse)> NCMouseUp;
-        Event<void(Mouse)> NCMouseDoubleClick;
-        Event<void(Mouse)> NCMouseHover;
-        Event<void(Mouse)> NCMouseMove;
-        Event<void(Mouse)> NCMouseLeave;
-
-        Event<void(BdUI::Size)> SizeChanged;
-        Event<void(Point)> LocationChanged;
-        Event<void(BdUI::Cursor)> CursorChanged;
-        Event<void(bool)> VisibleChanged;
-        void Rendering();
+        EventArray<void(Mouse)> NCMouseDown;
+        EventArray<void(Mouse)> NCMouseUp;
+        EventArray<void(Mouse)> NCMouseDoubleClick;
+        EventArray<void(Mouse)> NCMouseHover;
+        EventArray<void(Mouse)> NCMouseMove;
+        EventArray<void(Mouse)> NCMouseLeave;
     private:
-        void UIEventBind();
+        void CursorDefaultSet();
     };
 }
 #endif

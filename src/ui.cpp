@@ -2,14 +2,12 @@
 namespace BdUI
 {
     UI::UI(){
-        UIEventBind();
         MouseHoverTime = 1000;
+        CursorDefaultSet();
     }
-
-    void UI::UIEventBind(){
-        Size.EventList += SizeChanged;
-        Location.EventList += LocationChanged;
-        Cursor.EventList += CursorChanged;
-        Visible.EventList += VisibleChanged;
+    void UI::CursorDefaultSet(){
+        #ifdef _WIN32
+        Cursor = {IDC_ARROW};
+        #endif
     }
 }

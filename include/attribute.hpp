@@ -9,16 +9,16 @@ namespace BdUI{
     template<typename Data,typename GetData,typename SetData>
     class Attribute<Data,GetData,SetData>{
     public:
-        EventArray<void(Data)> EventList;
+        EventArray<void(Data)> Changed;
         GetData (*get)(const Data&);
         bool (*set)(Data&,const SetData&);
         Attribute(GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) : get(getptr),set(setptr) {}
         Attribute(const Data &t,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
         Value(t),get(getptr),set(setptr) {}
         Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
-        EventList(e),get(getptr),set(setptr) {}
+        Changed(e),get(getptr),set(setptr) {}
         Attribute(const Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(const Attribute<Data,GetData,SetData>&) = delete;
         operator GetData() {
             Mutex.lock();
@@ -41,7 +41,7 @@ namespace BdUI{
                 Mutex.unlock();
                 return;
             }
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
         }
         Attribute<Data,GetData,SetData> &operator=(SetData value){
@@ -50,7 +50,7 @@ namespace BdUI{
                 Mutex.unlock();
                 return *this; 
             }
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
             return *this;
         }
@@ -62,16 +62,16 @@ namespace BdUI{
     template<typename Data,typename GetData,typename SetData>
     class Attribute<Data*,GetData,SetData>{
         public:
-        EventArray<void(Data*)> EventList;
+        EventArray<void(Data*)> Changed;
         GetData (*get)(Data* const&);
         bool (*set)(Data*&,Data* const&);
         Attribute(Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) : get(getptr),set(setptr) {}
         Attribute(Data* const &t,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
         Value(t),get(getptr),set(setptr) {}
         Attribute(const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
-        EventList(e),get(getptr),set(setptr) {}
+        Changed(e),get(getptr),set(setptr) {}
         Attribute(Data* const &t,const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&),bool (*setptr)(Data*&,Data* const&)) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(const Attribute<Data*,GetData,SetData>&) = delete;
         operator GetData() {
             GetData *data;
@@ -96,7 +96,7 @@ namespace BdUI{
                 Mutex.unlock();
                 return;
             }
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
         }
         Attribute<Data*,GetData,SetData> &operator=(Data *value){
@@ -105,7 +105,7 @@ namespace BdUI{
                 Mutex.unlock();
                 return *this; 
             }
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
             return *this;
         }
@@ -117,16 +117,16 @@ namespace BdUI{
     template<typename Data,typename GetData,typename SetData>
     class Attribute<Data&,GetData,SetData>{
         public:
-        EventArray<void(Data)> EventList;
+        EventArray<void(Data)> Changed;
         GetData (*get)(const Data&);
         bool (*set)(Data&,const SetData&);
         Attribute(GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) : get(getptr),set(setptr) {}
         Attribute(Data &t,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
         Value(t),get(getptr),set(setptr) {}
         Attribute(const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
-        EventList(e),get(getptr),set(setptr) {}
+        Changed(e),get(getptr),set(setptr) {}
         Attribute(Data &t,const EventArray<void(Data)> &e,GetData (*getptr)(const Data&),bool (*setptr)(Data&,const SetData&)) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(const Attribute<Data&,GetData,SetData> &a) = delete;
         operator GetData() {
             Mutex.lock();
@@ -149,7 +149,7 @@ namespace BdUI{
                 Mutex.unlock();
                 return;
             }
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
         }
         Attribute<Data&,GetData,SetData> &operator=(SetData value){
@@ -158,7 +158,7 @@ namespace BdUI{
                 Mutex.unlock();
                 return *this; 
             }
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
             return *this;
         }
@@ -170,7 +170,7 @@ namespace BdUI{
     template<typename Data>
     class Attribute<Data>{
         public:
-        EventArray<void(Data)> EventList;
+        EventArray<void(Data)> Changed;
         Data (*get)(const Data&);
         bool (*set)(Data&,const Data&);
         Attribute(Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) : get(getptr),set(setptr) {}
@@ -180,13 +180,13 @@ namespace BdUI{
         Attribute(const Data &t,bool (*setptr)(Data&,const Data&)) :
         Value(t),set(setptr),get(nullptr) {}
         Attribute(const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
-        EventList(e),get(getptr),set(setptr) {}
+        Changed(e),get(getptr),set(setptr) {}
         Attribute(const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
-        EventList(e),set(setptr),get(nullptr) {}
+        Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Data &t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(const Data &t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
-        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Value(t),Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Attribute<Data>&) = delete;
         operator Data() {
             Data data;
@@ -213,7 +213,7 @@ namespace BdUI{
                 }
             }
             else Value = value;
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
         }
         Attribute<Data> &operator=(Data value){
@@ -225,7 +225,7 @@ namespace BdUI{
                 }
             }
             else Value = value;
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
             return *this;
         }
@@ -237,7 +237,7 @@ namespace BdUI{
     template<typename Data>
     class Attribute<Data*>{
         public:
-        EventArray<void(Data*)> EventList;
+        EventArray<void(Data*)> Changed;
         Data* (*get)(Data* const&);
         bool (*set)(Data*&,Data* const&);
         Attribute(Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) : get(getptr),set(setptr) {}
@@ -247,13 +247,13 @@ namespace BdUI{
         Attribute(Data* const &t,bool (*setptr)(Data*&,Data* const&)) :
         Value(t),set(setptr),get(nullptr) {}
         Attribute(const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
-        EventList(e),get(getptr),set(setptr) {}
+        Changed(e),get(getptr),set(setptr) {}
         Attribute(const EventArray<void(Data)> &e,bool (*setptr)(Data*&,Data* const&)) :
-        EventList(e),set(setptr),get(nullptr) {}
+        Changed(e),set(setptr),get(nullptr) {}
         Attribute(Data* const &t,const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(Data* const &t,const EventArray<void(Data)> &e,bool (*setptr)(Data*&,Data* const&)) :
-        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Value(t),Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Attribute<Data*>&) = delete;
         operator Data*() {
             Data *data;
@@ -280,7 +280,7 @@ namespace BdUI{
                 }
             }
             else Value = value;
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
         }
         Attribute<Data*> &operator=(Data *value){
@@ -292,7 +292,7 @@ namespace BdUI{
                 }
             }
             else Value = value;
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
             return *this;
         }
@@ -304,7 +304,7 @@ namespace BdUI{
     template<typename Data>
     class Attribute<Data&>{
         public:
-        EventArray<void(Data)> EventList;
+        EventArray<void(Data)> Changed;
         Data (*get)(const Data&);
         bool (*set)(Data&,const Data&);
         Attribute(const Data &t,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
@@ -312,9 +312,9 @@ namespace BdUI{
         Attribute(const Data &t,bool (*setptr)(Data&,const Data&)) :
         Value(t),set(setptr),get(nullptr) {}
         Attribute(const Data &t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(const Data &t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
-        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Value(t),Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Attribute<Data&>&) = delete;
         operator Data() {
             Data data;
@@ -342,7 +342,7 @@ namespace BdUI{
             }
             else Value = value;
             Mutex.unlock();
-            EventList(value);
+            Changed(value);
         }
         Attribute<Data&> &operator=(Data value){
             Mutex.lock();
@@ -354,7 +354,7 @@ namespace BdUI{
             }
             else Value = value;
             Mutex.unlock();
-            EventList(value);
+            Changed(value);
             return *this;
         }
         Attribute<Data&> &operator=(const Attribute<Data&>&) = delete;
@@ -365,7 +365,7 @@ namespace BdUI{
     template<typename Data>
     class Attribute<Data*&>{
         public:
-        EventArray<void(Data*)> EventList;
+        EventArray<void(Data*)> Changed;
         Data* (*get)(Data* const&);
         bool (*set)(Data*&,Data* const&);
         Attribute(Data*&t,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
@@ -373,9 +373,9 @@ namespace BdUI{
         Attribute(Data*&t,bool (*setptr)(Data*&,Data* const&)) :
         Value(t),set(setptr),get(nullptr) {}
         Attribute(Data*&t,const EventArray<void(Data)> &e,Data* (*getptr)(Data* const&) = nullptr,bool (*setptr)(Data*&,Data* const&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(Data*&t,const EventArray<void(Data)> &e,bool (*setptr)(Data*&,const Data*)) :
-        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Value(t),Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Attribute<Data*&>&) = delete;
         operator Data*() {
             Data *data;
@@ -403,7 +403,7 @@ namespace BdUI{
             }
             else Value = value;
             Mutex.unlock();
-            EventList(value);
+            Changed(value);
         }
         Attribute<Data*&> &operator=(Data* value){
             Mutex.lock();
@@ -415,7 +415,7 @@ namespace BdUI{
             }
             else Value = value;
             Mutex.unlock();
-            EventList(value);
+            Changed(value);
             return *this;
         }
         Attribute<Data*&> &operator=(const Attribute<Data*&>&) = delete;
@@ -426,7 +426,7 @@ namespace BdUI{
     template<typename Data>
     class Attribute<const Data*>{
         public:
-        EventArray<void(const Data*)> EventList;
+        EventArray<void(const Data*)> Changed;
         Data (*get)(const Data&);
         bool (*set)(Data&,const Data&);
         Attribute(Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) : get(getptr),set(setptr) {}
@@ -436,13 +436,13 @@ namespace BdUI{
         Attribute(const Data *t,bool (*setptr)(Data&,const Data&)) :
         Value(t),set(setptr),get(nullptr) {}
         Attribute(const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
-        EventList(e),get(getptr),set(setptr) {}
+        Changed(e),get(getptr),set(setptr) {}
         Attribute(const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
-        EventList(e),set(setptr),get(nullptr) {}
+        Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Data *t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(const Data *t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
-        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Value(t),Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Attribute<const Data*>&) = delete;
         operator Data*() const {
             const Data *data;
@@ -470,7 +470,7 @@ namespace BdUI{
             }
             else Value = value;
             Mutex.unlock();
-            EventList(value);
+            Changed(value);
         }
         Attribute<const Data*> &operator=(const Data *value){
             Mutex.lock();
@@ -481,7 +481,7 @@ namespace BdUI{
                 }
             }
             else Value = value;
-            EventList(Value);
+            Changed(Value);
             Mutex.unlock();
             return *this;
         }
@@ -493,7 +493,7 @@ namespace BdUI{
     template<typename Data>
     class Attribute<Data* const&>{
         public:
-        EventArray<void(Data)> EventList;
+        EventArray<void(Data)> Changed;
         Data (*get)(const Data&);
         bool (*set)(Data&,const Data&);
         Attribute(Data* const &t,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
@@ -501,9 +501,9 @@ namespace BdUI{
         Attribute(Data* const &t,bool (*setptr)(Data&,const Data&)) :
         Value(t),set(setptr),get(nullptr) {}
         Attribute(Data* const &t,const EventArray<void(Data)> &e,Data (*getptr)(const Data&) = nullptr,bool (*setptr)(Data&,const Data&) = nullptr) :
-        Value(t),EventList(e),get(getptr),set(setptr) {}
+        Value(t),Changed(e),get(getptr),set(setptr) {}
         Attribute(Data* const &t,const EventArray<void(Data)> &e,bool (*setptr)(Data&,const Data&)) :
-        Value(t),EventList(e),set(setptr),get(nullptr) {}
+        Value(t),Changed(e),set(setptr),get(nullptr) {}
         Attribute(const Attribute<Data* const&>&) = delete;
         operator Data*() const {
             const Data *data;
@@ -531,7 +531,7 @@ namespace BdUI{
             }
             else Value = value;
             Mutex.unlock();
-            EventList(value);
+            Changed(value);
         }
         Attribute<Data* const&> &operator=(const Data *value){
             Mutex.lock();
@@ -543,7 +543,7 @@ namespace BdUI{
             }
             else Value = value;
             Mutex.unlock();
-            EventList(value);
+            Changed(value);
             return *this;
         }
         Attribute<Data* const&> &operator=(const Attribute<Data* const&>&) = delete;
