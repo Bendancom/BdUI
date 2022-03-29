@@ -10,7 +10,6 @@ namespace BdUI{
         CursorDefaultSet();
     }
     Window::~Window(){
-        Mutex.unlock();
         delete Thread;
     }
     bool Window::Create(){
@@ -25,12 +24,13 @@ namespace BdUI{
     }
     void Window::Block(){
         Mutex.lock();
+        Mutex.unlock();
     }
     void Window::WindowDefaultEventBind(){
         Visible.Changed += Delegate<void(bool)>(&Window::VisibleEvent,this);
     }
     void Window::CursorDefaultSet(){
-        #ifdef _WIN32
+        /*
         CaptionCursor = BdUI::Cursor(IDC_ARROW);
         BorderCursor_Left = BdUI::Cursor(IDC_SIZEWE);
         BorderCursor_Right = BdUI::Cursor(IDC_SIZEWE);
@@ -46,7 +46,7 @@ namespace BdUI{
         ReduceCursor = BdUI::Cursor(IDC_ARROW);
         HelpCursor = BdUI::Cursor(IDC_ARROW);
         MenuCursor = BdUI::Cursor(IDC_ARROW);
-        #endif
+        */
     }
     #ifdef _WIN32
     void Window::WindThread(){
@@ -77,7 +77,6 @@ namespace BdUI{
             Creation.set_value(false);
             return;
         }
-        printf("%ld",sizeof(this));
         SetWindowLongPtr(hWnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(this));
         Creation.set_value(true);
         Mutex.lock();
@@ -112,14 +111,14 @@ namespace BdUI{
             case WM_SETCURSOR:{
                 switch(LOWORD(lParam)){
                     case HTCLIENT:{
-                        SetCursor(w->Cursor.Get());
+                        //SetCursor(w->Cursor.Get());
                         break;
                     }
                 }
                 break;
             }
             case WM_DESTROY:{
-                w->~Window();
+                PostQuitMessage(0);
                 break;
             }
             default:{

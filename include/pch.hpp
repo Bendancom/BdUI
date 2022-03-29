@@ -19,18 +19,17 @@
 #include "delegate.hpp"
 #include "event.hpp"
 #include "readonly.hpp"
-#include "./resource/bitmap.hpp"
-#include "./resource/cursor.hpp"
+#include "resource.hpp"
 
 namespace BdUI
 {
     struct Point{
-        long X = 0;
-        long Y = 0;
+        int X = 0;
+        int Y = 0;
     };
     struct Size{
-        long Width = 0;
-        long Height = 0;
+        int Width = 0;
+        int Height = 0;
     };
     struct Margin{
         int Left = 0;

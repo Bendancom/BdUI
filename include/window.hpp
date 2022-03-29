@@ -11,6 +11,7 @@ namespace BdUI{
         bool Create();
         void Block();
         
+        /*
         Attribute<BdUI::Cursor> CaptionCursor;
         Attribute<BdUI::Cursor> BorderCursor_Left;
         Attribute<BdUI::Cursor> BorderCursor_Right;
@@ -26,10 +27,10 @@ namespace BdUI{
         Attribute<BdUI::Cursor> ReduceCursor;
         Attribute<BdUI::Cursor> HelpCursor;
         Attribute<BdUI::Cursor> MenuCursor;
+        */
     private:
         std::thread *Thread;
         std::mutex Mutex;
-        std::promise<bool>  IsCreation;
         void VisibleEvent(bool);
         void WindowDefaultEventBind();
         void CursorDefaultSet();

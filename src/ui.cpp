@@ -7,7 +7,7 @@ namespace BdUI
     }
     void UI::CursorDefaultSet(){
         #ifdef _WIN32
-        Cursor = {IDC_ARROW};
+        //Cursor = {IDC_ARROW};
         #endif
     }
 }

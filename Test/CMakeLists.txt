@@ -3,4 +3,4 @@ link_directories(${LIBRARY_OUTPUT_PATH})
 
 include_directories(../include)
 add_executable(Try ./try.cpp)
-target_link_libraries(Try BdUI)
+target_link_libraries(Try ${PROJECT_NAME})

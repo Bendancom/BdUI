@@ -12,7 +12,7 @@ namespace BdUI
 
         #ifdef _WIN32
         #endif
-        Attribute<Cursor> Cursor;
+        //Attribute<Cursor> Cursor;
         Attribute<Margin> Margin;
         Attribute<BdUI::Size> Size;
         Attribute<Point> Location;
@@ -21,7 +21,7 @@ namespace BdUI
         Attribute<HMENU> PopMenu;
         ReadOnly<UI*> Parent;
         
-        
+        /*
         EventArray<void(Mouse)> MouseWheel;
 
         EventArray<void(Mouse)> MouseDown;
@@ -37,6 +37,7 @@ namespace BdUI
         EventArray<void(Mouse)> NCMouseHover;
         EventArray<void(Mouse)> NCMouseMove;
         EventArray<void(Mouse)> NCMouseLeave;
+        */
     private:
         void CursorDefaultSet();
     };

@@ -9,4 +9,5 @@ int main()
    window.Create();
    window.Visible = true;
    window.Block();
+   return 0;
 }

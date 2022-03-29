@@ -1,3 +1,0 @@
-[submodule "module/FreeImage"]
-	path = module/FreeImage
-	url = https://github.com/Max-ChenFei/FreeImage-CMake.git

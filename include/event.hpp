@@ -2,7 +2,6 @@
 #define BDUI_EVENT
 #include <vector>
 #include <map>
-#include <memory_resource>
 #include "delegate.hpp"
 
 namespace BdUI{
@@ -86,15 +85,14 @@ namespace BdUI{
             return *this;
         }
         bool operator==(const Event<void(Param...)> &e){
-            if (e.check == check && e.returnCallback == returnCallback &&
+            if (e.check == check &&
             std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
                 return true;
             }
             else return false;
         }
         bool operator!=(const Event<void(Param...)> &e){
-            if (e.check != check || e.returnCallback != returnCallback ||
-            std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
+            if (e.check != check || std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
                 return true;
             }
             else return false;
