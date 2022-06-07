@@ -2,6 +2,7 @@
 #define BDUI_RESOURCE
 #include <string>
 #include <fstream>
+#include <cstdint>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -10,16 +11,16 @@
 namespace BdUI{
     class Resource{
     protected:
-        std::string filePath;
-        int Id = -1;// id must less than 2^((size(int)*8))-1)
+        std::string Filepath;
+        std::fstream File;
     public:
         Resource() {}
         Resource(const std::string&);
         Resource(const Resource&);
         ~Resource();
-        void OpenFile(const std::string&);
-        void Load();
-        void Save();
+        virtual void OpenFile(const std::string&);
+        virtual void Load();
+        virtual void Save();
         Resource &operator=(const Resource& resource);
         unsigned long long Size;
         unsigned char* Data = nullptr;

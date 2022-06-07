@@ -3,8 +3,8 @@
 namespace BdUI{
     Window::Window(){
         #ifdef _WIN32
-        Size = {CW_USEDEFAULT,CW_USEDEFAULT};
-        Location = {CW_USEDEFAULT,CW_USEDEFAULT};
+        Size = BdUI::Size{ CW_USEDEFAULT, CW_USEDEFAULT };
+        Location = BdUI::Point{CW_USEDEFAULT,CW_USEDEFAULT};
         #endif
         WindowDefaultEventBind();
         CursorDefaultSet();

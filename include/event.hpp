@@ -1,7 +1,6 @@
 #ifndef BDUI_EVENT
 #define BDUI_EVENT
 #include <vector>
-#include <map>
 #include "delegate.hpp"
 
 namespace BdUI{
@@ -9,24 +8,22 @@ namespace BdUI{
     template<typename Return,typename... Param>
     class Event<Return(Param...)> : public std::vector<Delegate<Return(Param...)>*>{
     public:
-        bool (*check)(const Param &...) = nullptr;
-        void (*returnCallback)(Return[],const Event<Return(Param...)>&) = nullptr;
+        Delegate<bool(Param...)> Check;
+        Delegate<void(std::vector<Return>)> ReturnCallBack;
         using std::vector<Delegate<Return(Param...)>>::vector;
         using std::vector<Delegate<Return(Param...)>>::operator=;
         Event(const Delegate<Return(Param...)> &d) { this->push_back(d); }
         void operator()(Param... args){
-            if (check != nullptr){
-                if (!check(args...)) return;
+            if(Check){
+                if(!Check(args...)) return;
             }
-            else if (!Check(args...)) return;
-            Return temp[this->size()];
             if (this->size() != 0){
-                for(int i = 0;i<this->size();i++){
-                    temp[i] = (this->operator[](i))(args...);
+                std::vector<Return> temp;
+                for(auto i : *this){
+                    temp.push_back(i(args...));
                 }
             }
-            if (returnCallback != nullptr) returnCallback(temp,*this);
-            else ReturnCallBack(temp,*this);
+            ReturnCallBack(temp);
         }
         Event<Return(Param...)> &operator+=(const Delegate<Return(Param...)> &d){
             if (this->size() == 0 || (*(std::find(this->begin(),this->end(),d))) != d) this->push_back(d);
@@ -52,22 +49,18 @@ namespace BdUI{
             }
             else return false;
         }
-    private:
-        virtual bool Check(const Param &...) { return true; }
-        virtual void ReturnCallBack(Return[],const Event<Return(Param...)>&) { return; }
     };
     template<typename... Param>
     class Event<void(Param...)> : public std::vector<Delegate<void(Param...)>,std::allocator<Delegate<void(Param...)>>>{
     public:
-        bool (*check)(const Param &...) = nullptr;
+        Delegate<bool(Param...)> Check;
         using std::vector<Delegate<void(Param...)>>::vector;
         using std::vector<Delegate<void(Param...)>>::operator=;
         Event(const Delegate<void(Param...)> &d) { this->push_back(d); }
         void operator()(Param... args){
-            if (check != nullptr){
-                if (!check(args...)) return;
+            if (Check){
+                if (!Check(args...)) return;
             }
-            else if (!Check(args...)) return;
             if(this->size() != 0){
                 for(auto i : *this){
                     i(args...);
@@ -97,8 +90,6 @@ namespace BdUI{
             }
             else return false;
         }
-    private:
-        virtual bool Check(const Param &...) { return true; }
     };
 
     template<typename Return,typename... Param> class EventArray;
@@ -107,6 +98,7 @@ namespace BdUI{
     public:
         using std::vector<Event<Return(Param...)>>::vector;
         using std::vector<Event<Return(Param...)>>::operator=;
+        EventArray() {}
         EventArray(const Event<Return(Param...)> &e) { this->push_back(e); }
         void operator()(Param... args){
             if (this->size() != 0){

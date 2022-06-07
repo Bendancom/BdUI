@@ -24,35 +24,49 @@ namespace BdUI{
             #endif
         };
         template <typename T, typename R, typename...Args>
-        auto Bind(R(T::*f)(Args...), T* t) -> decltype(MakeSeqs<sizeof...(Args)+1>::bind(t, f)){
+        auto _Bind(R(T::*f)(Args...), T* t) -> decltype(MakeSeqs<sizeof...(Args)+1>::bind(t, f)){
             return MakeSeqs<sizeof...(Args)+1>::bind(t, f);
         }
         std::function<Return(Param...)> function;
-        std::type_index type;
     public:
         Delegate() {}
-        Delegate(Return (*f)(Param...)) : function(f),type(typeid(f)){}
+        template<typename Func>
+        Delegate(Func f) : function(f){}
         template<typename T>
-        Delegate(Return (T::*f)(Param...),T *t) :  function(Bind(f,t)),type(typeid(f)) {}
+        Delegate(Return (T::*f)(Param...),T *t) :  function(_Bind(f,t)) {}
         template<typename T>
-        Delegate(T *t,Return (T::*f)(Param...)) : function(Bind(f,t)),type(typeid(f)) {}
-        Delegate(const Delegate<Return(Param...)> &d) : type(d.type){
+        Delegate(T *t,Return (T::*f)(Param...)) : function(_Bind(f,t)) {}
+        Delegate(const Delegate<Return(Param...)> &d){
             std::function<Return(Param...)> f(d.function);
             function.swap(f);
         }
-        const std::type_index &target_type() {return type;}
+        operator bool(){
+            return function.operator bool();
+        }
         Return operator()(Param... args){
             return function(args...);
         }
+        bool exist(){
+            return function.operator bool();
+        }
+        template<typename Func,typename...Args>
+        void bind(Func &&f,Args... args){
+            function = std::bind(f,args...);
+        }
+        template<typename Func,typename obj,typename...Args>
+        void bind(Func&& f , obj *t ,Args... args){
+            if(sizeof...(Args) == 0) function = _Bind(f,t);
+            else function = std::bind(f,t,args...);
+        }
         void swap(const Delegate<Return(Param...)> &d){
             function.swap(d.function);
-            std::type_index &&t = std::move(type);
-            type = std::move(d.type);
-            d.type = t;
         }
         Delegate &operator=(const Delegate<Return(Param...)> &d){
-            type = d.type;
             function = d.function;
+            return *this;
+        }
+        Delegate &operator=(Return (*f)(Param...)){
+            function = f;
             return *this;
         }
     };

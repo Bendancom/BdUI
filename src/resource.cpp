@@ -4,7 +4,10 @@ namespace BdUI
 {
     Resource::Resource(const std::string &s)
     {
-        filePath = s;
+        File.open(s,std::ios::in|std::ios::out|std::ios::binary);
+        if(!File) File.open(s,std::ios::out|std::ios::binary);
+        if(!File.good()) throw error::File::Open_Failed();
+        Filepath = s;
     }
     
     Resource::Resource(const Resource &resource)
@@ -21,29 +24,22 @@ namespace BdUI
 
     void Resource::OpenFile(const std::string &s)
     {
-        filePath = s;
+        File.open(s,std::ios::in|std::ios::out|std::ios::binary);
+        if(!File) File.open(s,std::ios::out|std::ios::binary);
+        if(!File.good()) throw error::File::Open_Failed();
+        Filepath = s;
     }
 
     void Resource::Load()
     {
-        std::fstream file;
-        file.open(filePath, std::ios::in | std::ios::binary);
-        if (!file.is_open())
-            throw error::bad_data_request();
-        file.seekg(std::ios::end);
-        Size = file.tellg();
-        file.seekg(std::ios::beg);
+        Size = File.rdbuf()->in_avail();
         Data = new unsigned char[Size];
-        file.read((char *)Data, Size);
+        File.read((char *)Data, Size);
     }
 
     void Resource::Save()
     {
-        if (Size == 0 || Data == nullptr)
-            throw error::value_error();
-        std::fstream file;
-        file.open(filePath, std::ios::out | std::ios::binary);
-        file.write((char *)Data, Size);
+        File.write((char *)Data, Size);
     }
 
     Resource &Resource::operator=(const Resource &resource)

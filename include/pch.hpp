@@ -5,8 +5,6 @@
 #include <typeinfo>
 #include <future>
 #include <thread>
-#include <chrono>
-#include <condition_variable>
 #include <iostream>
 
 #ifdef _WIN32
