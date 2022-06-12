@@ -29,8 +29,12 @@ namespace BdUI{
     void Window::WindowDefaultEventBind(){
         Visible.Changed += Delegate<void(bool)>(&Window::VisibleEvent,this);
     }
+
+#ifdef _WIN32
+
     void Window::CursorDefaultSet(){
         /*
+        ClientCursor = BdUI::Cursor(IDC_ARROW);
         CaptionCursor = BdUI::Cursor(IDC_ARROW);
         BorderCursor_Left = BdUI::Cursor(IDC_SIZEWE);
         BorderCursor_Right = BdUI::Cursor(IDC_SIZEWE);
@@ -48,7 +52,6 @@ namespace BdUI{
         MenuCursor = BdUI::Cursor(IDC_ARROW);
         */
     }
-    #ifdef _WIN32
     void Window::WindThread(){
         const WNDCLASSEX Windowclass{
             sizeof(WNDCLASSEX),
@@ -111,7 +114,7 @@ namespace BdUI{
             case WM_SETCURSOR:{
                 switch(LOWORD(lParam)){
                     case HTCLIENT:{
-                        //SetCursor(w->Cursor.Get());
+                        //SetCursor(w->ClientCursor.get());
                         break;
                     }
                 }

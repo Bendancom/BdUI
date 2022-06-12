@@ -11,19 +11,19 @@ namespace BdUI{
     class Attribute<Data,GetData,SetData>{
     public:
         EventArray<void(Data)> Changed;
-        Delegate<GetData(Data)> get;
-        Delegate<bool(SetData,Data&)> set;
+        Delegate<GetData(Data)> get_func;
+        Delegate<bool(SetData,Data&)> set_func;
         Attribute() {}
         Attribute(const Data& v) : Value(v) {}
-        Attribute(const Delegate<GetData(Data)>& g) : get(g) {}
-        Attribute(const Data &v, const Delegate<GetData(Data)>& g) : get(g),Value(v) {}
-        Attribute(const Delegate<bool(SetData,Data&)>& s) : set(s) {}
-        Attribute(const Data &v, const Delegate<bool(SetData,Data&)>& s) : set(s),Value(v) {}
-        Attribute(const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get(g),set(s) {}
-        Attribute(const Data &v, const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get(g),set(s),Value(v) {}
+        Attribute(const Delegate<GetData(Data)>& g) : get_func(g) {}
+        Attribute(const Data &v, const Delegate<GetData(Data)>& g) : get_func(g),Value(v) {}
+        Attribute(const Delegate<bool(SetData,Data&)>& s) : set_func(s) {}
+        Attribute(const Data &v, const Delegate<bool(SetData,Data&)>& s) : set_func(s),Value(v) {}
+        Attribute(const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get_func(g),set_func(s) {}
+        Attribute(const Data &v, const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get_func(g),set_func(s),Value(v) {}
         Attribute(const Attribute<Data,GetData,SetData>&) = delete;
         operator GetData() {
-            return get(Value);
+            return get_func(Value);
         }
         operator Data(){
             return Value;
@@ -34,10 +34,13 @@ namespace BdUI{
         bool exist(){
             return _exist;
         }
+        GetData get() {
+            return get_func(Value);
+        }
         Attribute<Data,GetData,SetData> &operator=(SetData value){
             Mutex.lock();
-            if(set.exist()){
-                if(set(value,Value)) Changed(Value);
+            if(set_func.exist()){
+                if(set_func(value,Value)) Changed(Value);
             }
             else{
                 Value = value;
@@ -57,27 +60,31 @@ namespace BdUI{
     class Attribute<Data>{
     public:
         EventArray<void(Data)> Changed;
-        Delegate<Data(Data)> get;
-        Delegate<bool(Data,Data&)> set;
+        Delegate<Data(Data)> get_func;
+        Delegate<bool(Data,Data&)> set_func;
         Attribute() {}
         Attribute(const Data& v) : Value(v) {}
-        Attribute(const Delegate<Data(Data)>& g) : get(g) {}
-        Attribute(const Data& v, const Delegate<Data(Data)>& g) : get(g),Value(v) {}
-        Attribute(const Delegate<bool(Data,Data&)>& s) : set(s) {}
-        Attribute(const Data& v, const Delegate<bool(Data,Data&)>& s) : set(s),Value(v) {}
-        Attribute(const Delegate<Data(Data)>& g, const Delegate<bool(Data,Data&)>& s) : get(g),set(s) {}
+        Attribute(const Delegate<Data(Data)>& g) : get_func(g) {}
+        Attribute(const Data& v, const Delegate<Data(Data)>& g) : get_func(g),Value(v) {}
+        Attribute(const Delegate<bool(Data,Data&)>& s) : set_func(s) {}
+        Attribute(const Data& v, const Delegate<bool(Data,Data&)>& s) : set_func(s),Value(v) {}
+        Attribute(const Delegate<Data(Data)>& g, const Delegate<bool(Data,Data&)>& s) : get_func(g),set_func(s) {}
         Attribute(const Attribute<Data>&) = delete;
         operator Data() {
-            if(get) return get(Value);
+            if(get_func) return get_func(Value);
             else return Value;
         }
         bool exist(){
             return _exist;
         }
+        Data get() {
+            if (get_func.exist()) return get_func(Value);
+            else return Value;
+        }
         Attribute<Data> &operator=(Data value){
             Mutex.lock();
-            if (set.exist()){
-                if(set(value,Value)) Changed(Value);
+            if (set_func.exist()){
+                if(set_func(value,Value)) Changed(Value);
             }
             else{
                 Value = value;

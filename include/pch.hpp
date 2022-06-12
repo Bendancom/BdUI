@@ -17,7 +17,10 @@
 #include "delegate.hpp"
 #include "event.hpp"
 #include "readonly.hpp"
-#include "resource.hpp"
+#include "resource/resource.hpp"
+#include "resource/cursor.hpp"
+#include "resource/bitmap.hpp"
+#include "resource/icon.hpp"
 
 namespace BdUI
 {

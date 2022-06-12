@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(BdUI LANGUAGES "CXX")
 include_directories(${PROJECT_SOURCE_DIR}/include)
+
 option("Shared" "Compile to Shared lib" OFF)
 
 set(LIBRARY_OUTPUT_PATH ./bin)
@@ -8,12 +9,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 file(GLOB_RECURSE SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
-set(LIB "value" CACHE FILEPATH "库文件路径")
-mark_as_advanced(LIB)
-add_subdirectory(${PROJECT_SOURCE_DIR}/lib)
 if(WIN32)
 set(PLATFORM_LIB "dwmapi" "opengl32")
-link_directories("${PROJECT_SOURCE_DIR}/lib/windows")
 endif()
 if(Shared)
 add_library(${PROJECT_NAME} SHARED ${SRC})
