@@ -4,6 +4,10 @@
 
 namespace BdUI {
 	class Cursor : virtual protected Bitmap,virtual public Resource {
+	private:
+#ifdef WIN32
+		HCURSOR cursor = nullptr;
+#endif
 	protected:
 		struct CursorFileHeader {
 			std::int16_t Reserved = 0;//必须为0
@@ -20,14 +24,11 @@ namespace BdUI {
 			std::int32_t ByteSize;
 			std::int32_t Offset;//从文件头起算
 		}*cursor_infoheader = nullptr;
-#ifdef WIN32
-		HCURSOR cursor = nullptr;
-		void* And = nullptr;
-#endif
+		void* cursor_And = nullptr;
 	public:
-		using Resource::operator=;
 		using Resource::Resource;
 		Cursor() {}
+		Cursor(const Cursor&);
 		~Cursor();
 		virtual void SaveFile();
 		virtual void Process();

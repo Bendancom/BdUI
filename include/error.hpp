@@ -7,11 +7,12 @@
 namespace BdUI{
     namespace error{
         namespace File{
-            ERRORTYPE(Open_Failed,"Can't find the file by this filename.");
+            ERRORTYPE(Open_Failed,"Can't find the file by this filename");
             ERRORTYPE(Type_Invalid, "The type of the file is invalid");
         }
         namespace Class{
             ERRORTYPE(Uninitialize,"Haven't initialized");
+            ERRORTYPE(Initialize_Failed, "Can't initialize the class");
         }
     }
 }

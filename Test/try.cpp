@@ -5,9 +5,10 @@ using namespace std;
 
 int main()
 {
-   Window window;
-   window.Create();
-   window.Visible = true;
-   window.Block();
-   return 0;
+	Cursor c = Cursor(LoadCursor(NULL, IDC_ARROW));
+	Window window;
+	window.Create();
+	window.Visible = true;
+	window.Block();
+	return 0;
 }

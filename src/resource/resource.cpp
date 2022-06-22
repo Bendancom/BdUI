@@ -21,7 +21,6 @@ namespace BdUI
         FileStream.open(resource.FilePath);
         FilePath = resource.FilePath;
         memcpy(Data, resource.Data, Size);
-        Process();
     }
 
     Resource::~Resource()
@@ -84,8 +83,7 @@ namespace BdUI
         Size = resource.Size;
         Data = new unsigned char[Size];
         Source = resource.Source;
-        memcpy(Data, resource.Data, Size);
-        Process();
+        //memcpy(Data, resource.Data, Size);
         return *this;
     }
 }

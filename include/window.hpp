@@ -11,22 +11,25 @@ namespace BdUI{
         bool Create();
         void Block();
         
-        Attribute<BdUI::Cursor> CaptionCursor;
-        Attribute<BdUI::Cursor> BorderCursor_Left;
-        Attribute<BdUI::Cursor> BorderCursor_Right;
-        Attribute<BdUI::Cursor> BorderCursor_Top;
-        Attribute<BdUI::Cursor> BorderCursor_Bottom;
-        Attribute<BdUI::Cursor> BottomLeftCursor;
-        Attribute<BdUI::Cursor> BottomRightCursor;
-        Attribute<BdUI::Cursor> TopLeftCursor;
-        Attribute<BdUI::Cursor> TopRightCursor;
-        Attribute<BdUI::Cursor> CloseCursor;
-        Attribute<BdUI::Cursor> SizeCursor;
-        Attribute<BdUI::Cursor> ZoomCursor;
-        Attribute<BdUI::Cursor> ReduceCursor;
-        Attribute<BdUI::Cursor> HelpCursor;
-        Attribute<BdUI::Cursor> MenuCursor;
-        Attribute<BdUI::Cursor> ClientCursor;
+        Attribute<Icon> SmIcon;
+        Attribute<Icon> Icon;
+
+        Attribute<Cursor> CaptionCursor;
+        Attribute<Cursor> BorderCursor_Left;
+        Attribute<Cursor> BorderCursor_Right;
+        Attribute<Cursor> BorderCursor_Top;
+        Attribute<Cursor> BorderCursor_Bottom;
+        Attribute<Cursor> BottomLeftCursor;
+        Attribute<Cursor> BottomRightCursor;
+        Attribute<Cursor> TopLeftCursor;
+        Attribute<Cursor> TopRightCursor;
+        Attribute<Cursor> CloseCursor;
+        Attribute<Cursor> SizeCursor;
+        Attribute<Cursor> ZoomCursor;
+        Attribute<Cursor> ReduceCursor;
+        Attribute<Cursor> HelpCursor;
+        Attribute<Cursor> MenuCursor;
+        Attribute<Cursor> ClientCursor;
     private:
         std::thread *Thread;
         std::mutex Mutex;

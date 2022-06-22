@@ -33,24 +33,22 @@ namespace BdUI{
 #ifdef _WIN32
 
     void Window::CursorDefaultSet(){
-        /*
-        ClientCursor = BdUI::Cursor(IDC_ARROW);
-        CaptionCursor = BdUI::Cursor(IDC_ARROW);
-        BorderCursor_Left = BdUI::Cursor(IDC_SIZEWE);
-        BorderCursor_Right = BdUI::Cursor(IDC_SIZEWE);
-        BorderCursor_Top = BdUI::Cursor(IDC_SIZENS);
-        BorderCursor_Bottom = BdUI::Cursor(IDC_SIZENS);
-        BottomLeftCursor = BdUI::Cursor(IDC_SIZENESW);
-        BottomRightCursor = BdUI::Cursor(IDC_SIZENWSE);
-        TopLeftCursor = BdUI::Cursor(IDC_SIZENWSE);
-        TopRightCursor = BdUI::Cursor(IDC_SIZENESW);
-        CloseCursor = BdUI::Cursor(IDC_ARROW);
-        SizeCursor = BdUI::Cursor(IDC_ARROW);
-        ZoomCursor = BdUI::Cursor(IDC_ARROW);
-        ReduceCursor = BdUI::Cursor(IDC_ARROW);
-        HelpCursor = BdUI::Cursor(IDC_ARROW);
-        MenuCursor = BdUI::Cursor(IDC_ARROW);
-        */
+        ClientCursor = Cursor(LoadCursor(NULL,IDC_ARROW));
+        CaptionCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        BorderCursor_Left = Cursor(LoadCursor(NULL, IDC_SIZEWE));
+        BorderCursor_Right = Cursor(LoadCursor(NULL, IDC_SIZEWE));
+        BorderCursor_Top = Cursor(LoadCursor(NULL, IDC_SIZENS));
+        BorderCursor_Bottom = Cursor(LoadCursor(NULL, IDC_SIZENS));
+        BottomLeftCursor = Cursor(LoadCursor(NULL, IDC_SIZENESW));
+        BottomRightCursor = Cursor(LoadCursor(NULL, IDC_SIZENWSE));
+        TopLeftCursor = Cursor(LoadCursor(NULL, IDC_SIZENWSE));
+        TopRightCursor = Cursor(LoadCursor(NULL, IDC_SIZENESW));
+        CloseCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        SizeCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        ZoomCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        ReduceCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        HelpCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        MenuCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
     }
     void Window::WindThread(){
         const WNDCLASSEX Windowclass{
@@ -114,7 +112,43 @@ namespace BdUI{
             case WM_SETCURSOR:{
                 switch(LOWORD(lParam)){
                     case HTCLIENT:{
-                        //SetCursor(w->ClientCursor.get());
+                        SetCursor(w->ClientCursor.get());
+                        break;
+                    }
+                    case HTCAPTION: {
+                        SetCursor(w->CaptionCursor.get());
+                        break;
+                    }
+                    case HTLEFT: {
+                        SetCursor(w->BorderCursor_Left.get());
+                        break;
+                    }
+                    case HTRIGHT: {
+                        SetCursor(w->BorderCursor_Right.get());
+                        break;
+                    }
+                    case HTTOP: {
+                        SetCursor(w->BorderCursor_Top.get());
+                        break;
+                    }
+                    case HTBOTTOM: {
+                        SetCursor(w->BorderCursor_Bottom.get());
+                        break;
+                    }
+                    case HTBOTTOMLEFT: {
+                        SetCursor(w->BottomLeftCursor.get());
+                        break;
+                    }
+                    case HTTOPLEFT:{
+                        SetCursor(w->TopLeftCursor.get());
+                        break;
+                    }
+                    case HTBOTTOMRIGHT: {
+                        SetCursor(w->BottomRightCursor.get());
+                        break;
+                    }
+                    case HTTOPRIGHT: {
+                        SetCursor(w->TopRightCursor.get());
                         break;
                     }
                 }

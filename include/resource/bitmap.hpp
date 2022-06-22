@@ -4,6 +4,10 @@
 
 namespace BdUI {
 	class Bitmap : virtual public Resource {
+	private:
+#ifdef WIN32
+		HBITMAP bitmap = nullptr;
+#endif
 	protected:
 		struct BitmapFileHeader {
 			std::int16_t Type = 0x4D42;
@@ -31,13 +35,10 @@ namespace BdUI {
 			std::int8_t Red;
 			std::int8_t Reserved = 0;
 		}*bitmap_data = nullptr;//若有调色板则指向调色板，若无则直接指向数据
-#ifdef WIN32
-		HBITMAP bitmap = nullptr;
-#endif
 	public:
-		Bitmap() {}
-		using Resource::operator=;
 		using Resource::Resource;
+		Bitmap() {}
+		Bitmap(const Bitmap&);
 		~Bitmap();
 		virtual void SaveFile();
 		virtual void Process();

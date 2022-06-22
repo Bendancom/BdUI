@@ -18,7 +18,7 @@ namespace BdUI{
             File = 1,
             Memory = 2,
         }Source = Where::Unknow;
-        unsigned long long Size;
+        unsigned long long Size = 0;
         unsigned char* Data = nullptr;
         bool IsProcess = false;
     public:
