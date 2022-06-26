@@ -31,6 +31,8 @@ namespace BdUI {
 		~Icon() {
 			if (Source == Where::Memory) delete icon_fileheader;
 		}
+		virtual void Process();
+		virtual void SaveFile();
 		Icon(const Icon&);
 		Icon& operator=(const Icon&);
 #ifdef WIN32
