@@ -13,33 +13,31 @@ namespace BdUI
         #ifdef _WIN32
         #endif
         //Attribute<Cursor> Cursor;
-        Attribute<Margin> Margin;
+        Attribute<BdUI::Margin> Margin;
+        Attribute<BdUI::Margin> Border;
         Attribute<BdUI::Size> Size;
         Attribute<Point> Location;
-        Attribute<int> MouseHoverTime;
         Attribute<bool> Visible;
+        Attribute<Mouse> Mouse;
         Attribute<HMENU> PopMenu;
+        Attribute<unsigned int> MouseHoverTime;
+
+        Attribute<Cursor> ClientCursor;
+        Attribute<Cursor> MenuCursor;
+        Attribute<Cursor> BorderCursor_Left;
+        Attribute<Cursor> BorderCursor_Right;
+        Attribute<Cursor> BorderCursor_Top;
+        Attribute<Cursor> BorderCursor_Bottom;
+        Attribute<Cursor> BottomLeftCursor;
+        Attribute<Cursor> BottomRightCursor;
+        Attribute<Cursor> TopLeftCursor;
+        Attribute<Cursor> TopRightCursor;
+
         ReadOnly<UI*> Parent;
-        
-        /*
-        EventArray<void(Mouse)> MouseWheel;
-
-        EventArray<void(Mouse)> MouseDown;
-        EventArray<void(Mouse)> MouseUp;
-        EventArray<void(Mouse)> MouseDoubleClick;
-        EventArray<void(Mouse)> MouseHover;
-        EventArray<void(Mouse)> MouseMove;
-        EventArray<void(Mouse)> MouseLeave;
-
-        EventArray<void(Mouse)> NCMouseDown;
-        EventArray<void(Mouse)> NCMouseUp;
-        EventArray<void(Mouse)> NCMouseDoubleClick;
-        EventArray<void(Mouse)> NCMouseHover;
-        EventArray<void(Mouse)> NCMouseMove;
-        EventArray<void(Mouse)> NCMouseLeave;
-        */
+        static UI* SearchUI_NearPos(const Point&,UI*);
+        static Cursor Search_Area_Cursor(const Point&,UI*);
     private:
-        void CursorDefaultSet();
+        void UICursorDefaultBind();
     };
 }
 #endif

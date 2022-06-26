@@ -58,7 +58,4 @@ namespace BdUI {
 		Resource::operator=(i);
 		return *this;
 	}
-	Icon::~Icon() {
-		if (Source == Where::Memory) delete icon_fileheader;
-	}
 }

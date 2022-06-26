@@ -8,7 +8,7 @@ int main()
 	Cursor c = Cursor(LoadCursor(NULL, IDC_ARROW));
 	Window window;
 	window.Create();
-	window.Visible = true;
+	window.Show();
 	window.Block();
 	return 0;
 }

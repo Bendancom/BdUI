@@ -3,7 +3,7 @@
 #include "bitmap.hpp"
 
 namespace BdUI {
-	class Icon : virtual public Resource, virtual protected Bitmap {
+	class Icon : virtual public Resource,protected Bitmap {
 	private:
 #ifdef WIN32
 		HICON icon = nullptr;
@@ -27,10 +27,11 @@ namespace BdUI {
 		void *icon_And;
 	public:
 		using Resource::Resource;
-		Icon();
-		~Icon();
-		virtual void SaveFile();
-		virtual void Process();
+		Icon(){}
+		~Icon() {
+			if (Source == Where::Memory) delete icon_fileheader;
+		}
+		Icon(const Icon&);
 		Icon& operator=(const Icon&);
 #ifdef WIN32
 		Icon(HICON);

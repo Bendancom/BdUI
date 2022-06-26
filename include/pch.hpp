@@ -24,13 +24,14 @@
 
 namespace BdUI
 {
+    class UI;
     struct Point{
-        int X = 0;
-        int Y = 0;
+        long X = 0;
+        long Y = 0;
     };
     struct Size{
-        int Width = 0;
-        int Height = 0;
+        unsigned long Width = 0;
+        unsigned long Height = 0;
     };
     struct Margin{
         int Left = 0;
@@ -40,14 +41,19 @@ namespace BdUI
     };
     struct Mouse{
         Point Location;
-        enum Button{
-            None = 0,
-            Right = 1,
-            Left = 2,
-            Middle = 3,
-            X1 = 4,
-            X2 = 5,
-        }Button = None;
+        struct{
+            unsigned Button : 3;
+            /*  None = 0,
+                Right = 1,
+                Left = 2,
+                Middle = 3,
+                X1 = 4,
+                X2 = 5, */
+            unsigned Up_Down : 1;   //Up = 0, Down = 1
+            unsigned IsLeaved : 1;  // false = 0, true = 1
+            unsigned Hover_Move : 1;  //Hover = 0, Move = 1
+            unsigned Client_Border : 1; //Client =0, Border = 1
+        }Content;
         int WheelDelta = 0;
     };
     

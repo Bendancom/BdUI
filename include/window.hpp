@@ -10,32 +10,29 @@ namespace BdUI{
         ~Window();
         bool Create();
         void Block();
+        void Show();
+        void Hide();
         
         Attribute<Icon> SmIcon;
         Attribute<Icon> Icon;
 
+
         Attribute<Cursor> CaptionCursor;
-        Attribute<Cursor> BorderCursor_Left;
-        Attribute<Cursor> BorderCursor_Right;
-        Attribute<Cursor> BorderCursor_Top;
-        Attribute<Cursor> BorderCursor_Bottom;
-        Attribute<Cursor> BottomLeftCursor;
-        Attribute<Cursor> BottomRightCursor;
-        Attribute<Cursor> TopLeftCursor;
-        Attribute<Cursor> TopRightCursor;
         Attribute<Cursor> CloseCursor;
         Attribute<Cursor> SizeCursor;
         Attribute<Cursor> ZoomCursor;
         Attribute<Cursor> ReduceCursor;
         Attribute<Cursor> HelpCursor;
-        Attribute<Cursor> MenuCursor;
-        Attribute<Cursor> ClientCursor;
+        Attribute<Cursor> SysMenuCursor;
+
     private:
         std::thread *Thread;
         std::mutex Mutex;
-        void VisibleEvent(bool);
         void WindowDefaultEventBind();
-        void CursorDefaultSet();
+        void WindowCursorDefaultBind();
+
+        UI* MouseContext = this;
+        Cursor CurrentCursor = ClientCursor;
         
         #ifdef _WIN32
         int dwExStyle = NULL;
@@ -43,6 +40,7 @@ namespace BdUI{
         HWND hWnd;
         std::promise<bool> Creation;
         static LRESULT CALLBACK __WndProc(HWND,UINT,WPARAM,LPARAM);
+        static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);
         void WindThread();
         #endif
     };

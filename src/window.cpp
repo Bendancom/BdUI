@@ -2,12 +2,10 @@
 
 namespace BdUI{
     Window::Window(){
-        #ifdef _WIN32
-        Size = BdUI::Size{ CW_USEDEFAULT, CW_USEDEFAULT };
-        Location = BdUI::Point{CW_USEDEFAULT,CW_USEDEFAULT};
-        #endif
+        Size = BdUI::Size{ 1000, 800 };
+        Location = BdUI::Point{200,100};
         WindowDefaultEventBind();
-        CursorDefaultSet();
+        WindowCursorDefaultBind();
     }
     Window::~Window(){
         delete Thread;
@@ -27,29 +25,22 @@ namespace BdUI{
         Mutex.unlock();
     }
     void Window::WindowDefaultEventBind(){
-        Visible.Changed += Delegate<void(bool)>(&Window::VisibleEvent,this);
+
     }
 
-#ifdef _WIN32
-
-    void Window::CursorDefaultSet(){
-        ClientCursor = Cursor(LoadCursor(NULL,IDC_ARROW));
+    void Window::WindowCursorDefaultBind() {
+#ifdef WIN32
         CaptionCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        BorderCursor_Left = Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        BorderCursor_Right = Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        BorderCursor_Top = Cursor(LoadCursor(NULL, IDC_SIZENS));
-        BorderCursor_Bottom = Cursor(LoadCursor(NULL, IDC_SIZENS));
-        BottomLeftCursor = Cursor(LoadCursor(NULL, IDC_SIZENESW));
-        BottomRightCursor = Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        TopLeftCursor = Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        TopRightCursor = Cursor(LoadCursor(NULL, IDC_SIZENESW));
         CloseCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
         SizeCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
         ZoomCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
         ReduceCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
         HelpCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        MenuCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        SysMenuCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+#endif
     }
+
+#ifdef _WIN32
     void Window::WindThread(){
         const WNDCLASSEX Windowclass{
             sizeof(WNDCLASSEX),
@@ -91,67 +82,33 @@ namespace BdUI{
     #endif
 
     #pragma region WindowEvent
-    void Window::VisibleEvent(bool visible){
-        if (visible){
-            #ifdef _WIN32
-            ShowWindow(hWnd,SW_SHOW);
-            UpdateWindow(hWnd);
-            #endif
-        }
-        else{
-            #ifdef _WIN32
-            ShowWindow(hWnd,SW_HIDE);
-            #endif
-        }
+    void Window::Show() {
+#ifdef _WIN32
+        ShowWindow(hWnd, SW_SHOW);
+        UpdateWindow(hWnd);
+#endif
+        Visible = true;
+    }
+    void Window::Hide() {
+#ifdef _WIN32
+        ShowWindow(hWnd, SW_HIDE);
+#endif
+        Visible = false;
     }
 
     #ifdef _WIN32
     LRESULT Window::__WndProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam){
         Window *w = reinterpret_cast<Window*>(GetWindowLongPtr(hWnd,GWLP_USERDATA));
         switch(msg){
-            case WM_SETCURSOR:{
-                switch(LOWORD(lParam)){
-                    case HTCLIENT:{
-                        SetCursor(w->ClientCursor.get());
-                        break;
-                    }
-                    case HTCAPTION: {
-                        SetCursor(w->CaptionCursor.get());
-                        break;
-                    }
-                    case HTLEFT: {
-                        SetCursor(w->BorderCursor_Left.get());
-                        break;
-                    }
-                    case HTRIGHT: {
-                        SetCursor(w->BorderCursor_Right.get());
-                        break;
-                    }
-                    case HTTOP: {
-                        SetCursor(w->BorderCursor_Top.get());
-                        break;
-                    }
-                    case HTBOTTOM: {
-                        SetCursor(w->BorderCursor_Bottom.get());
-                        break;
-                    }
-                    case HTBOTTOMLEFT: {
-                        SetCursor(w->BottomLeftCursor.get());
-                        break;
-                    }
-                    case HTTOPLEFT:{
-                        SetCursor(w->TopLeftCursor.get());
-                        break;
-                    }
-                    case HTBOTTOMRIGHT: {
-                        SetCursor(w->BottomRightCursor.get());
-                        break;
-                    }
-                    case HTTOPRIGHT: {
-                        SetCursor(w->TopRightCursor.get());
-                        break;
-                    }
-                }
+            case WM_WINDOWPOSCHANGED: { //同时处理 WM_SIZE 与 WM_MOVE 消息
+                WINDOWPOS *p = reinterpret_cast<WINDOWPOS*>(lParam);
+                w->Location = Point{ p->x ,p->y };
+                w->Size = BdUI::Size{ (unsigned long)p->cx,(unsigned long)p->cy };
+                break;
+            }
+            case WM_MOVING:{
+                RECT* r = reinterpret_cast<RECT*>(lParam);
+                w->Location = Point{r->left,r->top};
                 break;
             }
             case WM_DESTROY:{
@@ -159,8 +116,108 @@ namespace BdUI{
                 break;
             }
             default:{
+                if (w == nullptr) return DefWindowProc(hWnd, msg, wParam, lParam);
+                else return MouseProc(hWnd, msg, wParam, lParam, w);
+            }
+        }
+        return 0;
+    }
+
+    LRESULT Window::MouseProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam,Window* w) {
+        bool Ismouse = true;
+        BdUI::Mouse mouse = w->MouseContext->Mouse;
+        UI*& Context = w->MouseContext;
+        Cursor& Cur = w->CurrentCursor;
+        switch (msg)
+        {
+            case WM_SETCURSOR: {
+                SetCursor(Cur);
+                break;
+            }
+            case WM_RBUTTONDOWN: {
+                mouse.Content.Button = 1;
+                mouse.Content.Up_Down = 1;
+                break;
+            }
+            case WM_LBUTTONDOWN: {
+                mouse.Content.Button = 2;
+                mouse.Content.Up_Down = 1;
+                break;
+            }
+            case WM_MBUTTONDOWN: {
+                mouse.Content.Button = 3;
+                mouse.Content.Up_Down = 1;
+                break;
+            }
+            case WM_XBUTTONDOWN: {
+                mouse.Content.Button = HIWORD(wParam) == 1 ? 4 : 5 ;
+                mouse.Content.Up_Down = 1;
+                break;
+            }
+            case WM_RBUTTONUP: {
+                mouse.Content.Button = 1;
+                mouse.Content.Up_Down = 0;
+                break;
+            }
+            case WM_LBUTTONUP: {
+                mouse.Content.Button = 2;
+                mouse.Content.Up_Down = 0;
+                break;
+            }
+            case WM_MBUTTONUP: {
+                mouse.Content.Button = 3;
+                mouse.Content.Up_Down = 0;
+                break;
+            }
+            case WM_XBUTTONUP: {
+                mouse.Content.Button = HIWORD(wParam) == 1 ? 4 : 5;
+                mouse.Content.Up_Down = 0;
+                break;
+            }
+            case WM_MOUSEWHEEL: {
+                mouse.WheelDelta = HIWORD(wParam);
+            }
+            case WM_MOUSELEAVE: {
+                BdUI::Mouse&& parent_mouse = w->Mouse;
+                parent_mouse.Content.IsLeaved = 1;
+                w->Mouse = parent_mouse;
+                Context = w;
+                break;
+            }
+            case WM_MOUSEHOVER: {
+                mouse.Content.Hover_Move = 0;
+                mouse.Location = { LOWORD(lParam),HIWORD(lParam) };
+                mouse.Content.IsLeaved = 1;
+                break;
+            }
+            case WM_MOUSEMOVE: {
+                mouse.Content.Hover_Move = 1;
+                mouse.Location = { LOWORD(lParam),HIWORD(lParam) };
+                if (w->Mouse.get().Content.IsLeaved == 1 || mouse.Content.Hover_Move == 0) {
+                    TRACKMOUSEEVENT tme;
+                    tme.cbSize = sizeof(tme);
+                    tme.hwndTrack = hWnd;
+                    tme.dwFlags = TME_HOVER | TME_LEAVE;
+                    tme.dwHoverTime = Context->MouseHoverTime;
+                    TrackMouseEvent(&tme);
+                }
+                UI* newContext = SearchUI_NearPos(mouse.Location, Context);
+                if (newContext != Context) {
+                    BdUI::Mouse&& oldmouse = Context->Mouse;
+                    oldmouse.Content.IsLeaved = 1;
+                    Context->Mouse = oldmouse;
+                    Context = newContext;
+                }
+                Cur = Search_Area_Cursor(mouse.Location, newContext);
+                break;
+            }
+            default:{
+                Ismouse = false;
                 return DefWindowProc(hWnd, msg, wParam, lParam);
             }
+        }
+        if (Ismouse) {
+            Context->Mouse = mouse;
         }
         return 0;
     }
