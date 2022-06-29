@@ -5,7 +5,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 option("Shared" "Compile to Shared lib" OFF)
 
 set(LIBRARY_OUTPUT_PATH ./bin)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB_RECURSE SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 

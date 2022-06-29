@@ -49,14 +49,13 @@ namespace BdUI{
         bool exist(){
             return function.operator bool();
         }
-        template<typename Func,typename...Args>
-        void bind(Func &&f,Args... args){
-            function = std::bind(f,args...);
+        template<typename T,typename R,typename... Args>
+        void bind(R(T::* f)(Args...),T *t) {
+            function = _Bind(f, t);
         }
-        template<typename Func,typename obj,typename...Args>
-        void bind(Func&& f , obj *t ,Args... args){
-            if(sizeof...(Args) == 0) function = _Bind(f,t);
-            else function = std::bind(f,t,args...);
+        template<typename Func,typename...Args>
+        void bind(Func &&f,Args... args) {
+            function = std::bind(std::forward<Func&&>(f),args...);
         }
         void swap(const Delegate<Return(Param...)> &d){
             function.swap(d.function);

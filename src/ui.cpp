@@ -3,20 +3,28 @@ namespace BdUI
 {
     UI::UI(){
         UICursorDefaultBind();
+        Delegate<bool(BdUI::Mouse, BdUI::Mouse&)>&& mouse_set = Delegate<bool(BdUI::Mouse,BdUI::Mouse&)>();
+        mouse_set.bind(&UI::MouseRelativePos, this, Location.get_Pointer(), std::placeholders::_1, std::placeholders::_2);
+        Mouse.set_func = mouse_set;
     }
     void UI::UICursorDefaultBind(){
 #ifdef WIN32
-        ClientCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        BorderCursor_Left = Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        BorderCursor_Right = Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        BorderCursor_Top = Cursor(LoadCursor(NULL, IDC_SIZENS));
-        BorderCursor_Bottom = Cursor(LoadCursor(NULL, IDC_SIZENS));
-        BottomLeftCursor = Cursor(LoadCursor(NULL, IDC_SIZENESW));
-        BottomRightCursor = Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        TopLeftCursor = Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        TopRightCursor = Cursor(LoadCursor(NULL, IDC_SIZENESW));
-        MenuCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        Cursor.Client = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        Cursor.Menu = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        Cursor.Border.Left = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
+        Cursor.Border.Right = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
+        Cursor.Border.Top = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
+        Cursor.Border.Bottom = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
+        Cursor.Border.BottomLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
+        Cursor.Border.BottomRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
+        Cursor.Border.TopLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
+        Cursor.Border.TopRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
 #endif
+    }
+
+    bool UI::MouseRelativePos(const Point* location, BdUI::Mouse get, BdUI::Mouse& set) {
+        set.Location = { get.Location.X - location->X,get.Location.Y - location->Y };
+        return true;
     }
 
     UI* UI::SearchUI_NearPos(const Point& p,UI* ui) {
@@ -33,7 +41,7 @@ namespace BdUI
         return result;
     }
 
-    Cursor UI::Search_Area_Cursor(const Point& p, UI* ui) {
-        return ui->ClientCursor.get();
+    const Cursor* UI::Search_Area_Cursor(const Point& p, UI* ui) {
+        return ui->Cursor.Client.get_Pointer();
     }
 }

@@ -22,8 +22,8 @@ namespace BdUI{
                 for(auto i : *this){
                     temp.push_back(i(args...));
                 }
+                ReturnCallBack(temp);
             }
-            ReturnCallBack(temp);
         }
         Event<Return(Param...)> &operator+=(const Delegate<Return(Param...)> &d){
             if (this->size() == 0 || (*(std::find(this->begin(),this->end(),d))) != d) this->push_back(d);
@@ -36,14 +36,14 @@ namespace BdUI{
             return *this;
         }
         bool operator==(const Event<Return(Param...)> &e){
-            if (e.check == check && e.returnCallback == returnCallback &&
+            if (e.Check == Check && e.ReturnCallBack == ReturnCallBack &&
             std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
                 return true;
             }
             else return false;
         }
         bool operator!=(const Event<Return(Param...)> &e){
-            if (e.check != check || e.returnCallback != returnCallback ||
+            if (e.Check != Check || e.ReturnCallBack != ReturnCallBack ||
             std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
                 return true;
             }
@@ -78,14 +78,14 @@ namespace BdUI{
             return *this;
         }
         bool operator==(const Event<void(Param...)> &e){
-            if (e.check == check &&
+            if (e.Check == Check &&
             std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
                 return true;
             }
             else return false;
         }
         bool operator!=(const Event<void(Param...)> &e){
-            if (e.check != check || std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
+            if (e.Check != Check || std::equal(this->operator[](0),this->operator[](this->size()-1),e[0])){
                 return true;
             }
             else return false;

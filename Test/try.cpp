@@ -5,7 +5,6 @@ using namespace std;
 
 int main()
 {
-	Cursor c = Cursor(LoadCursor(NULL, IDC_ARROW));
 	Window window;
 	window.Create();
 	window.Show();

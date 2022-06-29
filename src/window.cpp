@@ -4,6 +4,7 @@ namespace BdUI{
     Window::Window(){
         Size = BdUI::Size{ 1000, 800 };
         Location = BdUI::Point{200,100};
+        Mouse.set_func = Delegate<bool(BdUI::Mouse, BdUI::Mouse&)>();
         WindowDefaultEventBind();
         WindowCursorDefaultBind();
     }
@@ -27,16 +28,21 @@ namespace BdUI{
     void Window::WindowDefaultEventBind(){
 
     }
+    /*
+    template<typename E,typename... T>
+    static void Window::EventDeliver<E>(UI*, T...) requires(typeid(E) == typeid(EventArray<void(T...)>)) {
+
+    }*/
 
     void Window::WindowCursorDefaultBind() {
 #ifdef WIN32
-        CaptionCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        CloseCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        SizeCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        ZoomCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        ReduceCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        HelpCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
-        SysMenuCursor = Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.Caption = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.Close = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.Size = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.Zoom = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.Reduce = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.Help = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.SysMenu = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
 #endif
     }
 
@@ -95,6 +101,11 @@ namespace BdUI{
 #endif
         Visible = false;
     }
+    void Window::SetText(const std::string& s) {
+#ifdef WIN32
+        SetWindowText(hWnd, TEXT(s.c_str()));
+#endif
+    }
 
     #ifdef _WIN32
     LRESULT Window::__WndProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam){
@@ -115,6 +126,38 @@ namespace BdUI{
                 PostQuitMessage(0);
                 break;
             }
+            case WM_CHAR: {
+                UI* focus = w->Focus;
+                BdUI::Key&& key = focus->Key;
+                key.code = wParam;
+                key.RepeatCount = LOWORD(lParam);
+                key.scan_code = LOBYTE(HIWORD(lParam));
+                key.Up_Down = !HIWORD(lParam) & KF_UP;
+                focus->Key = key;
+                std::string s = "" + (char)lParam;
+                w->SetText(s);
+                break;
+            }
+            case WM_KEYDOWN: {
+                UI* focus = w->Focus;
+                BdUI::Key&& key = focus->Key;
+                key.VirtualKey = BdUI::Key::Type(wParam);
+                key.RepeatCount = LOWORD(lParam);
+                key.scan_code = LOBYTE(HIWORD(lParam));
+                key.Up_Down = 1;
+                focus->Key = key;
+                break;
+            }
+            case WM_KEYUP: {
+                UI* focus = w->Focus;
+                BdUI::Key&& key = focus->Key;
+                key.VirtualKey = BdUI::Key::Type(wParam);
+                key.RepeatCount = LOWORD(lParam);
+                key.scan_code = LOBYTE(HIWORD(lParam));
+                key.Up_Down = 0;
+                focus->Key = key;
+                break;
+            }
             default:{
                 if (w == nullptr) return DefWindowProc(hWnd, msg, wParam, lParam);
                 else return MouseProc(hWnd, msg, wParam, lParam, w);
@@ -127,80 +170,84 @@ namespace BdUI{
         bool Ismouse = true;
         BdUI::Mouse mouse = w->MouseContext->Mouse;
         UI*& Context = w->MouseContext;
-        Cursor& Cur = w->CurrentCursor;
+        const BdUI::Cursor* Cur = w->CurrentCursor;
         switch (msg)
         {
             case WM_SETCURSOR: {
-                SetCursor(Cur);
+                SetCursor(const_cast<BdUI::Cursor*>(Cur)->getIndex());
                 break;
             }
             case WM_RBUTTONDOWN: {
-                mouse.Content.Button = 1;
-                mouse.Content.Up_Down = 1;
+                mouse.Button.Right = 1;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_LBUTTONDOWN: {
-                mouse.Content.Button = 2;
-                mouse.Content.Up_Down = 1;
+                mouse.Button.Left = 1;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_MBUTTONDOWN: {
-                mouse.Content.Button = 3;
-                mouse.Content.Up_Down = 1;
+                mouse.Button.Middle = 1;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_XBUTTONDOWN: {
-                mouse.Content.Button = HIWORD(wParam) == 1 ? 4 : 5 ;
-                mouse.Content.Up_Down = 1;
+                if (GET_XBUTTON_WPARAM(wParam) & XBUTTON1) mouse.Button.X1 = 1;
+                if (GET_XBUTTON_WPARAM(wParam) & XBUTTON2) mouse.Button.X2 = 1;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_RBUTTONUP: {
-                mouse.Content.Button = 1;
-                mouse.Content.Up_Down = 0;
+                mouse.Button.Right = 0;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_LBUTTONUP: {
-                mouse.Content.Button = 2;
-                mouse.Content.Up_Down = 0;
+                mouse.Button.Left = 0;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_MBUTTONUP: {
-                mouse.Content.Button = 3;
-                mouse.Content.Up_Down = 0;
+                mouse.Button.Middle = 0;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_XBUTTONUP: {
-                mouse.Content.Button = HIWORD(wParam) == 1 ? 4 : 5;
-                mouse.Content.Up_Down = 0;
+                if (HIWORD(wParam) == 1) mouse.Button.X1 = 0;
+                else mouse.Button.X2 = 0;
+                MouseVitualKey(wParam, mouse);
                 break;
             }
             case WM_MOUSEWHEEL: {
-                mouse.WheelDelta = HIWORD(wParam);
+                mouse.WheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
             }
             case WM_MOUSELEAVE: {
-                BdUI::Mouse&& parent_mouse = w->Mouse;
-                parent_mouse.Content.IsLeaved = 1;
-                w->Mouse = parent_mouse;
-                Context = w;
+                if (Context != w) {
+                    BdUI::Mouse&& parent_mouse = w->Mouse;
+                    parent_mouse.Content.IsLeaved = 1;
+                    w->Mouse = parent_mouse;
+                    Context = w;
+                }
+                else mouse.Content.IsLeaved = 1;
                 break;
             }
             case WM_MOUSEHOVER: {
                 mouse.Content.Hover_Move = 0;
-                mouse.Location = { LOWORD(lParam),HIWORD(lParam) };
-                mouse.Content.IsLeaved = 1;
                 break;
             }
             case WM_MOUSEMOVE: {
-                mouse.Content.Hover_Move = 1;
-                mouse.Location = { LOWORD(lParam),HIWORD(lParam) };
-                if (w->Mouse.get().Content.IsLeaved == 1 || mouse.Content.Hover_Move == 0) {
+                if (mouse.Content.IsLeaved || mouse.Content.Hover_Move == 0) {
                     TRACKMOUSEEVENT tme;
                     tme.cbSize = sizeof(tme);
                     tme.hwndTrack = hWnd;
-                    tme.dwFlags = TME_HOVER | TME_LEAVE;
-                    tme.dwHoverTime = Context->MouseHoverTime;
+                    tme.dwFlags = TME_LEAVE | TME_HOVER;
+                    tme.dwHoverTime = 0;
                     TrackMouseEvent(&tme);
                 }
+                mouse.Content.Hover_Move = 1;
+                mouse.Location = { GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam) };
+                mouse.Content.IsLeaved = 0;
                 UI* newContext = SearchUI_NearPos(mouse.Location, Context);
                 if (newContext != Context) {
                     BdUI::Mouse&& oldmouse = Context->Mouse;
@@ -208,7 +255,7 @@ namespace BdUI{
                     Context->Mouse = oldmouse;
                     Context = newContext;
                 }
-                Cur = Search_Area_Cursor(mouse.Location, newContext);
+                Cur = Search_Area_Cursor(mouse.Location, Context);
                 break;
             }
             default:{
@@ -220,6 +267,15 @@ namespace BdUI{
             Context->Mouse = mouse;
         }
         return 0;
+    }
+
+    void Window::MouseVitualKey(WPARAM wParam,BdUI::Mouse& m) {
+        if (wParam & MK_CONTROL) m.Button.Ctrl = 1;
+        else m.Button.Ctrl = 0;
+        if (wParam & MK_SHIFT) m.Button.Shift = 1;
+        else m.Button.Shift = 0;
+        if (GetKeyState(VK_MENU) < 0) m.Button.Alt = 1;
+        else m.Button.Alt = 0;
     }
     #endif
     #pragma endregion

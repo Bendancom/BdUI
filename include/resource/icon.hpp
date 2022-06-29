@@ -13,7 +13,7 @@ namespace BdUI {
 			std::int16_t Reserved = 0;
 			std::int16_t Type = 1;
 			std::int16_t Count = 1;
-		}*icon_fileheader;
+		}*icon_fileheader = nullptr;
 		struct IconInfoHeader {
 			std::int8_t Width;
 			std::int8_t Height;
@@ -23,8 +23,8 @@ namespace BdUI {
 			std::int16_t BitCount;
 			std::int32_t ByteInRes;
 			std::int32_t Offset;
-		}*icon_infoheader;
-		void *icon_And;
+		}*icon_infoheader = nullptr;
+		void *icon_And = nullptr;
 	public:
 		using Resource::Resource;
 		Icon(){}

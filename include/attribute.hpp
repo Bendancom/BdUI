@@ -2,6 +2,7 @@
 #define BDUI_ATTRIBUTE
 #include <mutex>
 #include <type_traits>
+#include "error.hpp"
 #include "event.hpp"
 #include "delegate.hpp"
 
@@ -14,19 +15,20 @@ namespace BdUI{
         Delegate<GetData(Data)> get_func;
         Delegate<bool(SetData,Data&)> set_func;
         Attribute() {}
-        Attribute(const Data& v) : Value(v),_exist(true) {}
-        Attribute(const Delegate<GetData(Data)>& g) : get_func(g) {}
-        Attribute(const Data &v, const Delegate<GetData(Data)>& g) : get_func(g),Value(v),_exist(true) {}
-        Attribute(const Delegate<bool(SetData,Data&)>& s) : set_func(s) {}
-        Attribute(const Data &v, const Delegate<bool(SetData,Data&)>& s) : set_func(s),Value(v),_exist(true) {}
         Attribute(const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get_func(g),set_func(s) {}
         Attribute(const Data &v, const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get_func(g),set_func(s),Value(v),_exist(true) {}
         Attribute(const Attribute<Data,GetData,SetData>&) = delete;
         operator GetData() {
-            return get_func(Value);
+            Mutex.lock();
+            GetData&& g = get_func(Value);
+            Mutex.unlock();
+            return g;
         }
         operator Data(){
             return Value;
+        }
+        operator const Data*() {
+            return &Value;
         }
         operator bool(){
             return _exist;
@@ -34,43 +36,46 @@ namespace BdUI{
         bool exist(){
             return _exist;
         }
+        const Data* get_Pointer() {
+            return &Value;
+        }
         GetData get() {
             return get_func(Value);
         }
         bool set(SetData value) {
             Mutex.lock();
             if (set_func.exist()) {
-                if (set_func(value, Value)) {
-                    if (Event != nullptr) Event->operator()(Value);
-                    _exist = true;
+                Data d;
+                if (set_func(value, d)) {
+                    Value = d;
                     Mutex.unlock();
+                    if (Event != nullptr) Event->operator()(d);
+                    _exist = true;
                     return true;
                 }
+                else Mutex.unlock();
             }
             else {
-                Value = value;
-                if (Event != nullptr) Event->operator()(Value);
-                _exist = true;
                 Mutex.unlock();
-                return true;
+                throw error::Class::Uninitialize();
             }
-            Mutex.unlock();
             return false;
         }
         Attribute<Data,GetData,SetData> &operator=(SetData value){
             Mutex.lock();
             if(set_func.exist()){
-                if (set_func(value, Value)) {
-                    if (Event != nullptr) Event->operator()(Value);
+                Data d;
+                if (set_func(value, d)) {
+                    Mutex.unlock();
+                    if (Event != nullptr) Event->operator()(d);
                     _exist = true;
                 }
+                else Mutex.unlock();
             }
-            else{
-                Value = value;
-                if (Event != nullptr) Event->operator()(Value);
-                _exist = true;
+            else {
+                Mutex.unlock();
+                throw error::Class::Uninitialize();
             }
-            Mutex.unlock();
             return *this;
         }
         Attribute<Data,GetData,SetData> &operator=(const Attribute<Data,GetData,SetData>&) = delete;
@@ -94,50 +99,72 @@ namespace BdUI{
         Attribute(const Delegate<Data(Data)>& g, const Delegate<bool(Data,Data&)>& s) : get_func(g),set_func(s) {}
         Attribute(const Attribute<Data>&) = delete;
         operator Data() {
-            if(get_func) return get_func(Value);
+            if (get_func.exist()) {
+                Mutex.lock();
+                Data&& d = get_func(Value);
+                Mutex.unlock();
+                return d;
+            }
             else return Value;
+        }
+        operator const Data* () {
+            return &Value;
         }
         bool exist(){
             return _exist;
         }
+        const Data* get_Pointer() {
+            return &Value;
+        }
         Data get() {
-            if (get_func.exist()) return get_func(Value);
+            if (get_func.exist()) {
+                Mutex.lock();
+                Data&& d = get_func(Value);
+                Mutex.unlock();
+                return d;
+            }
             else return Value;
         }
         bool set(Data value) {
             Mutex.lock();
             if (set_func.exist()) {
-                if (set_func(value, Value)) {
-                    if (Event != nullptr) Event->operator()(Value);
-                    _exist = true;
+                Data d;
+                if (set_func(value, d)) {
+                    Value = d;
                     Mutex.unlock();
+                    if (Event != nullptr) Event->operator()(d);
+                    _exist = true;
                     return true;
                 }
+                else Mutex.unlock();
             }
             else {
                 Value = value;
-                if (Event != nullptr) Event->operator()(Value);
-                _exist = true;
                 Mutex.unlock();
+                if (Event != nullptr) Event->operator()(value);
+                _exist = true;
                 return true;
             }
-            Mutex.unlock();
             return false;
         }
         Attribute<Data> &operator=(Data value){
             Mutex.lock();
-            if (set_func.exist()){
-                if (set_func(value, Value)) {
-                    if (Event != nullptr) Event->operator()(Value);
+            if (set_func.exist()) {
+                Data d;
+                if (set_func(value, d)) {
+                    Value = d;
+                    Mutex.unlock();
+                    if (Event != nullptr) Event->operator()(d);
                     _exist = true;
                 }
+                else Mutex.unlock();
             }
-            else{
+            else {
                 Value = value;
-                if (Event != nullptr) Event->operator()(Value);
+                Mutex.unlock();
+                if (Event != nullptr) Event->operator()(value);
                 _exist = true;
             }
-            Mutex.unlock();
             return *this;
         }
         Attribute<Data> &operator=(const Attribute<Data>&) = delete;

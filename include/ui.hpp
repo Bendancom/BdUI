@@ -19,25 +19,31 @@ namespace BdUI
         Attribute<Point> Location;
         Attribute<bool> Visible;
         Attribute<Mouse> Mouse;
+        Attribute<Key> Key;
         Attribute<HMENU> PopMenu;
         Attribute<unsigned int> MouseHoverTime;
 
-        Attribute<Cursor> ClientCursor;
-        Attribute<Cursor> MenuCursor;
-        Attribute<Cursor> BorderCursor_Left;
-        Attribute<Cursor> BorderCursor_Right;
-        Attribute<Cursor> BorderCursor_Top;
-        Attribute<Cursor> BorderCursor_Bottom;
-        Attribute<Cursor> BottomLeftCursor;
-        Attribute<Cursor> BottomRightCursor;
-        Attribute<Cursor> TopLeftCursor;
-        Attribute<Cursor> TopRightCursor;
-
+        struct {
+            Attribute<Cursor> Client;
+            Attribute<Cursor> Menu;
+            struct {
+                Attribute<Cursor> Left;
+                Attribute<Cursor> Right;
+                Attribute<Cursor> Top;
+                Attribute<Cursor> Bottom;
+                Attribute<Cursor> BottomLeft;
+                Attribute<Cursor> BottomRight;
+                Attribute<Cursor> TopLeft;
+                Attribute<Cursor> TopRight;
+            }Border;
+        }Cursor;
+        
         ReadOnly<UI*> Parent;
         static UI* SearchUI_NearPos(const Point&,UI*);
-        static Cursor Search_Area_Cursor(const Point&,UI*);
+        static const BdUI::Cursor* Search_Area_Cursor(const Point&,UI*);
     private:
         void UICursorDefaultBind();
+        bool MouseRelativePos(const Point*,BdUI::Mouse,BdUI::Mouse&);
     };
 }
 #endif
