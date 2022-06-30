@@ -62,8 +62,8 @@ namespace BdUI
 
     struct Key {
         int RepeatCount;
-        char code;
-        unsigned char scan_code;
+        char Code;
+        unsigned char ScanCode;
         bool Up_Down; // Up = 0,Down = 1
         enum Type {
 #ifdef WIN32

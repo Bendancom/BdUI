@@ -12,7 +12,7 @@ namespace BdUI{
         void Block();
         void Show();
         void Hide();
-        void SetText(const std::string&);
+
         
         Attribute<Icon> SmIcon;
         Attribute<Icon> Icon;
@@ -31,12 +31,12 @@ namespace BdUI{
     private:
         std::thread *Thread;
         std::mutex Mutex;
-        void WindowDefaultEventBind();
+        void WindowEventDefaultBind();
         void WindowCursorDefaultBind();
         
-
-        template<typename E, typename... T>
-        static void EventDeliver(UI*, T...) requires(typeid(E) == typeid(EventArray<void(T...)>));
+        bool WindowSizeChange(const Point*,BdUI::Size,BdUI::Size&);
+        bool WindowSetText(const std::string&);
+        bool WindowLocationChange(const BdUI::Size*, Point, Point&);
 
         UI* MouseContext = this;
         const BdUI::Cursor* CurrentCursor = Cursor.Client;

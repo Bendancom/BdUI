@@ -43,6 +43,7 @@ namespace BdUI
         static const BdUI::Cursor* Search_Area_Cursor(const Point&,UI*);
     private:
         void UICursorDefaultBind();
+        void UIEventDefaultBind();
         bool MouseRelativePos(const Point*,BdUI::Mouse,BdUI::Mouse&);
     };
 }

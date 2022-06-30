@@ -2,10 +2,9 @@
 
 namespace BdUI{
     Window::Window(){
-        Size = BdUI::Size{ 1000, 800 };
-        Location = BdUI::Point{200,100};
-        Mouse.set_func = Delegate<bool(BdUI::Mouse, BdUI::Mouse&)>();
-        WindowDefaultEventBind();
+        Size.setOnly(BdUI::Size{ 1000, 800 });
+        Location.setOnly(BdUI::Point{ 200,100 });
+        WindowEventDefaultBind();
         WindowCursorDefaultBind();
     }
     Window::~Window(){
@@ -25,14 +24,14 @@ namespace BdUI{
         Mutex.lock();
         Mutex.unlock();
     }
-    void Window::WindowDefaultEventBind(){
-
+    void Window::WindowEventDefaultBind(){
+        delete Mouse.set_func;
+        Mouse.set_func = nullptr;
+        Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size&)>(&Window::WindowSizeChange, this, Location.getPointer(), std::placeholders::_1, std::placeholders::_2);
+        Location.set_func = new Delegate<bool(Point,Point&)>(&Window::WindowLocationChange, this, Size.getPointer(), std::placeholders::_1, std::placeholders::_2);
     }
-    /*
-    template<typename E,typename... T>
-    static void Window::EventDeliver<E>(UI*, T...) requires(typeid(E) == typeid(EventArray<void(T...)>)) {
 
-    }*/
+
 
     void Window::WindowCursorDefaultBind() {
 #ifdef WIN32
@@ -101,10 +100,25 @@ namespace BdUI{
 #endif
         Visible = false;
     }
-    void Window::SetText(const std::string& s) {
+    bool Window::WindowSetText(const std::string& s) {
 #ifdef WIN32
         SetWindowText(hWnd, TEXT(s.c_str()));
 #endif
+        return true;
+    }
+    bool Window::WindowSizeChange( const Point* location,BdUI::Size size,BdUI::Size& old) {
+        old = size;
+#ifdef WIN32
+        MoveWindow(hWnd, location->X, location->Y, size.Width, size.Height, TRUE);
+#endif
+        return true;
+    }
+    bool Window::WindowLocationChange(const BdUI::Size* size, Point location, Point& old) {
+        old = location;
+#ifdef WIN32
+        MoveWindow(hWnd, location.X, location.Y, size->Width, size->Height, TRUE);
+#endif
+        return true;
     }
 
     #ifdef _WIN32
@@ -113,13 +127,19 @@ namespace BdUI{
         switch(msg){
             case WM_WINDOWPOSCHANGED: { //同时处理 WM_SIZE 与 WM_MOVE 消息
                 WINDOWPOS *p = reinterpret_cast<WINDOWPOS*>(lParam);
-                w->Location = Point{ p->x ,p->y };
-                w->Size = BdUI::Size{ (unsigned long)p->cx,(unsigned long)p->cy };
+                w->Location.setOnly(Point{ p->x ,p->y });
+                w->Size.setOnly(BdUI::Size{ (unsigned long)p->cx,(unsigned long)p->cy });
+                break;
+            }
+            case WM_SIZING: {
+                RECT* rect = reinterpret_cast<RECT*>(lParam);
+                w->Size.setOnly(BdUI::Size{ (unsigned long)(rect->right - rect->left),(unsigned long)(rect->bottom - rect->top) });
+                w->Location.setOnly(Point{ rect->left,rect->top });
                 break;
             }
             case WM_MOVING:{
                 RECT* r = reinterpret_cast<RECT*>(lParam);
-                w->Location = Point{r->left,r->top};
+                w->Location.setOnly(Point{ r->left,r->top });
                 break;
             }
             case WM_DESTROY:{
@@ -129,23 +149,29 @@ namespace BdUI{
             case WM_CHAR: {
                 UI* focus = w->Focus;
                 BdUI::Key&& key = focus->Key;
-                key.code = wParam;
+                key.Code = wParam;
                 key.RepeatCount = LOWORD(lParam);
-                key.scan_code = LOBYTE(HIWORD(lParam));
+                key.ScanCode = LOBYTE(HIWORD(lParam));
                 key.Up_Down = !HIWORD(lParam) & KF_UP;
-                focus->Key = key;
-                std::string s = "" + (char)lParam;
-                w->SetText(s);
+                while (focus->Parent.exist()) {
+                    focus->Key = key;
+                    if (focus->Key.ChangedEvent != nullptr) break;
+                    focus = focus->Parent;
+                }
                 break;
             }
             case WM_KEYDOWN: {
                 UI* focus = w->Focus;
-                BdUI::Key&& key = focus->Key;
+                BdUI::Key key = focus->Key;
                 key.VirtualKey = BdUI::Key::Type(wParam);
                 key.RepeatCount = LOWORD(lParam);
-                key.scan_code = LOBYTE(HIWORD(lParam));
+                key.ScanCode = LOBYTE(HIWORD(lParam));
                 key.Up_Down = 1;
-                focus->Key = key;
+                while (focus->Parent.exist()) {
+                    focus->Key = key;
+                    if (focus->Key.ChangedEvent != nullptr) break;
+                    focus = focus->Parent;
+                }
                 break;
             }
             case WM_KEYUP: {
@@ -153,9 +179,13 @@ namespace BdUI{
                 BdUI::Key&& key = focus->Key;
                 key.VirtualKey = BdUI::Key::Type(wParam);
                 key.RepeatCount = LOWORD(lParam);
-                key.scan_code = LOBYTE(HIWORD(lParam));
+                key.ScanCode = LOBYTE(HIWORD(lParam));
                 key.Up_Down = 0;
-                focus->Key = key;
+                while (focus->Parent.exist()) {
+                    focus->Key = key;
+                    if (focus->Key.ChangedEvent != nullptr) break;
+                    focus = focus->Parent;
+                }
                 break;
             }
             default:{
@@ -262,9 +292,14 @@ namespace BdUI{
                 Ismouse = false;
                 return DefWindowProc(hWnd, msg, wParam, lParam);
             }
-        }
-        if (Ismouse) {
-            Context->Mouse = mouse;
+            if (Ismouse) {
+                UI* c = Context;
+                while (c->Parent.exist()) {
+                    c->Mouse = mouse;
+                    if (c->Mouse.ChangedEvent != nullptr) break;
+                    c = c->Parent;
+                }
+            }
         }
         return 0;
     }

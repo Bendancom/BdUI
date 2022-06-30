@@ -8,6 +8,9 @@ int main()
 	Window window;
 	window.Create();
 	window.Show();
+	printf("%d\n",sizeof(std::atomic<int>));
+	printf("%d : %d\n", window.Location.get().X, window.Location.get().Y);
+	printf("%d : %d\n", window.Size.get().Width, window.Size.get().Height);
 	window.Block();
 	return 0;
 }

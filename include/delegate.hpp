@@ -36,35 +36,43 @@ namespace BdUI{
         Delegate(Return (T::*f)(Param...),T *t) :  function(_Bind(f,t)) {}
         template<typename T>
         Delegate(T *t,Return (T::*f)(Param...)) : function(_Bind(f,t)) {}
-        Delegate(const Delegate<Return(Param...)> &d){
+        template<typename Func,typename... Args>
+        Delegate(Func f, Args... args) {
+            function = std::bind(f, args...);
+        }
+        Delegate(const Delegate<Return(Param...)>& d) {
             std::function<Return(Param...)> f(d.function);
             function.swap(f);
         }
-        operator bool(){
+
+        operator bool() {
             return function.operator bool();
         }
-        Return operator()(Param... args){
+        Return operator()(Param... args) {
             return function(args...);
         }
-        bool exist(){
+
+        bool exist() {
             return function.operator bool();
         }
-        template<typename T,typename R,typename... Args>
-        void bind(R(T::* f)(Args...),T *t) {
+        void swap(const Delegate<Return(Param...)>& d) {
+            function.swap(d.function);
+        }
+
+        template<typename T>
+        void bind(Return(T::* f)(Param...), T* t) {
             function = _Bind(f, t);
         }
         template<typename Func,typename...Args>
-        void bind(Func &&f,Args... args) {
-            function = std::bind(std::forward<Func&&>(f),args...);
+        void bind(Func&& f, Args... args) {
+            function = std::bind(std::forward<Func&&>(f), args...);
         }
-        void swap(const Delegate<Return(Param...)> &d){
-            function.swap(d.function);
-        }
-        Delegate &operator=(const Delegate<Return(Param...)> &d){
+        
+        Delegate<Return(Param...)>& operator=(const Delegate<Return(Param...)>& d) {
             function = d.function;
             return *this;
         }
-        Delegate &operator=(Return (*f)(Param...)){
+        Delegate<Return(Param...)>& operator=(Return(*f)(Param...)) {
             function = f;
             return *this;
         }

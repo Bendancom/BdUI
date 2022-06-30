@@ -3,9 +3,7 @@ namespace BdUI
 {
     UI::UI(){
         UICursorDefaultBind();
-        Delegate<bool(BdUI::Mouse, BdUI::Mouse&)>&& mouse_set = Delegate<bool(BdUI::Mouse,BdUI::Mouse&)>();
-        mouse_set.bind(&UI::MouseRelativePos, this, Location.get_Pointer(), std::placeholders::_1, std::placeholders::_2);
-        Mouse.set_func = mouse_set;
+        UIEventDefaultBind();
     }
     void UI::UICursorDefaultBind(){
 #ifdef WIN32
@@ -20,6 +18,9 @@ namespace BdUI
         Cursor.Border.TopLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
         Cursor.Border.TopRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
 #endif
+    }
+    void UI::UIEventDefaultBind() {
+        Mouse.set_func = new Delegate<bool(BdUI::Mouse,BdUI::Mouse&)>(&UI::MouseRelativePos, this, Location.getPointer(), std::placeholders::_1, std::placeholders::_2);
     }
 
     bool UI::MouseRelativePos(const Point* location, BdUI::Mouse get, BdUI::Mouse& set) {
@@ -42,6 +43,6 @@ namespace BdUI
     }
 
     const Cursor* UI::Search_Area_Cursor(const Point& p, UI* ui) {
-        return ui->Cursor.Client.get_Pointer();
+        return ui->Cursor.Client.getPointer();
     }
 }
