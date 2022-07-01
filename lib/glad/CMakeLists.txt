@@ -1,0 +1,5 @@
+project(glad LANGUAGES "C")
+
+set(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCE_DIR}/src/glad.c)

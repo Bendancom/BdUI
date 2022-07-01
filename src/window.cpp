@@ -1,6 +1,7 @@
 #include "window.hpp"
 
 namespace BdUI{
+    bool Window::IsLoadOpenGL = false;
     Window::Window(){
         Size.setOnly(BdUI::Size{ 1000, 800 });
         Location.setOnly(BdUI::Point{ 200,100 });
@@ -30,9 +31,6 @@ namespace BdUI{
         Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size&)>(&Window::WindowSizeChange, this, Location.getPointer(), std::placeholders::_1, std::placeholders::_2);
         Location.set_func = new Delegate<bool(Point,Point&)>(&Window::WindowLocationChange, this, Size.getPointer(), std::placeholders::_1, std::placeholders::_2);
     }
-
-
-
     void Window::WindowCursorDefaultBind() {
 #ifdef WIN32
         WindowCursor.Caption = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
@@ -70,10 +68,50 @@ namespace BdUI{
         BdUI::Size size = Size;
         hWnd = CreateWindowEx(dwExStyle,Windowclass.lpszClassName,NULL,dwStyle,location.X,location.Y,size.Width,size.Height,NULL,NULL,Windowclass.hInstance,NULL);
         if(hWnd == NULL){
-            MessageBox(NULL, TEXT("Creating Window Failed"), NULL, MB_OK);
             Creation.set_value(false);
             return;
         }
+        hDC = GetWindowDC(hWnd);
+        PIXELFORMATDESCRIPTOR pfd = {
+            sizeof(PIXELFORMATDESCRIPTOR),
+            1,
+            PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW,
+            24,
+            0,0,0,0,0,0,
+            0,
+            0,
+            0,
+            0,0,0,0,
+            32,
+            0,
+            0,
+            PFD_MAIN_PLANE,
+            0,
+            0,0,0
+        };
+        int&& render = ChoosePixelFormat(hDC, &pfd);
+        if (render == 0) {
+            Creation.set_value(false);
+            DestroyWindow(hWnd);
+            return;
+        }
+        SetPixelFormat(hDC, render, &pfd);
+        hRC = wglCreateContext(hDC);
+        if (hRC == 0) {
+            Creation.set_value(false);
+            DestroyWindow(hWnd);
+            return;
+        }
+        wglMakeCurrent(hDC, hRC);
+        if (!IsLoadOpenGL) {
+            if (!gladLoadGL()) {
+                Creation.set_value(false);
+                return;
+            }
+            IsLoadOpenGL = true;
+        }
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
         SetWindowLongPtr(hWnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(this));
         Creation.set_value(true);
         Mutex.lock();
@@ -110,6 +148,7 @@ namespace BdUI{
         old = size;
 #ifdef WIN32
         MoveWindow(hWnd, location->X, location->Y, size.Width, size.Height, TRUE);
+        glViewport(0, 0, size.Width, size.Height);
 #endif
         return true;
     }
@@ -120,6 +159,17 @@ namespace BdUI{
 #endif
         return true;
     }
+    void Window::Paint() {
+        glBegin(GL_TRIANGLES);
+        glColor3f(1, 0, 0);
+        glVertex3f(-1, -1, 0);
+        glColor3f(0, 1, 0);
+        glVertex3f(0, 1, 0);
+        glColor3f(0, 0, 1);
+        glVertex3f(1, -1, 0);
+        glEnd();
+        glFlush();
+    }
 
     #ifdef _WIN32
     LRESULT Window::__WndProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam){
@@ -129,12 +179,14 @@ namespace BdUI{
                 WINDOWPOS *p = reinterpret_cast<WINDOWPOS*>(lParam);
                 w->Location.setOnly(Point{ p->x ,p->y });
                 w->Size.setOnly(BdUI::Size{ (unsigned long)p->cx,(unsigned long)p->cy });
+                glViewport(0, 0, (unsigned long)p->cx, (unsigned long)p->cy);
                 break;
             }
             case WM_SIZING: {
                 RECT* rect = reinterpret_cast<RECT*>(lParam);
                 w->Size.setOnly(BdUI::Size{ (unsigned long)(rect->right - rect->left),(unsigned long)(rect->bottom - rect->top) });
                 w->Location.setOnly(Point{ rect->left,rect->top });
+                glViewport(0, 0, (unsigned long)(rect->right - rect->left), (unsigned long)(rect->bottom - rect->top));
                 break;
             }
             case WM_MOVING:{
@@ -143,6 +195,9 @@ namespace BdUI{
                 break;
             }
             case WM_DESTROY:{
+                wglMakeCurrent(NULL, NULL);
+                wglDeleteContext(w->hRC);
+                ReleaseDC(hWnd, w->hDC);
                 PostQuitMessage(0);
                 break;
             }
@@ -186,6 +241,10 @@ namespace BdUI{
                     if (focus->Key.ChangedEvent != nullptr) break;
                     focus = focus->Parent;
                 }
+                break;
+            }
+            case WM_PAINT: {
+                w->Paint();
                 break;
             }
             default:{

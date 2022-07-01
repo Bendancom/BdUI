@@ -31,12 +31,16 @@ namespace BdUI{
     private:
         std::thread *Thread;
         std::mutex Mutex;
+        static bool IsLoadOpenGL;
+
         void WindowEventDefaultBind();
         void WindowCursorDefaultBind();
         
         bool WindowSizeChange(const Point*,BdUI::Size,BdUI::Size&);
         bool WindowSetText(const std::string&);
         bool WindowLocationChange(const BdUI::Size*, Point, Point&);
+
+        void Paint();
 
         UI* MouseContext = this;
         const BdUI::Cursor* CurrentCursor = Cursor.Client;
@@ -45,6 +49,8 @@ namespace BdUI{
         int dwExStyle = NULL;
         int dwStyle = WS_OVERLAPPEDWINDOW;
         HWND hWnd;
+        HDC hDC;
+        HGLRC hRC;
         std::promise<bool> Creation;
         static LRESULT CALLBACK __WndProc(HWND,UINT,WPARAM,LPARAM);
         static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);

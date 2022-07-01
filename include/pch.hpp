@@ -12,7 +12,10 @@
 #include <WinUser.h>
 #include <WinBase.h>
 #include <windowsx.h>
+#include <wingdi.h>
 #endif
+
+#include "OpenGL/glad/glad.h"
 
 #include "attribute.hpp"
 #include "delegate.hpp"
