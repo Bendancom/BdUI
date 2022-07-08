@@ -17,6 +17,7 @@ namespace BdUI{
         Attribute<Icon> SmIcon;
         Attribute<Icon> Icon;
         Attribute<UI*> Focus = this;
+        Attribute<BdUI::Size> Size;
 
         struct {
             Attribute<BdUI::Cursor> Caption;

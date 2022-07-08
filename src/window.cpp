@@ -177,7 +177,7 @@ namespace BdUI{
         switch(msg){
             case WM_WINDOWPOSCHANGED: { //同时处理 WM_SIZE 与 WM_MOVE 消息
                 WINDOWPOS *p = reinterpret_cast<WINDOWPOS*>(lParam);
-                w->Location.setOnly(Point{ p->x ,p->y });
+                w->Location.setOnly(Point(p->x, p->y, Pixel));
                 w->Size.setOnly(BdUI::Size{ (unsigned long)p->cx,(unsigned long)p->cy });
                 glViewport(0, 0, (unsigned long)p->cx, (unsigned long)p->cy);
                 break;
@@ -185,13 +185,13 @@ namespace BdUI{
             case WM_SIZING: {
                 RECT* rect = reinterpret_cast<RECT*>(lParam);
                 w->Size.setOnly(BdUI::Size{ (unsigned long)(rect->right - rect->left),(unsigned long)(rect->bottom - rect->top) });
-                w->Location.setOnly(Point{ rect->left,rect->top });
+                w->Location.setOnly(Point(rect->left, rect->top, Pixel));
                 glViewport(0, 0, (unsigned long)(rect->right - rect->left), (unsigned long)(rect->bottom - rect->top));
                 break;
             }
             case WM_MOVING:{
                 RECT* r = reinterpret_cast<RECT*>(lParam);
-                w->Location.setOnly(Point{ r->left,r->top });
+                w->Location.setOnly(Point(r->left, r->top, Pixel));
                 break;
             }
             case WM_DESTROY:{
@@ -335,7 +335,7 @@ namespace BdUI{
                     TrackMouseEvent(&tme);
                 }
                 mouse.Content.Hover_Move = 1;
-                mouse.Location = { GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam) };
+                mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), Pixel);
                 mouse.Content.IsLeaved = 0;
                 UI* newContext = SearchUI_NearPos(mouse.Location, Context);
                 if (newContext != Context) {

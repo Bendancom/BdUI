@@ -5,7 +5,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 option("Shared" "Compile to Shared lib" OFF)
 
 set(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/lib)
 set(LIB glad)

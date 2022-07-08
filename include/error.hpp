@@ -14,6 +14,9 @@ namespace BdUI{
             ERRORTYPE(Uninitialize,"Haven't initialized");
             ERRORTYPE(Initialize_Failed, "Can't initialize the class");
         }
+        namespace Function {
+            ERRORTYPE(ParamError, "Input a error parameter");
+        }
     }
 }
 #endif

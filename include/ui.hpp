@@ -15,11 +15,11 @@ namespace BdUI
         //Attribute<Cursor> Cursor;
         Attribute<BdUI::Margin> Margin;
         Attribute<BdUI::Margin> Border;
-        Attribute<BdUI::Size> Size;
         Attribute<Point> Location;
         Attribute<bool> Visible;
         Attribute<Mouse> Mouse;
         Attribute<Key> Key;
+
         Attribute<HMENU> PopMenu;
         Attribute<unsigned int> MouseHoverTime;
 

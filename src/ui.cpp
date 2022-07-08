@@ -30,15 +30,6 @@ namespace BdUI
 
     UI* UI::SearchUI_NearPos(const Point& p,UI* ui) {
         UI* result = ui;
-        for (UI* i : ui->UIList)
-        {
-            Point&& location = i->Location;
-            BdUI::Size&& size = i->Size;
-            if (p.X >= location.X && p.X <= location.X + size.Width && p.Y >= location.Y && p.Y <= location.Y + size.Height) {
-                if (i->UIList.size() == 0) return i;
-                else result = SearchUI_NearPos(p, i);
-            }
-        }
         return result;
     }
 

@@ -16,6 +16,9 @@
 #endif
 
 #include "OpenGL/glad/glad.h"
+#include "graph/unit.hpp"
+#include "graph/point.hpp"
+#include "graph/color.hpp"
 
 #include "attribute.hpp"
 #include "delegate.hpp"
@@ -29,10 +32,6 @@
 namespace BdUI
 {
     class UI;
-    struct Point{
-        long X = 0;
-        long Y = 0;
-    };
     struct Size{
         unsigned long Width = 0;
         unsigned long Height = 0;
