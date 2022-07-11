@@ -5,10 +5,10 @@ namespace BdUI
     Resource::Resource(const std::string &s)
     {
         IsProcess = false;
-        FileStream.open(s,std::ios::in|std::ios::out|std::ios::binary);
-        if(!FileStream) FileStream.open(s,std::ios::out|std::ios::binary);
-        if(!FileStream.good()) throw error::File::Open_Failed();
-        FilePath = s;
+        FileStream = new std::fstream(s, std::ios::in | std::ios::out | std::ios::binary);
+        if(!FileStream->operator bool()) FileStream->open(s,std::ios::out|std::ios::binary);
+        if(!FileStream->good()) throw error::File::Open_Failed();
+        FilePath = new std::string(s);
     }
     
     Resource::Resource(const Resource &resource)
@@ -18,8 +18,6 @@ namespace BdUI
         Size = resource.Size;
         Data = new unsigned char[Size];
         Source = resource.Source;
-        FileStream.open(resource.FilePath);
-        FilePath = resource.FilePath;
         memcpy(Data, resource.Data, Size);
     }
 
@@ -30,10 +28,10 @@ namespace BdUI
 
     void Resource::OpenFile(const std::string &s)
     {
-        FileStream.open(s,std::ios::in|std::ios::out|std::ios::binary);
-        if(!FileStream) FileStream.open(s,std::ios::out|std::ios::binary);
-        if(!FileStream.good()) throw error::File::Open_Failed();
-        FilePath = s;
+        FileStream = new std::fstream(s,std::ios::in|std::ios::out|std::ios::binary);
+        if(!FileStream->operator bool()) FileStream = new std::fstream(s,std::ios::out|std::ios::binary);
+        if(!FileStream->good()) throw error::File::Open_Failed();
+        FilePath = new std::string(s);
     }
 
     void Resource::OpenMemory(void* data, unsigned long long size) {
@@ -64,16 +62,18 @@ namespace BdUI
     {
         IsProcess = false;
         delete[] Data;
-        Size = FileStream.rdbuf()->in_avail();
+        if (FileStream == nullptr) throw error::Class::Uninitialize();
+        Size = FileStream->rdbuf()->in_avail();
         Data = new unsigned char[Size];
-        FileStream.read((char *)Data, Size);
+        FileStream->read((char *)Data, Size);
         Source = Where::File;
         Process();
     }
 
     void Resource::SaveFile()
     {
-        FileStream.write((char *)Data, Size);
+        if (FileStream == nullptr) throw error::Class::Uninitialize();
+        FileStream->write((char *)Data, Size);
     }
 
     Resource &Resource::operator=(const Resource &resource)
@@ -83,7 +83,7 @@ namespace BdUI
         Size = resource.Size;
         Data = new unsigned char[Size];
         Source = resource.Source;
-        //memcpy(Data, resource.Data, Size);
+        memcpy(Data, resource.Data, Size);
         return *this;
     }
 }

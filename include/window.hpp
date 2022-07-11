@@ -12,12 +12,14 @@ namespace BdUI{
         void Block();
         void Show();
         void Hide();
-
         
+        Attribute<Color> Background;
         Attribute<Icon> SmIcon;
         Attribute<Icon> Icon;
-        Attribute<UI*> Focus = this;
-        Attribute<BdUI::Size> Size;
+        Attribute<UI*> Focus;
+        Attribute<Size> Size;
+        Attribute<BdUI::Size> ClientSize;
+        Attribute<bool> VSync;
 
         struct {
             Attribute<BdUI::Cursor> Caption;
@@ -28,6 +30,7 @@ namespace BdUI{
             Attribute<BdUI::Cursor> Help;
             Attribute<BdUI::Cursor> SysMenu;
         }WindowCursor;
+
         
     private:
         std::thread *Thread;
@@ -36,17 +39,23 @@ namespace BdUI{
 
         void WindowEventDefaultBind();
         void WindowCursorDefaultBind();
-        
-        bool WindowSizeChange(const Point*,BdUI::Size,BdUI::Size&);
-        bool WindowSetText(const std::string&);
-        bool WindowLocationChange(const BdUI::Size*, Point, Point&);
 
         void Paint();
+        
+        bool WindowSizeChange(BdUI::Size,BdUI::Size&);
+        bool WindowSetText(const std::string&);
+        bool WindowLocationChange(Point, Point&);
+        bool WindowSetBackground(Color, Color&);
+        bool WindowSetVSync(bool,bool&);
+        bool WindowSetClientSize(BdUI::Size, BdUI::Size&);
 
         UI* MouseContext = this;
         const BdUI::Cursor* CurrentCursor = Cursor.Client;
         
+
+        bool GraphChanged = true;
         #ifdef _WIN32
+        static bool IsLoadWGL;
         int dwExStyle = NULL;
         int dwStyle = WS_OVERLAPPEDWINDOW;
         HWND hWnd;

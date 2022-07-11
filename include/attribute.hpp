@@ -1,14 +1,16 @@
 #ifndef BDUI_ATTRIBUTE
 #define BDUI_ATTRIBUTE
-#include <mutex>
-#include <type_traits>
+
+#include <shared_mutex>
+#include <map>
+#include <algorithm>
 #include "error.hpp"
 #include "event.hpp"
 #include "delegate.hpp"
 
 namespace BdUI{
     template<typename... T> class Attribute; 
-    template<typename Data,typename GetData,typename SetData>
+    template<typename Data,typename GetData,typename SetData> //requires(sizeof(Data) <= sizeof(void*)*2)
     class Attribute<Data,GetData,SetData>{
     public:
         EventArray<void(Data)> * ChangedEvent = nullptr;
@@ -18,10 +20,13 @@ namespace BdUI{
         Attribute(const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get_func(g),set_func(s) {}
         Attribute(const Data &v, const Delegate<GetData(Data)>& g , const Delegate<bool(SetData,Data&)>& s) : get_func(g),set_func(s),Value(v),_exist(true) {}
         Attribute(const Attribute<Data,GetData,SetData>&) = delete;
+        ~Attribute() {
+            delete ChangedEvent;
+        }
         operator GetData() {
-            Mutex.lock();
+            Mutex.lock_shared();
             GetData&& g = get_func(Value);
-            Mutex.unlock();
+            Mutex.unlock_shared();
             return g;
         }
         operator Data(){
@@ -40,7 +45,10 @@ namespace BdUI{
             return &Value;
         }
         GetData get() {
-            return get_func(Value);
+            Mutex.lock_shared();
+            GetData&& g = get_func(Value);
+            Mutex.unlock_shared();
+            return g;
         }
         bool set(SetData value) {
             Mutex.lock();
@@ -83,9 +91,9 @@ namespace BdUI{
     private:
         Data Value;
         bool _exist = false;
-        std::mutex Mutex;
+        std::shared_mutex Mutex;
     };
-    template<typename Data>
+    template<typename Data> //requires(sizeof(Data) <= sizeof(void*) * 2 )
     class Attribute<Data>{
     public:
         EventArray<void(Data)> *ChangedEvent = nullptr;
@@ -99,11 +107,16 @@ namespace BdUI{
         Attribute(const Data& v, const Delegate<bool(Data,Data&)>& s) : set_func(new Delegate<bool(Data, Data&)>(s)),Value(v),_exist(true) {}
         Attribute(const Delegate<Data(Data)>& g, const Delegate<bool(Data,Data&)>& s) : get_func(new Delegate<Data(Data)>(g)),set_func(new Delegate<bool(Data, Data&)>(s)) {}
         Attribute(const Attribute<Data>&) = delete;
+        ~Attribute() {
+            delete ChangedEvent;
+            delete get_func;
+            delete set_func;
+        }
         operator Data() {
             if (get_func != nullptr) {
-                Mutex.lock();
+                Mutex.lock_shared();
                 Data&& d = (*get_func)(Value);
-                Mutex.unlock();
+                Mutex.unlock_shared();
                 return d;
             }
             else return Value;
@@ -119,9 +132,9 @@ namespace BdUI{
         }
         Data get() {
             if (get_func != nullptr) {
-                Mutex.lock();
+                Mutex.lock_shared();
                 Data&& d = (*get_func)(Value);
-                Mutex.unlock();
+                Mutex.unlock_shared();
                 return d;
             }
             else return Value;
@@ -149,7 +162,9 @@ namespace BdUI{
             return false;
         }
         bool setOnly(Data data) {
+            Mutex.lock();
             Value = data;
+            Mutex.unlock();
             if (ChangedEvent != nullptr) ChangedEvent->operator()(data);
             return true;
         }
@@ -177,7 +192,7 @@ namespace BdUI{
     private:
         Data Value;
         bool _exist = false;
-        std::mutex Mutex;
+        std::shared_mutex Mutex;
     };
 }
 #endif

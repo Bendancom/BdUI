@@ -4,7 +4,7 @@ namespace BdUI {
 	void Icon::SaveFile() {
 		if (Source == Where::Memory) {
 			icon_fileheader = new IconFileHeader;
-			FileStream.write(reinterpret_cast<char*>(icon_fileheader), sizeof(IconFileHeader));
+			if (FileStream != nullptr) FileStream->write(reinterpret_cast<char*>(icon_fileheader), sizeof(IconFileHeader));
 		}
 		Resource::SaveFile();
 	}

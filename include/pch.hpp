@@ -6,6 +6,7 @@
 #include <future>
 #include <thread>
 #include <iostream>
+#include <chrono>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -13,12 +14,15 @@
 #include <WinBase.h>
 #include <windowsx.h>
 #include <wingdi.h>
+#include <OpenGL/glad/glad_wgl.h>
 #endif
 
 #include "OpenGL/glad/glad.h"
 #include "graph/unit.hpp"
 #include "graph/point.hpp"
 #include "graph/color.hpp"
+#include "graph/shape.hpp"
+#include "graph/size.hpp"
 
 #include "attribute.hpp"
 #include "delegate.hpp"
@@ -32,10 +36,6 @@
 namespace BdUI
 {
     class UI;
-    struct Size{
-        unsigned long Width = 0;
-        unsigned long Height = 0;
-    };
     struct Margin{
         int Left = 0;
         int Right = 0;

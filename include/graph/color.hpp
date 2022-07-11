@@ -4,40 +4,38 @@
 #include <cmath>
 
 namespace BdUI {
-	enum ColorType {
-		RGB = 0,
-		YUV = 1,
-		HSV = 2,
+	struct RGB {
+		unsigned char R = 0;
+		unsigned char G = 0;
+		unsigned char B = 0;
 	};
-
+	struct YUV {
+		unsigned char Y = 0;
+		unsigned char U = 0;
+		unsigned char V = 0;
+	};
+	struct HSV {
+		unsigned H : 9;
+		unsigned S : 7;
+		unsigned V : 7;
+	};
 	class Color {
-	public:
-		struct RGB {
-			unsigned char R = 0;
-			unsigned char G = 0;
-			unsigned char B = 0;
-		};
-		struct YUV {
-			unsigned char Y = 0;
-			unsigned char U = 0;
-			unsigned char V = 0;
-		};
-		struct HSV {
-			unsigned H : 9;
-			unsigned S : 7;
-			unsigned V : 7;
-		};
 	private:
-		ColorType Type;
+		enum ColorType {
+			ColorType_RGB = 0,
+			ColorType_YUV = 1,
+			ColorType_HSV = 2,
+		}Type;
 		union ColorEncoding{
 			RGB rgb;
 			YUV yuv;
 			HSV hsv;
+		public:
+			ColorEncoding() : rgb({0,0,0}) {}
 		}color;
 		unsigned char Alpha = 0;
-
 	public:
-		Color(){}
+		Color() {}
 		Color(const RGB&);
 		Color(const YUV&);
 		Color(const HSV&);

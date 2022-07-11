@@ -8,7 +8,7 @@ namespace BdUI {
 			bitmap_fileheader = new BitmapFileHeader;
 			bitmap_fileheader->Size = sizeof(BitmapFileHeader) + bitmap_infoheader->Size + bitmap_infoheader->SizeImage;
 			bitmap_fileheader->Offset = reinterpret_cast<unsigned char*>(bitmap_data) - Data;
-			FileStream.write(reinterpret_cast<char*>(bitmap_fileheader), sizeof(BitmapFileHeader));
+			if (FileStream != nullptr) FileStream->write(reinterpret_cast<char*>(bitmap_fileheader), sizeof(BitmapFileHeader));
 		}
 		Resource::SaveFile();
 	}

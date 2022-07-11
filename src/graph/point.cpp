@@ -1,24 +1,24 @@
 #include "graph/point.hpp"
 
 namespace BdUI {
-	Point::Point(std::initializer_list<double> list) {
+	Point::Point(const std::initializer_list<double>& list) {
 		if (list.size() != 2) throw error::Function::ParamError();
 		const double* p = list.begin();
 		X = *p;
 		Y = *(p + 1);
 	}
 
-	void Point::ChangeUnit(const UnitType& type) {
-		if (type == PixelHorizon || type == PixelVertical) throw error::Function::ParamError();
+	void Point::ChangeUnit(const UnitType::UnitType& type) {
+		if (type == UnitType::PixelHorizon || type == UnitType::PixelVertical) throw error::Function::ParamError();
 		if (type == Type) return;
-		if (type == Pixel) {
+		if (type == UnitType::Pixel) {
 			Unit x(X, Type);
-			x.ChangeUnit(PixelHorizon);
+			x.ChangeUnit(UnitType::PixelHorizon);
 			X = x;
 			Unit y(Y, Type);
-			y.ChangeUnit(PixelVertical);
+			y.ChangeUnit(UnitType::PixelVertical);
 			Y = y;
-			_Type = type;
+			Type = type;
 		}
 		else {
 			Unit x(X, Type);
@@ -27,10 +27,14 @@ namespace BdUI {
 			Unit y(Y, Type);
 			y.ChangeUnit(type);
 			Y = y;
-			_Type = type;
+			Type = type;
 		}
 	}
-	Point& Point::operator=(std::initializer_list<double> list) {
+	const UnitType::UnitType& Point::GetType() {
+		return Type;
+	}
+
+	Point& Point::operator=(const std::initializer_list<double>& list) {
 		if (list.size() != 2) throw error::Function::ParamError();
 		const double* a = list.begin();
 		X = *a;
@@ -40,7 +44,7 @@ namespace BdUI {
 	Point& Point::operator=(const Point& p) {
 		X = p.X;
 		Y = p.Y;
-		_Type = p.Type;
+		Type = p.Type;
 		return *this;
 	}
 

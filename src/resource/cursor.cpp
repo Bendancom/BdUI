@@ -4,7 +4,7 @@ namespace BdUI {
 	void Cursor::SaveFile() {
 		if (Source == Where::Memory){
 			cursor_fileheader = new CursorFileHeader;
-			FileStream.write(reinterpret_cast<char*>(cursor_fileheader), sizeof(CursorFileHeader));
+			if (FileStream != nullptr) FileStream->write(reinterpret_cast<char*>(cursor_fileheader), sizeof(CursorFileHeader));
 		}
 		Resource::SaveFile();
 	}

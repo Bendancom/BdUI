@@ -76,6 +76,14 @@ namespace BdUI{
             function = f;
             return *this;
         }
+        bool operator==(const Delegate<Return(Param...)>& d) {
+            if (function == d.function) return true;
+            else return false;
+        }
+        bool operator!=(const Delegate<Return(Param...)>& d) {
+            if (function != d.function) return true;
+            else return false;
+        }
     };
 }
 #endif

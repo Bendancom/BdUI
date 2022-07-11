@@ -7,14 +7,15 @@ namespace BdUI
     class UI{
     public:
         UI();
-        virtual ~UI() {}
-        std::vector<UI*> UIList;
+        ~UI() {}
+        std::list<UI*> UIList;
 
-        #ifdef _WIN32
-        #endif
-        //Attribute<Cursor> Cursor;
+        virtual void Paint(const Size&);
+
+        Attribute<UI*> Parent;
+
         Attribute<BdUI::Margin> Margin;
-        Attribute<BdUI::Margin> Border;
+        Attribute<Shape> Shape;
         Attribute<Point> Location;
         Attribute<bool> Visible;
         Attribute<Mouse> Mouse;
@@ -38,13 +39,14 @@ namespace BdUI
             }Border;
         }Cursor;
         
-        ReadOnly<UI*> Parent;
         static UI* SearchUI_NearPos(const Point&,UI*);
         static const BdUI::Cursor* Search_Area_Cursor(const Point&,UI*);
     private:
         void UICursorDefaultBind();
         void UIEventDefaultBind();
+
         bool MouseRelativePos(const Point*,BdUI::Mouse,BdUI::Mouse&);
+        bool ParentSet(UI*, UI*&);
     };
 }
 #endif

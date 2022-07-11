@@ -7,19 +7,19 @@
 namespace BdUI {
 	class Point {
 	private:
-		UnitType _Type = Unknown;
+		UnitType::UnitType Type = UnitType::Unknown;
 	public:
 		double X = 0;
 		double Y = 0;
-		const UnitType& Type = _Type;
 
 		Point(){}
-		Point(std::initializer_list<double>);
-		Point(const double& x,const double& y,const UnitType& type = Unknown) : X(x),Y(y),_Type(type) {}
+		Point(const std::initializer_list<double>&);
+		Point(const double& x,const double& y,const UnitType::UnitType& type = UnitType::Unknown) : X(x),Y(y),Type(type) {}
 		
-		void ChangeUnit(const UnitType& type);
+		void ChangeUnit(const UnitType::UnitType& type);
+		const UnitType::UnitType& GetType();
 
-		Point& operator=(std::initializer_list<double>);
+		Point& operator=(const std::initializer_list<double>&);
 		Point& operator=(const Point&);
 
 		Point& operator+(Point&);

@@ -10,38 +10,41 @@
 
 
 namespace BdUI {
-	enum UnitType {
-		Pixel = 0,
-		PixelHorizon = 1,
-		PixelVertical = 2,
-		inch = 3,
-		mm = 4,
-		cm = 5,
-		dm = 6,
-		m = 7,
-		Unknown = 8,
-	};
+	namespace UnitType {
+		enum UnitType {
+			Pixel = 0,
+			PixelHorizon = 1,
+			PixelVertical = 2,
+			inch = 3,
+			mm = 4,
+			cm = 5,
+			dm = 6,
+			m = 7,
+			Unknown = 8,
+		};
+	}
 
 	class Unit{
 	private:
 		double Number = 0;
 		bool NumberExist = false;
-		UnitType unitType;
+		UnitType::UnitType unitType;
 		unsigned short Power;
 		struct {
-			short X;
-			short Y;
+			double X = 0;
+			double Y = 0;
 		}DPI;
 		void GetDPI();
 	public:
-		Unit(const long double& n,const UnitType& u = Unknown,const unsigned short& power = 1) : Number(n), unitType(u), NumberExist(true),Power(power) {}
+		Unit(const long double& n,const UnitType::UnitType& u = UnitType::Unknown,const unsigned short& power = 1) : Number(n), unitType(u), NumberExist(true),Power(power) {}
 		Unit(const Unit& u) : Number(u.Number), NumberExist(u.NumberExist),unitType(u.unitType) {}
 
-		void ChangeUnit(const UnitType&);		
+		void ChangeUnit(const UnitType::UnitType&);
+		const UnitType::UnitType& GetType();
 
-		double Output(const UnitType&);
+		double Output(const UnitType::UnitType&);
 		double Output();
-		void Input(const long double&, const UnitType&);
+		void Input(const long double&, const UnitType::UnitType&);
 
 		operator double();
 

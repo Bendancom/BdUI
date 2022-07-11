@@ -58,7 +58,7 @@ namespace BdUI{
                 }
             }
         }
-        ReadOnly<Data>& operator=(const ReadOnly<Data>&) {
+        ReadOnly<Data>& operator=(const ReadOnly<Data>& r) {
             if (r.Isexist && Isexist == false)
                 Value = r.Value;
             Isexist = true;

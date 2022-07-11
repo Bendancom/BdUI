@@ -11,8 +11,8 @@
 namespace BdUI{
     class Resource{
     protected:
-        std::string FilePath;
-        std::fstream FileStream;
+        std::string* FilePath = nullptr;
+        std::fstream* FileStream = nullptr;
         enum class Where {
             Unknow = 0,
             File = 1,
