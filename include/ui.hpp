@@ -8,9 +8,10 @@ namespace BdUI
     public:
         UI();
         ~UI() {}
+
         std::list<UI*> UIList;
 
-        virtual void Paint(const Size&);
+        void Paint(const Size&);
 
         Attribute<UI*> Parent;
 

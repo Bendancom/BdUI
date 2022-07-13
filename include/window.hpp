@@ -10,8 +10,7 @@ namespace BdUI{
         ~Window();
         bool Create();
         void Block();
-        void Show();
-        void Hide();
+        void Paint(const BdUI::Size&) = delete;
         
         Attribute<Color> Background;
         Attribute<Icon> SmIcon;
@@ -48,6 +47,7 @@ namespace BdUI{
         bool WindowSetBackground(Color, Color&);
         bool WindowSetVSync(bool,bool&);
         bool WindowSetClientSize(BdUI::Size, BdUI::Size&);
+        bool WindowSetVisible(bool, bool&);
 
         UI* MouseContext = this;
         const BdUI::Cursor* CurrentCursor = Cursor.Client;
@@ -55,12 +55,11 @@ namespace BdUI{
 
         bool GraphChanged = true;
         #ifdef _WIN32
-        static bool IsLoadWGL;
         int dwExStyle = NULL;
         int dwStyle = WS_OVERLAPPEDWINDOW;
-        HWND hWnd;
-        HDC hDC;
-        HGLRC hRC;
+        HWND hWnd = nullptr;
+        HDC hDC = nullptr;
+        HGLRC hRC = nullptr;
         std::promise<bool> Creation;
         static LRESULT CALLBACK __WndProc(HWND,UINT,WPARAM,LPARAM);
         static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);

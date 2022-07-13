@@ -4,6 +4,7 @@ namespace BdUI
     UI::UI(){
         UICursorDefaultBind();
         UIEventDefaultBind();
+        Visible = true;
     }
     void UI::UICursorDefaultBind(){
 #ifdef WIN32

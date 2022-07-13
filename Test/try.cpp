@@ -6,8 +6,10 @@ using namespace std;
 int main()
 {
 	Window window;
+	window.Size = BdUI::Size(10, 10, UnitType::cm);
+	Attribute<bool> a = true;
+	bool b = a;
 	window.Create();
-	window.Show();
 	/*
 	UI* ui = new UI;
 	Shape rect(BdUI::ShapeType::Polygon);
@@ -18,6 +20,9 @@ int main()
 	ui->Shape = rect;
 	window.UIList.push_back(ui);
 	*/
+	printf("%d\n", sizeof(Point));
+	printf("%d\n", sizeof(double));
+	printf("%d\n", sizeof(UnitType::UnitType));
 	printf("%lf : %lf\n", window.Location.get().X, window.Location.get().Y);
 	window.Block();
 	return 0;

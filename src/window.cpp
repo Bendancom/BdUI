@@ -2,7 +2,6 @@
 
 namespace BdUI{
     bool Window::IsLoadOpenGL = false;
-    bool Window::IsLoadWGL = false;
     Window::Window(){
         WindowEventDefaultBind();
         WindowCursorDefaultBind();
@@ -10,8 +9,8 @@ namespace BdUI{
         Size.setOnly(BdUI::Size( 1000, 800,UnitType::Pixel ));
         Location.setOnly(Point(5,5,UnitType::cm));
         Background.setOnly(RGB{ 255,255,255 });
-        Focus = this;
         VSync.setOnly(true);
+        Focus = this;
     }
     Window::~Window(){
         delete Thread;
@@ -33,10 +32,12 @@ namespace BdUI{
     void Window::WindowEventDefaultBind(){
         delete Mouse.set_func;
         Mouse.set_func = nullptr;
+        Background.set_func = new Delegate<bool(Color, Color&)>(&Window::WindowSetBackground, this);
         Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size&)>(&Window::WindowSizeChange, this);
         Location.set_func = new Delegate<bool(Point,Point&)>(&Window::WindowLocationChange, this);
         VSync.set_func = new Delegate<bool(bool, bool&)>(&Window::WindowSetVSync, this);
         ClientSize.set_func = new Delegate<bool(BdUI::Size, BdUI::Size&)>(&Window::WindowSetClientSize, this);
+        Visible.set_func = new Delegate<bool(bool, bool&)>(&Window::WindowSetVisible, this);
     }
     void Window::WindowCursorDefaultBind() {
 #ifdef WIN32
@@ -67,7 +68,6 @@ namespace BdUI{
             NULL,
         };
         if (!RegisterClassEx(&Windowclass)) { //注册窗口类
-		    MessageBox(NULL, TEXT("Register Class Failed!"), NULL, MB_OK);
             Creation.set_value(false);
             return;
 	    }
@@ -80,6 +80,7 @@ namespace BdUI{
             Creation.set_value(false);
             return;
         }
+        ShowWindow(hWnd, Visible ? SW_SHOW : SW_HIDE);
         hDC = GetWindowDC(hWnd);
         PIXELFORMATDESCRIPTOR pfd =
         {
@@ -105,6 +106,7 @@ namespace BdUI{
         if (render == 0) {
             Creation.set_value(false);
             DestroyWindow(hWnd);
+            hWnd = nullptr;
             return;
         }
         SetPixelFormat(hDC, render, &pfd);
@@ -112,23 +114,29 @@ namespace BdUI{
         if (hRC == 0) {
             Creation.set_value(false);
             DestroyWindow(hWnd);
+            hWnd = nullptr;
             return;
         }
         wglMakeCurrent(hDC, hRC);
         if (!IsLoadOpenGL) {
-            if (!gladLoadGL()) {
-                Creation.set_value(false);
-                return;
-            }
             if (!gladLoadWGL(hDC)) {
                 Creation.set_value(false);
+                DestroyWindow(hWnd);
+                hWnd = nullptr;
+                return;
+            }
+            if (!gladLoadGL()) {
+                Creation.set_value(false);
+                DestroyWindow(hWnd);
+                hWnd = nullptr;
                 return;
             }
             IsLoadOpenGL = true;
         }
+        
+        wglSwapIntervalEXT(VSync);
         RGB rgb = Background.get().GetRGB();
         glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(Background.get().GetAlpha()) / 255);
-        wglSwapIntervalEXT(VSync);
         SetWindowLongPtr(hWnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(this));
         Creation.set_value(true);
         Mutex.lock();
@@ -142,19 +150,6 @@ namespace BdUI{
     }
 
     #pragma region WindowEvent
-    void Window::Show() {
-#ifdef _WIN32
-        ShowWindow(hWnd, SW_SHOW);
-        UpdateWindow(hWnd);
-#endif
-        Visible = true;
-    }
-    void Window::Hide() {
-#ifdef _WIN32
-        ShowWindow(hWnd, SW_HIDE);
-#endif
-        Visible = false;
-    }
     void Window::Paint() {
         if (GraphChanged == true) {
             glClear(GL_COLOR_BUFFER_BIT);
@@ -170,7 +165,7 @@ namespace BdUI{
 
     bool Window::WindowSetText(const std::string& s) {
 #ifdef WIN32
-        SetWindowText(hWnd, TEXT(s.c_str()));
+        if(hWnd != nullptr) SetWindowText(hWnd, TEXT(s.c_str()));
 #endif
         return true;
     }
@@ -178,8 +173,8 @@ namespace BdUI{
         old = size;
         size.ChangeUnit(UnitType::Pixel);
 #ifdef WIN32
-        SetWindowPos(hWnd, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
-        glViewport(0, 0, size.Width, size.Height);
+        if(hWnd != nullptr) SetWindowPos(hWnd, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
+        if(IsLoadOpenGL) glViewport(0, 0, size.Width, size.Height);
 #endif
         return true;
     }
@@ -187,19 +182,19 @@ namespace BdUI{
         old = location;
         location.ChangeUnit(UnitType::Pixel);
 #ifdef WIN32
-        SetWindowPos(hWnd, NULL,location.X, location.Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
+        if(hWnd != nullptr) SetWindowPos(hWnd, NULL,location.X, location.Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
 #endif
         return true;
     }
     bool Window::WindowSetBackground(Color n, Color& old) {
         RGB rgb = n.GetRGB();
-        glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(n.GetAlpha()) / 255);
+        if(IsLoadOpenGL) glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(n.GetAlpha()) / 255);
         old = n;
         return true;
     }
     bool Window::WindowSetVSync(bool n, bool& old) {
 #ifdef _WIN32
-        if (IsLoadWGL) {
+        if (IsLoadOpenGL) {
             wglMakeCurrent(hDC, hRC);
             wglSwapIntervalEXT(n);
             wglMakeCurrent(NULL, NULL);
@@ -208,10 +203,18 @@ namespace BdUI{
         old = n;
         return true;
     }
+    bool Window::WindowSetVisible(bool visible, bool& old) {
+        old = visible;
+        if (hWnd != nullptr) {
+            ShowWindow(hWnd, visible ? SW_SHOW : SW_HIDE);
+        }
+        return true;
+    }
     bool Window::WindowSetClientSize(BdUI::Size size, BdUI::Size& old) {
         old = size;
         size.ChangeUnit(UnitType::Pixel);
-        glViewport(0, 0, size.Width, size.Height);
+        if(IsLoadOpenGL) glViewport(0, 0, size.Width, size.Height);
+        return true;
     }
 
     #ifdef _WIN32

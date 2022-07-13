@@ -30,13 +30,13 @@ namespace BdUI{
             return g;
         }
         operator Data(){
-            return Value;
+            Mutex.lock_shared();
+            Data&& v = Value;
+            Mutex.unlock_shared();
+            return v;
         }
         operator const Data*() {
             return &Value;
-        }
-        operator bool(){
-            return _exist;
         }
         bool exist(){
             return _exist;
@@ -74,7 +74,7 @@ namespace BdUI{
             if(set_func.exist()){
                 Data d;
                 if (set_func(value, d)) {
-                    Value = d;
+                    Value = std::move(d);
                     Mutex.unlock();
                     _exist = true;
                     if (ChangedEvent != nullptr) ChangedEvent->operator()(d);
@@ -95,6 +95,10 @@ namespace BdUI{
     };
     template<typename Data> //requires(sizeof(Data) <= sizeof(void*) * 2 )
     class Attribute<Data>{
+    private:
+        Data Value;
+        bool _exist = false;
+        std::shared_mutex Mutex;
     public:
         EventArray<void(Data)> *ChangedEvent = nullptr;
         Delegate<Data(Data)>* get_func = nullptr;
@@ -113,13 +117,16 @@ namespace BdUI{
             delete set_func;
         }
         operator Data() {
-            if (get_func != nullptr) {
-                Mutex.lock_shared();
-                Data&& d = (*get_func)(Value);
-                Mutex.unlock_shared();
-                return d;
+            std::shared_lock<std::shared_mutex> lock(Mutex);
+            if (_exist) {
+                if (get_func != nullptr) {
+                    return (*get_func)(Value);
+                }
+                else {
+                    return Value;
+                }
             }
-            else return Value;
+            else throw error::Class::Uninitialize();
         }
         operator const Data* () {
             return &Value;
@@ -131,30 +138,32 @@ namespace BdUI{
             return &Value;
         }
         Data get() {
-            if (get_func != nullptr) {
-                Mutex.lock_shared();
-                Data&& d = (*get_func)(Value);
-                Mutex.unlock_shared();
-                return d;
+            std::shared_lock<std::shared_mutex> lock(Mutex);
+            if (_exist) {
+                if (get_func != nullptr) {
+                    return (*get_func)(Value);
+                }
+                else {
+                    return Value;
+                }
             }
-            else return Value;
+            else throw error::Class::Uninitialize();
         }
         bool set(Data value) {
-            Mutex.lock();
+            std::unique_lock<std::shared_mutex> lock(Mutex);
             if (set_func != nullptr) {
                 Data d;
                 if ((*set_func)(value, d)) {
                     Value = d;
-                    Mutex.unlock();
+                    lock.~unique_lock();
                     _exist = true;
                     if (ChangedEvent != nullptr) ChangedEvent->operator()(d);
                     return true;
                 }
-                else Mutex.unlock();
             }
             else {
                 Value = value;
-                Mutex.unlock();
+                lock.~unique_lock();
                 _exist = true;
                 if (ChangedEvent != nullptr) ChangedEvent->operator()(value);
                 return true;
@@ -165,6 +174,7 @@ namespace BdUI{
             Mutex.lock();
             Value = data;
             Mutex.unlock();
+            _exist = true;
             if (ChangedEvent != nullptr) ChangedEvent->operator()(data);
             return true;
         }
@@ -173,7 +183,7 @@ namespace BdUI{
             if (set_func != nullptr) {
                 Data d;
                 if ((*set_func)(value, d)) {
-                    Value = d;
+                    Value = std::move(d);
                     Mutex.unlock();
                     _exist = true;
                     if (ChangedEvent != nullptr) ChangedEvent->operator()(d);
@@ -189,10 +199,6 @@ namespace BdUI{
             return *this;
         }
         Attribute<Data> &operator=(const Attribute<Data>&) = delete;
-    private:
-        Data Value;
-        bool _exist = false;
-        std::shared_mutex Mutex;
     };
 }
 #endif

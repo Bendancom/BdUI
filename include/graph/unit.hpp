@@ -8,22 +8,21 @@
 #include <Windows.h>
 #endif
 
-
 namespace BdUI {
 	namespace UnitType {
 		enum UnitType {
-			Pixel = 0,
-			PixelHorizon = 1,
-			PixelVertical = 2,
-			inch = 3,
-			mm = 4,
-			cm = 5,
-			dm = 6,
-			m = 7,
-			Unknown = 8,
+			Unknown = 0,
+			Pixel = 1,
+			inch = 2,
+			mm = 3,
+			cm = 4,
+			dm = 5,
+			m = 6,
+			PixelHorizon = 7,
+			PixelVertical = 8,
 		};
 	}
-
+	
 	class Unit{
 	private:
 		double Number = 0;

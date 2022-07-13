@@ -1,7 +1,7 @@
 #ifndef BDUI_SHAPE
 #define BDUI_SHAPE
 
-#include <list>
+#include <vector>
 #include "point.hpp"
 #include "color.hpp"
 #include "size.hpp"
@@ -20,36 +20,30 @@ namespace BdUI {
 			Rectangle = 5,
 		};
 	}
-	class Shape : public std::list<Point> {
+	class Shape : public std::vector<Point> {
 	private:
 		ShapeType::ShapeType Type = ShapeType::Unknown;
 		unsigned int VBO;
+		void Changed();
 	public:
-		Shape(){}
-		template<ShapeType::ShapeType type> requires(type != ShapeType::Rectangle && type != ShapeType::Circle)
-		Shape(const std::list<Point>& points) : std::list<Point>(points), Type(type) {
-			glGenBuffers(1, &VBO);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		}
+		Shape() {}
+		template<ShapeType::ShapeType type> requires(type == ShapeType::Polygon || type == ShapeType::Bezier)
+		Shape(const std::vector<Point>& points) : std::vector<Point>(points), Type(type) {}
 		template<const ShapeType::ShapeType& type> requires(type == ShapeType::Circle)
 		Shape(const Point& center,const Unit& radius) {
 			this->insert(this->cend(), center);
 			this->insert(this->cend(), Point(radius, 0, radius.GetType()));
-			glGenBuffers(1, &VBO);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
 			Type = type;
 		}
 		template<const ShapeType::ShapeType& type> requires(type == ShapeType::Rectangle)
 		Shape(const Point& point,const Size& size) {
-			if (point.GetType() != UnitType::Pixel) {
-				Point&& p = point;
+			Point&& p = point;
+			if (p.GetType() != UnitType::Pixel) {
 				p.ChangeUnit(UnitType::Pixel);
 				this->insert(this->cend(), p);
 			}
-			else this->insert(this->cend(), point);
+			else this->insert(this->cend(), p);
 			this->insert(this->cend(), Point(size.Width, size.Height, size.GetType()));
-			glGenBuffers(1, &VBO);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
 			Type = type;
 		}
 		void SetShapeType(const ShapeType::ShapeType&);
