@@ -30,7 +30,7 @@ namespace BdUI {
 			Type = type;
 		}
 	}
-	const UnitType::UnitType& Point::GetType() {
+	UnitType::UnitType Point::GetType() {
 		return Type;
 	}
 	std::array<double, 3> Point::GetPoint(const UnitType::UnitType& type) {

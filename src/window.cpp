@@ -52,6 +52,7 @@ namespace BdUI{
     }
 
     void Window::WindThread(){
+        bool visible = Visible;
 #ifdef _WIN32
         const WNDCLASSEX Windowclass{
             sizeof(WNDCLASSEX),

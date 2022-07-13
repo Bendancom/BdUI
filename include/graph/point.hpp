@@ -20,7 +20,7 @@ namespace BdUI {
 		
 		void ChangeUnit(const UnitType::UnitType&);
 		std::array<double, 3> GetPoint(const UnitType::UnitType&);
-		const UnitType::UnitType& GetType();
+		UnitType::UnitType GetType();
 
 		Point& operator=(const std::array<double,3>&);
 		Point& operator=(const Point&);

@@ -7,8 +7,6 @@ int main()
 {
 	Window window;
 	window.Size = BdUI::Size(10, 10, UnitType::cm);
-	Attribute<bool> a = true;
-	bool b = a;
 	window.Create();
 	/*
 	UI* ui = new UI;
