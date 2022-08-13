@@ -1,13 +1,15 @@
 #include "window.hpp"
 
 namespace BdUI{
+    std::map < HWND, Window*> Window::WindowList;
     bool Window::IsLoadOpenGL = false;
     Window::Window(){
         WindowEventDefaultBind();
         WindowCursorDefaultBind();
 
+        Mouse = BdUI::Mouse();
         Size.setOnly(BdUI::Size( 1000, 800,UnitType::Pixel ));
-        Location.setOnly(Point(5,5,UnitType::cm));
+        Location.setOnly(Point(5,5,0,UnitType::cm));
         Background.setOnly(RGB{ 255,255,255 });
         VSync.setOnly(true);
         Focus = this;
@@ -32,12 +34,12 @@ namespace BdUI{
     void Window::WindowEventDefaultBind(){
         delete Mouse.set_func;
         Mouse.set_func = nullptr;
-        Background.set_func = new Delegate<bool(Color, Color&)>(&Window::WindowSetBackground, this);
-        Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size&)>(&Window::WindowSizeChange, this);
-        Location.set_func = new Delegate<bool(Point,Point&)>(&Window::WindowLocationChange, this);
-        VSync.set_func = new Delegate<bool(bool, bool&)>(&Window::WindowSetVSync, this);
-        ClientSize.set_func = new Delegate<bool(BdUI::Size, BdUI::Size&)>(&Window::WindowSetClientSize, this);
-        Visible.set_func = new Delegate<bool(bool, bool&)>(&Window::WindowSetVisible, this);
+        Background.set_func = new Delegate<bool(Color, Color*&)>(&Window::WindowSetBackground, this);
+        Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size*&)>(&Window::WindowSizeChange, this);
+        Location.set_func = new Delegate<bool(Point,Point*&)>(&Window::WindowLocationChange, this);
+        VSync.set_func = new Delegate<bool(bool, bool*&)>(&Window::WindowSetVSync, this);
+        Visible.set_func = new Delegate<bool(bool, bool*&)>(&Window::WindowSetVisible, this);
+        //ParentEvent
     }
     void Window::WindowCursorDefaultBind() {
 #ifdef WIN32
@@ -52,11 +54,10 @@ namespace BdUI{
     }
 
     void Window::WindThread(){
-        bool visible = Visible;
 #ifdef _WIN32
         const WNDCLASSEX Windowclass{
             sizeof(WNDCLASSEX),
-            CS_VREDRAW|CS_HREDRAW|CS_DBLCLKS,
+            CS_VREDRAW|CS_HREDRAW|CS_OWNDC,
             Window::__WndProc,
             0,
             8,
@@ -72,74 +73,26 @@ namespace BdUI{
             Creation.set_value(false);
             return;
 	    }
-        Point location = Location;
+
+        Point location = Location.get();
         location.ChangeUnit(UnitType::Pixel);
-        BdUI::Size size = Size;
-        size.ChangeUnit(UnitType::Pixel);
-        hWnd = CreateWindowEx(dwExStyle,Windowclass.lpszClassName,NULL,dwStyle,location.X,location.Y,size.Width,size.Height,NULL,NULL,Windowclass.hInstance,NULL);
+        BdUI::Size size = Size.get().GetData(UnitType::Pixel);
+        hWnd = CreateWindowEx(dwExStyle,Windowclass.lpszClassName,"Window", dwStyle, location.X, location.Y, size.Width, size.Height, NULL, NULL, Windowclass.hInstance, NULL);
         if(hWnd == NULL){
             Creation.set_value(false);
             return;
         }
-        ShowWindow(hWnd, Visible ? SW_SHOW : SW_HIDE);
-        hDC = GetWindowDC(hWnd);
-        PIXELFORMATDESCRIPTOR pfd =
-        {
-            sizeof(PIXELFORMATDESCRIPTOR),
-            1,
-            PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
-            PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
-            32,                        //Colordepth of the framebuffer.
-            0, 0, 0, 0, 0, 0,
-            0,
-            0,
-            0,
-            0, 0, 0, 0,
-            24,                        //Number of bits for the depthbuffer
-            8,                        //Number of bits for the stencilbuffer
-            0,                        //Number of Aux buffers in the framebuffer.
-            PFD_MAIN_PLANE,
-            0,
-            0, 0, 0
-        };
-        
-        int&& render = ChoosePixelFormat(hDC, &pfd);
-        if (render == 0) {
-            Creation.set_value(false);
-            DestroyWindow(hWnd);
-            hWnd = nullptr;
-            return;
-        }
-        SetPixelFormat(hDC, render, &pfd);
-        hRC = wglCreateContext(hDC);
-        if (hRC == 0) {
-            Creation.set_value(false);
-            DestroyWindow(hWnd);
-            hWnd = nullptr;
-            return;
-        }
-        wglMakeCurrent(hDC, hRC);
-        if (!IsLoadOpenGL) {
-            if (!gladLoadWGL(hDC)) {
-                Creation.set_value(false);
-                DestroyWindow(hWnd);
-                hWnd = nullptr;
-                return;
-            }
-            if (!gladLoadGL()) {
-                Creation.set_value(false);
-                DestroyWindow(hWnd);
-                hWnd = nullptr;
-                return;
-            }
-            IsLoadOpenGL = true;
-        }
-        
+        WindowList[hWnd] = this;
+        hDC = GetDC(hWnd);
+        hRC = wglGetCurrentContext();
+
         wglSwapIntervalEXT(VSync);
         RGB rgb = Background.get().GetRGB();
         glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(Background.get().GetAlpha()) / 255);
-        SetWindowLongPtr(hWnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(this));
+        ShowWindow(hWnd, Visible.get() ? SW_SHOW : SW_HIDE);
+        UpdateWindow(hWnd);
         Creation.set_value(true);
+
         Mutex.lock();
         MSG msg;
         while(GetMessage(&msg,NULL,0,0) > 0){
@@ -154,24 +107,30 @@ namespace BdUI{
     void Window::Paint() {
         if (GraphChanged == true) {
             glClear(GL_COLOR_BUFFER_BIT);
-            for (auto i : UIList) {
-                i->Paint(ClientSize);
+            std::list<UI*> uiList = UIList.get();
+            if (uiList.size() == 0) return;
+            for (UI* i : uiList) {
+                RECT rect;
+                GetClientRect(hWnd, &rect);
+                i->Paint(BdUI::Size(rect.right-rect.left,rect.bottom-rect.top,UnitType::Pixel));
             }
 #ifdef _WIN32
             SwapBuffers(hDC);
 #endif
+            
             GraphChanged = false;
         }
     }
 
-    bool Window::WindowSetText(const std::string& s) {
+    bool Window::WindowSetText(const std::string*& s) {
 #ifdef WIN32
-        if(hWnd != nullptr) SetWindowText(hWnd, TEXT(s.c_str()));
+        if(hWnd != nullptr) SetWindowText(hWnd, TEXT(s->c_str()));
 #endif
         return true;
     }
-    bool Window::WindowSizeChange(BdUI::Size size,BdUI::Size& old) {
-        old = size;
+    bool Window::WindowSizeChange(BdUI::Size size,BdUI::Size*& old) {
+        if (old == nullptr) old = new BdUI::Size(size);
+        else *old = size;
         size.ChangeUnit(UnitType::Pixel);
 #ifdef WIN32
         if(hWnd != nullptr) SetWindowPos(hWnd, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
@@ -179,21 +138,23 @@ namespace BdUI{
 #endif
         return true;
     }
-    bool Window::WindowLocationChange(Point location, Point& old) {
-        old = location;
+    bool Window::WindowLocationChange(Point location, Point*& old) {
+        if (old == nullptr) old = new BdUI::Point(location);
+        else *old = location;
         location.ChangeUnit(UnitType::Pixel);
 #ifdef WIN32
         if(hWnd != nullptr) SetWindowPos(hWnd, NULL,location.X, location.Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
 #endif
         return true;
     }
-    bool Window::WindowSetBackground(Color n, Color& old) {
+    bool Window::WindowSetBackground(Color n, Color*& old) {
         RGB rgb = n.GetRGB();
         if(IsLoadOpenGL) glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(n.GetAlpha()) / 255);
-        old = n;
+        if (old == nullptr) old = new BdUI::Color(n);
+        else *old = n;
         return true;
     }
-    bool Window::WindowSetVSync(bool n, bool& old) {
+    bool Window::WindowSetVSync(bool n, bool*& old) {
 #ifdef _WIN32
         if (IsLoadOpenGL) {
             wglMakeCurrent(hDC, hRC);
@@ -201,18 +162,31 @@ namespace BdUI{
             wglMakeCurrent(NULL, NULL);
         }
 #endif
-        old = n;
+        if (old == nullptr) old = new bool(n);
+        else *old = n;
         return true;
     }
-    bool Window::WindowSetVisible(bool visible, bool& old) {
-        old = visible;
+    bool Window::WindowSetVisible(bool visible, bool*& old) {
+        if (old == nullptr) old = new bool(visible);
+        else *old = visible;
         if (hWnd != nullptr) {
-            ShowWindow(hWnd, visible ? SW_SHOW : SW_HIDE);
+            if (visible) {
+#ifdef _WIN32
+                ShowWindow(hWnd, SW_SHOW);
+                UpdateWindow(hWnd);
+#endif
+            }
+            else {
+#ifdef _WIN32
+                ShowWindow(hWnd, SW_HIDE);
+#endif
+            }
         }
         return true;
     }
-    bool Window::WindowSetClientSize(BdUI::Size size, BdUI::Size& old) {
-        old = size;
+    bool Window::WindowSetClientSize(BdUI::Size size, BdUI::Size*& old) {
+        if (old == nullptr) old = new BdUI::Size(size);
+        else *old = size;
         size.ChangeUnit(UnitType::Pixel);
         if(IsLoadOpenGL) glViewport(0, 0, size.Width, size.Height);
         return true;
@@ -220,33 +194,68 @@ namespace BdUI{
 
     #ifdef _WIN32
     LRESULT Window::__WndProc(HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam){
-        Window *w = reinterpret_cast<Window*>(GetWindowLongPtr(hWnd,GWLP_USERDATA));
+        Window *w = WindowList[hWnd];
+        log.write(Log::Debug, std::to_string(msg));
         switch(msg){
+            case WM_CREATE: {
+                HDC hDC = GetWindowDC(hWnd);
+                PIXELFORMATDESCRIPTOR pfd =
+                {
+                    sizeof(PIXELFORMATDESCRIPTOR),
+                    1,
+                    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+                    PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
+                    32,                        //Colordepth of the framebuffer.
+                    0, 0, 0, 0, 0, 0,
+                    0,
+                    0,
+                    0,
+                    0, 0, 0, 0,
+                    24,                        //Number of bits for the depthbuffer
+                    8,                        //Number of bits for the stencilbuffer
+                    0,                        //Number of Aux buffers in the framebuffer.
+                    PFD_MAIN_PLANE,
+                    0,
+                    0, 0, 0
+                };
+                int&& render = ChoosePixelFormat(hDC, &pfd);
+                if (render == 0)
+                    throw error::OpenGL::Initialization_Failed();
+                SetPixelFormat(hDC, render, &pfd);
+                HGLRC hRC = wglCreateContext(hDC);
+                if (hRC == 0)
+                    throw error::OpenGL::Initialization_Failed();
+                wglMakeCurrent(hDC, hRC);
+                if (!IsLoadOpenGL) {
+                    if (!gladLoadWGL(hDC))
+                        throw error::OpenGL::Initialization_Failed();
+                    if (!gladLoadGL())
+                        throw error::OpenGL::Initialization_Failed();
+                    IsLoadOpenGL = true;
+                }
+
+                break;
+            }
             case WM_MOVE: {
-                w->Location.setOnly(Point(LOWORD(lParam), HIWORD(lParam), UnitType::Pixel));
+                w->Location.setOnly(Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),0, UnitType::Pixel));
                 break;
             }
             case WM_SIZE: {
                 w->Size.setOnly(BdUI::Size(LOWORD(lParam), HIWORD(lParam), UnitType::Pixel));
-                RECT rect;
-                GetClientRect(hWnd, &rect);
-                w->ClientSize = BdUI::Size(rect.right - rect.left, rect.bottom - rect.top, UnitType::Pixel);
+                glViewport(0, 0, LOWORD(lParam), HIWORD(lParam));
                 w->GraphChanged = true;
                 break;
             }
             case WM_SIZING: {
                 RECT* rect = reinterpret_cast<RECT*>(lParam);
                 w->Size.setOnly(BdUI::Size((double)(rect->right - rect->left),(double)(rect->bottom - rect->top),UnitType::Pixel ));
-                w->Location.setOnly(Point(rect->left, rect->top, UnitType::Pixel));
-                RECT rec;
-                GetClientRect(hWnd, &rec);
-                w->ClientSize = BdUI::Size(rec.right - rec.left, rec.bottom - rec.top, UnitType::Pixel);
+                w->Location.setOnly(Point(rect->left, rect->top, 0,UnitType::Pixel));
                 w->GraphChanged = true;
                 break;
             }
             case WM_MOVING:{
                 RECT* r = reinterpret_cast<RECT*>(lParam);
-                w->Location.setOnly(Point(r->left, r->top, UnitType::Pixel));
+                w->Location.setOnly(Point(r->left, r->top, 0,UnitType::Pixel));
                 break;
             }
             case WM_DESTROY:{
@@ -258,13 +267,14 @@ namespace BdUI{
             }
             case WM_CHAR: {
                 UI* focus = w->Focus;
-                BdUI::Key&& key = focus->Key;
+                BdUI::Key key;
+                if(focus->Key.exist()) key = focus->Key;
                 key.Code = wParam;
                 key.RepeatCount = LOWORD(lParam);
                 key.ScanCode = LOBYTE(HIWORD(lParam));
                 key.Up_Down = !HIWORD(lParam) & KF_UP;
                 while (focus->Parent.exist()) {
-                    focus->Key = key;
+                    focus->Key = std::move(key);
                     if (focus->Key.ChangedEvent != nullptr) break;
                     focus = focus->Parent;
                 }
@@ -272,7 +282,8 @@ namespace BdUI{
             }
             case WM_KEYDOWN: {
                 UI* focus = w->Focus;
-                BdUI::Key key = focus->Key;
+                BdUI::Key key;
+                if(focus->Key.exist()) key = focus->Key;
                 key.VirtualKey = BdUI::Key::Type(wParam);
                 key.RepeatCount = LOWORD(lParam);
                 key.ScanCode = LOBYTE(HIWORD(lParam));
@@ -286,7 +297,8 @@ namespace BdUI{
             }
             case WM_KEYUP: {
                 UI* focus = w->Focus;
-                BdUI::Key&& key = focus->Key;
+                BdUI::Key key;
+                if (focus->Key.exist()) key = focus->Key;
                 key.VirtualKey = BdUI::Key::Type(wParam);
                 key.RepeatCount = LOWORD(lParam);
                 key.ScanCode = LOBYTE(HIWORD(lParam));
@@ -304,7 +316,7 @@ namespace BdUI{
             }
             default:{
                 if (w == nullptr) return DefWindowProc(hWnd, msg, wParam, lParam);
-                else return MouseProc(hWnd, msg, wParam, lParam, w);
+                return MouseProc(hWnd, msg, wParam, lParam, w);
             }
         }
         return 0;
@@ -312,13 +324,14 @@ namespace BdUI{
 
     LRESULT Window::MouseProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam,Window* w) {
         bool Ismouse = true;
-        BdUI::Mouse mouse = w->MouseContext->Mouse;
+        BdUI::Mouse mouse;
+        if (w->Mouse.exist()) mouse = w->Mouse;
         UI*& Context = w->MouseContext;
-        const BdUI::Cursor* Cur = w->CurrentCursor;
+        BdUI::Cursor& Cur = w->CurrentCursor;
         switch (msg)
         {
             case WM_SETCURSOR: {
-                SetCursor(const_cast<BdUI::Cursor*>(Cur)->getIndex());
+                SetCursor(Cur.getIndex());
                 break;
             }
             case WM_RBUTTONDOWN: {
@@ -390,7 +403,7 @@ namespace BdUI{
                     TrackMouseEvent(&tme);
                 }
                 mouse.Content.Hover_Move = 1;
-                mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), UnitType::Pixel);
+                mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),0, UnitType::Pixel);
                 mouse.Content.IsLeaved = 0;
                 UI* newContext = SearchUI_NearPos(mouse.Location, Context);
                 if (newContext != Context) {
@@ -406,13 +419,13 @@ namespace BdUI{
                 Ismouse = false;
                 return DefWindowProc(hWnd, msg, wParam, lParam);
             }
-            if (Ismouse) {
-                UI* c = Context;
-                while (c->Parent.exist()) {
-                    c->Mouse = mouse;
-                    if (c->Mouse.ChangedEvent != nullptr) break;
-                    c = c->Parent;
-                }
+        }
+        if (Ismouse) {
+            UI* c = Context;
+            while (c->Parent.exist()) {
+                c->Mouse = mouse;
+                if (c->Mouse.ChangedEvent != nullptr) break;
+                c = c->Parent;
             }
         }
         return 0;

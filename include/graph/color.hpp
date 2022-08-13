@@ -25,7 +25,8 @@ namespace BdUI {
 			ColorType_RGB = 0,
 			ColorType_YUV = 1,
 			ColorType_HSV = 2,
-		}Type;
+			Unknown = 3,
+		}Type = Unknown;
 		union ColorEncoding{
 			RGB rgb;
 			YUV yuv;

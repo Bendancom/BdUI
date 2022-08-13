@@ -9,7 +9,7 @@ namespace BdUI
         UI();
         ~UI() {}
 
-        std::list<UI*> UIList;
+        Attribute<std::list<UI*>> UIList = std::list<UI*>();
 
         void Paint(const Size&);
 
@@ -41,12 +41,12 @@ namespace BdUI
         }Cursor;
         
         static UI* SearchUI_NearPos(const Point&,UI*);
-        static const BdUI::Cursor* Search_Area_Cursor(const Point&,UI*);
+        static BdUI::Cursor Search_Area_Cursor(const Point&,UI*);
     private:
         void UICursorDefaultBind();
         void UIEventDefaultBind();
 
-        bool MouseRelativePos(const Point*,BdUI::Mouse,BdUI::Mouse&);
+        bool MouseRelativePos(BdUI::Mouse,BdUI::Mouse*&);
         bool ParentSet(UI*, UI*&);
     };
 }

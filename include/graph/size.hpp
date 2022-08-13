@@ -1,7 +1,7 @@
 #ifndef BDUI_SIZE
 #define BDUI_SIZE
 #include "unit.hpp"
-#include <initializer_list>
+#include <array>
 
 namespace BdUI {
 	class Size {
@@ -12,13 +12,14 @@ namespace BdUI {
 		double Height = 0;
 
 		Size() {}
-		Size(const std::initializer_list<double>&);
+		Size(const std::array<double,2>&);
 		Size(const double& width, const double& height, const UnitType::UnitType& type = UnitType::Unknown) : Width(width), Height(height), Type(type) {}
 
 		void ChangeUnit(const UnitType::UnitType& type);
-		const UnitType::UnitType& GetType();
+		UnitType::UnitType GetType() const;
+		std::array<double, 2> GetData(UnitType::UnitType) const;
 
-		Size& operator=(const std::initializer_list<double>&);
+		Size& operator=(const std::array<double,2>&);
 		Size& operator=(const Size&);
 
 		Size& operator+(Size&);

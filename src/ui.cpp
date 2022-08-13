@@ -21,24 +21,30 @@ namespace BdUI
 #endif
     }
     void UI::UIEventDefaultBind() {
-        Mouse.set_func = new Delegate<bool(BdUI::Mouse,BdUI::Mouse&)>(&UI::MouseRelativePos, this, Location.getPointer(), std::placeholders::_1, std::placeholders::_2);
+        Mouse.set_func = new Delegate<bool(BdUI::Mouse,BdUI::Mouse*&)>(&UI::MouseRelativePos, this);
         Parent.set_func = new Delegate<bool(UI*, UI*&)>(&UI::ParentSet, this);
     }
-    void UI::Paint(const Size& size) {
-        Shape.get().Paint(Location,size);
-        for (auto i : UIList) {
+    void UI::Paint(const Size& size){
+        Shape.get().Paint(Location, size);
+        std::list<UI*> uiList = UIList;
+        if (uiList.size() == 0) return;
+        for (UI* i : uiList) {
             i->Paint(size);
         }
     }
 
-    bool UI::MouseRelativePos(const Point* location, BdUI::Mouse get, BdUI::Mouse& set) {
-        set.Location = { get.Location.X - location->X,get.Location.Y - location->Y };
+    bool UI::MouseRelativePos(BdUI::Mouse get, BdUI::Mouse*& set) {
+        Point location = this->Location;
+        if (set == nullptr) set = new BdUI::Mouse(); 
+        set->Location = { get.Location.X - location.X, get.Location.Y - location.Y };
         return true;
     }
-    bool UI::ParentSet(UI* ui, UI*& set) {
-        set->UIList.remove(this);
-        ui->UIList.push_back(this);
-        set = ui;
+    bool UI::ParentSet(UI* new_parent, UI*& old_parent) {
+        old_parent->UIList.getReference()->remove(this);
+        old_parent->UIList.unlock();
+        new_parent->UIList.getReference()->push_back(this);
+        new_parent->UIList.unlock();
+        old_parent = new_parent;
         return true;
     }
 
@@ -47,7 +53,7 @@ namespace BdUI
         return result;
     }
 
-    const Cursor* UI::Search_Area_Cursor(const Point& p, UI* ui) {
-        return ui->Cursor.Client.getPointer();
+    Cursor UI::Search_Area_Cursor(const Point& p, UI* ui) {
+        return ui->Cursor.Client;
     }
 }

@@ -10,39 +10,39 @@ namespace BdUI {
 
 	void Point::ChangeUnit(const UnitType::UnitType& type) { // TODO: 实现Z的转换
 		if (type == UnitType::PixelHorizon || type == UnitType::PixelVertical) throw error::Function::ParamError();
-		if (type == Type) return;
-		if (type == UnitType::Pixel) {
-			Unit x(X, Type);
-			x.ChangeUnit(UnitType::PixelHorizon);
-			X = x;
-			Unit y(Y, Type);
-			y.ChangeUnit(UnitType::PixelVertical);
-			Y = y;
-			Type = type;
+		else if (type == Type) return;
+		else if (type == UnitType::Pixel) {
+			X = Unit(X, Type).GetData(UnitType::PixelHorizon);
+			Y = Unit(Y, Type).GetData(UnitType::PixelVertical);
+			Z = Z;
 		}
 		else {
-			Unit x(X, Type);
-			x.ChangeUnit(type);
-			X = x;
-			Unit y(Y, Type);
-			y.ChangeUnit(type);
-			Y = y;
-			Type = type;
+			X = Unit(X, Type).GetData(type);
+			Y = Unit(Y, Type).GetData(type);
+			Z = Z;
 		}
 	}
-	UnitType::UnitType Point::GetType() {
+	UnitType::UnitType Point::GetType() const {
 		return Type;
 	}
-	std::array<double, 3> Point::GetPoint(const UnitType::UnitType& type) {
+	std::array<double, 3> Point::GetData(const UnitType::UnitType& type) const {
 		if (type == UnitType::PixelHorizon || type == UnitType::PixelVertical) throw error::Function::ParamError();
-		if (type == Type) return std::array<double, 3>{X, Y, Z};
-		Point p = Point(X, Y, Z, Type);
-		p.ChangeUnit(type);
-		return std::array<double, 3>{p.X, p.Y, p.Z};
+		else if (type == Type) return std::array<double, 3>{X, Y, Z};
+		else if (type == UnitType::Pixel) {
+			double x = Unit(X, Type).GetData(UnitType::PixelHorizon);
+			double y = Unit(Y, Type).GetData(UnitType::PixelVertical);
+			double z = Z;
+			return std::array<double, 3>{x, y, z};
+		}
+		else {
+			double x = Unit(X,Type).GetData(type);
+			double y = Unit(Y, Type).GetData(type);
+			double z = Z;
+			return std::array<double, 3>{x, y, z};
+		}
 	}
 
 	Point& Point::operator=(const std::array<double,3>& list) {
-		if (list.size() != 2) throw error::Function::ParamError();
 		const double* a = list.data();
 		X = *a;
 		Y = *(a+1);

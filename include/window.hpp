@@ -17,7 +17,6 @@ namespace BdUI{
         Attribute<Icon> Icon;
         Attribute<UI*> Focus;
         Attribute<Size> Size;
-        Attribute<BdUI::Size> ClientSize;
         Attribute<bool> VSync;
 
         struct {
@@ -41,20 +40,21 @@ namespace BdUI{
 
         void Paint();
         
-        bool WindowSizeChange(BdUI::Size,BdUI::Size&);
-        bool WindowSetText(const std::string&);
-        bool WindowLocationChange(Point, Point&);
-        bool WindowSetBackground(Color, Color&);
-        bool WindowSetVSync(bool,bool&);
-        bool WindowSetClientSize(BdUI::Size, BdUI::Size&);
-        bool WindowSetVisible(bool, bool&);
+        bool WindowSizeChange(BdUI::Size,BdUI::Size*&);
+        bool WindowSetText(const std::string*&);
+        bool WindowLocationChange(Point, Point*&);
+        bool WindowSetBackground(Color, Color*&);
+        bool WindowSetVSync(bool,bool*&);
+        bool WindowSetClientSize(BdUI::Size, BdUI::Size*&);
+        bool WindowSetVisible(bool, bool*&);
 
         UI* MouseContext = this;
-        const BdUI::Cursor* CurrentCursor = Cursor.Client;
+        BdUI::Cursor CurrentCursor = Cursor.Client;
         
 
         bool GraphChanged = true;
         #ifdef _WIN32
+        static std::map<HWND,Window*> WindowList;
         int dwExStyle = NULL;
         int dwStyle = WS_OVERLAPPEDWINDOW;
         HWND hWnd = nullptr;

@@ -50,7 +50,7 @@ namespace BdUI {
 		void SetCircle(const Point&, const Unit&);
 		void SetQuad(const Point&,const Size&);
 		ShapeType::ShapeType GetShapeType();
-		void Paint(const Point&,const Size&);
+		void Paint(const Point&,const Size&) const;
 	};
 }
 #endif

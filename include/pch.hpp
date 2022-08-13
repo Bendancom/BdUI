@@ -8,6 +8,7 @@
 #include <iostream>
 #include <chrono>
 #include <mutex>
+#include <map>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -28,7 +29,9 @@
 #include "attribute.hpp"
 #include "delegate.hpp"
 #include "event.hpp"
+#include "log.hpp"
 #include "readonly.hpp"
+
 #include "resource/resource.hpp"
 #include "resource/cursor.hpp"
 #include "resource/bitmap.hpp"
@@ -44,7 +47,7 @@ namespace BdUI
         int Bottom = 0;
     };
     struct Mouse{
-        Point Location;
+        Point Location = {0,0,0};
         struct {
             unsigned Left : 1;
             unsigned Right : 1;

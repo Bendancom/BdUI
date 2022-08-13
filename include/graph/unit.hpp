@@ -26,26 +26,29 @@ namespace BdUI {
 	class Unit{
 	private:
 		double Number = 0;
-		bool NumberExist = false;
 		UnitType::UnitType unitType;
-		unsigned short Power;
+		char Power;
 		struct {
 			double X = 0;
 			double Y = 0;
-		}DPI;
+		}DPI;//Pixel per Millimeter
 		void GetDPI();
 	public:
-		Unit(const long double& n,const UnitType::UnitType& u = UnitType::Unknown,const unsigned short& power = 1) : Number(n), unitType(u), NumberExist(true),Power(power) {}
-		Unit(const Unit& u) : Number(u.Number), NumberExist(u.NumberExist),unitType(u.unitType) {}
+		Unit(double n, UnitType::UnitType u = UnitType::Unknown, char power = 1) : Number(n), unitType(u), Power(power) {
+			GetDPI();
+		}
+		Unit(const Unit& u) : Number(u.Number), unitType(u.unitType),Power(u.Power),DPI(u.DPI) {}
 
-		void ChangeUnit(const UnitType::UnitType&);
-		const UnitType::UnitType& GetType();
+		void ChangeUnit(UnitType::UnitType);
 
-		double Output(const UnitType::UnitType&);
-		double Output();
-		void Input(const long double&, const UnitType::UnitType&);
+		UnitType::UnitType GetType() const;
+		char GetPow() const;
+		double GetData(UnitType::UnitType) const;
 
-		operator double();
+		void SetData(double, UnitType::UnitType);
+		void SetMonitor();
+
+		operator double() const;
 
 		Unit& operator+(Unit&);
 		Unit& operator-(Unit&);

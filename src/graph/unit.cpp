@@ -1,133 +1,110 @@
 #include "graph/unit.hpp"
 
 namespace BdUI {
-	void Unit::ChangeUnit(const UnitType::UnitType& u) {
-		if (u == unitType || u == UnitType::Unknown) return;
-		if (unitType == UnitType::Unknown) unitType = u;
-		if (!NumberExist) {
-			unitType = u;
-			return;
+	double Unit::GetData(UnitType::UnitType u) const {
+		int&& number = Number;
+		if (u == unitType || u == UnitType::Unknown) return number;
+		else if (u >= UnitType::mm && u <= UnitType::m) {
+			if (unitType >= UnitType::mm && unitType <= UnitType::m)
+				number *= pow(pow(10, unitType - u), Power);
+			else if (unitType == UnitType::PixelHorizon)
+				number /= DPI.X * pow(pow(10, UnitType::mm - u), Power);
+			else if (unitType == UnitType::PixelVertical)
+				number /= DPI.Y * pow(pow(10, UnitType::mm - u), Power);
+			else if (unitType == UnitType::inch)
+				number /= 2.54 * pow(pow(10, UnitType::cm - u), Power);
 		}
-		if (u >= UnitType::mm && u <= UnitType::m && unitType >= UnitType::mm && unitType <= UnitType::m) {
-			long long&& power = pow(pow(10, Power),abs(u - unitType));
-			if (u - unitType <= 0) Number = Number * power;
-			else Number = Number / power;
-			unitType = u;
+		else if (u == UnitType::PixelHorizon) {
+			if (unitType >= UnitType::mm && unitType <= UnitType::m)
+				number *= pow(pow(10, unitType - UnitType::mm), Power) * DPI.X;
+			else if (unitType == UnitType::inch)
+				number *= pow(pow(10, unitType - UnitType::mm), Power) * DPI.X / 25.4;
+			else if (unitType == UnitType::PixelVertical)
+				throw error::Function::ParamError();
 		}
-		else {
-			switch (u) {
-				case UnitType::PixelHorizon: {
-					if (DPI.X == 0) GetDPI();
-					if (unitType == UnitType::inch) {
-						Number *= DPI.X;
-						unitType = u;
-					}
-					else if (unitType == UnitType::PixelVertical) unitType = u;
-					else {
-						long long&& power = pow(pow(10, Power), abs(UnitType::cm - unitType));
-						if (UnitType::cm - unitType <= 0) Number = Number * power;
-						else Number = Number / power;
-						Number *= DPI.X / 2.54;
-						unitType = u;
-					}
-					break;
-				}
-				case UnitType::PixelVertical: {
-					if (DPI.Y == 0) GetDPI();
-					if (unitType == UnitType::inch) {
-						Number *= DPI.Y;
-						unitType = u;
-					}
-					else if (unitType == UnitType::PixelHorizon) unitType = u;
-					else {
-						long long&& power = pow(pow(10, Power), abs(UnitType::cm - unitType));
-						if (UnitType::cm - unitType <= 0) Number = Number * power;
-						else Number = Number / power;
-						Number *= DPI.Y / 2.54;
-						unitType = u;
-					}
-					break;
-				}
-				case UnitType::inch: {
-					if (unitType == UnitType::PixelHorizon) Number /= DPI.X;
-					else if (unitType == UnitType::PixelVertical) Number /= DPI.Y;
-					else {
-						long long&& power = pow(pow(10, Power), abs(UnitType::cm - unitType));
-						if (UnitType::cm - unitType <= 0) Number = Number * power;
-						else Number = Number / power;
-						Number /= 2.54;
-					}
-					break;
-				}
-			}
+		else if (u == UnitType::PixelVertical) {
+			if (unitType >= UnitType::mm && unitType <= UnitType::m)
+				number *= pow(pow(10, unitType - UnitType::mm), Power) * DPI.Y;
+			else if (unitType == UnitType::inch)
+				number *= pow(pow(10, unitType - UnitType::mm), Power) * DPI.Y / 25.4;
+			else if (unitType == UnitType::PixelHorizon)
+				throw error::Function::ParamError();
 		}
+		else if (u == UnitType::inch) {
+			if (unitType >= UnitType::mm && unitType <= UnitType::m)
+				number *= pow(pow(10, unitType - UnitType::cm), Power) * 2.54;
+			else if (unitType == UnitType::PixelHorizon)
+				number /= DPI.X * 25.4;
+			else if (unitType == UnitType::PixelVertical)
+				number /= DPI.Y * 25.4;
+		}
+		return number;
+	}
+	void Unit::ChangeUnit(UnitType::UnitType u) {
+		Number = GetData(u);
+		unitType = u;
 	}
 	// TODO: 多显示屏DPI问题
-	void Unit::GetDPI() {
+	void Unit::GetDPI(){
 #ifdef WIN32
 		SetProcessDPIAware();
 		HDC desktop = GetDC(NULL);
-		DPI.X = double(GetDeviceCaps(desktop, HORZRES)) / GetDeviceCaps(desktop, HORZSIZE) * 25.4;
-		DPI.Y = double(GetDeviceCaps(desktop, VERTRES)) / GetDeviceCaps(desktop, VERTSIZE) * 25.4;
+		DPI.X = double(GetDeviceCaps(desktop, HORZRES)) / GetDeviceCaps(desktop, HORZSIZE);
+		DPI.Y = double(GetDeviceCaps(desktop, VERTRES)) / GetDeviceCaps(desktop, VERTSIZE);
 #endif
 	}
-	const UnitType::UnitType& Unit::GetType() {
+	UnitType::UnitType Unit::GetType() const{
 		return unitType;
 	}
-	double Unit::Output() {
-		return Number;
+	char Unit::GetPow() const{
+		return Power;
 	}
-	double Unit::Output(const UnitType::UnitType& u) {
-		Unit unit(*this);
-		unit.ChangeUnit(u);
-		return unit.Output();
-	}
-	void Unit::Input(const long double& n, const UnitType::UnitType& u) {
+	void Unit::SetData(double n, UnitType::UnitType u) {
 		Number = n;
 		unitType = u;
 	}
-	Unit::operator double() {
+	Unit::operator double() const{
 		return Number;
 	}
 
 	Unit& Unit::operator+(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number += u.Number;
+		Number += u.GetData(unitType);
 		return *this;
 	}
 	Unit& Unit::operator-(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number -= u.Number;
+		Number -= u.GetData(unitType);
 		return *this;
 	}
 	Unit& Unit::operator*(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number *= u.Number;
+		Number *= u.GetData(unitType);
+		Power += u.Power;
+		if (Power == 0) unitType = UnitType::Unknown;
 		return *this;
 	}
 	Unit& Unit::operator/(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number /= u.Number;
+		Number /= u.GetData(unitType);
+		Power -= u.Power;
+		if (Power == 0) unitType = UnitType::Unknown;
 		return *this;
 	}
 	Unit& Unit::operator+=(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number += u.Number;
+		Number += u.GetData(unitType);
 		return *this;
 	}
 	Unit& Unit::operator-=(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number -= u.Number;
+		Number -= u.GetData(unitType);
 		return *this;
 	}
 	Unit& Unit::operator*=(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number *= u.Number;
+		Number *= u.GetData(unitType);
+		Power += u.Power;
+		if (Power == 0) unitType = UnitType::Unknown;
 		return *this;
 	}
 	Unit& Unit::operator/=(Unit& u) {
-		u.ChangeUnit(unitType);
-		Number /= u.Number;
+		Number /= u.GetData(unitType);
+		Power -= Power;
+		if (Power == 0) unitType = UnitType::Unknown;
 		return *this;
 	}
 }

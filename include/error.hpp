@@ -17,6 +17,12 @@ namespace BdUI{
         namespace Function {
             ERRORTYPE(ParamError, "Input a error parameter");
         }
+        namespace Log {
+            ERRORTYPE(LayoutError, "Invaild Layout");
+        }
+        namespace OpenGL {
+            ERRORTYPE(Initialization_Failed, "OpenGL Load Error");
+        }
     }
 }
 #endif
