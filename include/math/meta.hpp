@@ -2,32 +2,38 @@
 #define BDUI_META
 
 #include <string>
+#include <list>
+#include <unordered_map>
+#include <vector>
 
 namespace BdUI{
-	namespace MetaType {
-		enum MetaType
-		{
-			Variable = 0,
-			Const = 1,
-		};
-	}
 
-	template<MetaType::MetaType> class Meta;
-
-	class Meta<MetaType::Const> {
+	class Meta {
+	private:
+		static std::unordered_map<std::string, Meta*> MetaMap;
+		enum {
+			Plus = 0,
+			Minus = 1,
+			Multiply = 2,
+			Division = 3,
+		}Symbol = Plus;
+		unsigned double coefficient = 1;
+		char* variable; // '\0' is the end
+		Meta* pow = nullptr;
+		std::string suffix;
+		std::list<Meta*> Content;
+		std::string Name;
 	public:
-		Meta(double n, double p = 1) : number(n),pow(p);
-		double pow;
-		double number;
-	};
+		Meta(std::string LATEX_expression);
 
-	class Meta<MetaType::Variable> {
-	public:
-		Meta<MetaType::Const> pow;
-		char variable;
-		Meta<MetaType::Const> coefficient;
-		std::string subscript;
+		Meta& operator+(const Meta&);
+		Meta& operator-(const Meta&);
+		Meta& operator*(const Meta&);
+		Meta& operator/(const Meta&);
+		Meta& operator+=(const Meta&);
+		Meta& operator-=(const Meta&);
+		Meta& operator*=(const Meta&);
+		Meta& operator/=(const Meta&);
 	};
-
-	
 }
+#endif

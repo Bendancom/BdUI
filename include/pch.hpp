@@ -32,6 +32,8 @@
 #include "log.hpp"
 #include "readonly.hpp"
 
+#include "math/meta.hpp"
+
 #include "resource/resource.hpp"
 #include "resource/cursor.hpp"
 #include "resource/bitmap.hpp"
