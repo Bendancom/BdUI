@@ -9,6 +9,7 @@ namespace BdUI{
         namespace File{
             ERRORTYPE(Open_Failed,"Can't find the file by this filename");
             ERRORTYPE(Type_Invalid, "The type of the file is invalid");
+            ERRORTYPE(Const_Changed, "The const resource can't be changed.");
         }
         namespace Class{
             ERRORTYPE(Uninitialize,"Haven't initialized");

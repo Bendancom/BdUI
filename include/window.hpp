@@ -12,12 +12,14 @@ namespace BdUI{
         void Block();
         void Paint(const BdUI::Size&) = delete;
         
-        Attribute<Color> Background;
+        Attribute<Color> BackgroundColor;
+        Attribute<Color> TransparentColor;
         Attribute<Icon> SmIcon;
         Attribute<Icon> Icon;
         Attribute<UI*> Focus;
         Attribute<Size> Size;
         Attribute<bool> VSync;
+        Attribute<std::list<BdUI::Key>> HotKey;
 
         struct {
             Attribute<BdUI::Cursor> Caption;
@@ -29,6 +31,7 @@ namespace BdUI{
             Attribute<BdUI::Cursor> SysMenu;
         }WindowCursor;
 
+        EventArray<BdUI::Key>* HotKey_Tigger;
         
     private:
         std::thread *Thread;
@@ -40,13 +43,13 @@ namespace BdUI{
 
         void Paint();
         
-        bool WindowSizeChange(BdUI::Size,BdUI::Size*&);
-        bool WindowSetText(const std::string*&);
-        bool WindowLocationChange(Point, Point*&);
-        bool WindowSetBackground(Color, Color*&);
-        bool WindowSetVSync(bool,bool*&);
-        bool WindowSetClientSize(BdUI::Size, BdUI::Size*&);
-        bool WindowSetVisible(bool, bool*&);
+        bool SetHotKey(std::list<BdUI::Key>, std::list<BdUI::Key>*&);
+        bool SizeChange(BdUI::Size,BdUI::Size*&);
+        bool LocationChange(Point, Point*&);
+        bool SetBackgroundColor(Color, Color*&);
+        bool SetVSync(bool,bool*&);
+        bool SetClientSize(BdUI::Size, BdUI::Size*&);
+        bool SetVisible(bool, bool*&);
 
         UI* MouseContext = this;
         BdUI::Cursor CurrentCursor = Cursor.Client;

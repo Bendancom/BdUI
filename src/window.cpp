@@ -10,7 +10,7 @@ namespace BdUI{
         Mouse = BdUI::Mouse();
         Size.setOnly(BdUI::Size( 1000, 800,UnitType::Pixel ));
         Location.setOnly(Point(5,5,0,UnitType::cm));
-        Background.setOnly(RGB{ 255,255,255 });
+        BackgroundColor.setOnly(RGB{ 255,255,255 });
         VSync.setOnly(true);
         Focus = this;
     }
@@ -34,7 +34,7 @@ namespace BdUI{
     void Window::WindowEventDefaultBind(){
         delete Mouse.set_func;
         Mouse.set_func = nullptr;
-        Background.set_func = new Delegate<bool(Color, Color*&)>(&Window::WindowSetBackground, this);
+        BackgroundColor.set_func = new Delegate<bool(Color, Color*&)>(&Window::WindowSetBackground, this);
         Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size*&)>(&Window::WindowSizeChange, this);
         Location.set_func = new Delegate<bool(Point,Point*&)>(&Window::WindowLocationChange, this);
         VSync.set_func = new Delegate<bool(bool, bool*&)>(&Window::WindowSetVSync, this);
@@ -87,8 +87,8 @@ namespace BdUI{
         hRC = wglGetCurrentContext();
 
         wglSwapIntervalEXT(VSync);
-        RGB rgb = Background.get().GetRGB();
-        glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(Background.get().GetAlpha()) / 255);
+        RGB rgb = BackgroundColor.get().GetRGB();
+        glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(BackgroundColor.get().GetAlpha()) / 255);
         ShowWindow(hWnd, Visible.get() ? SW_SHOW : SW_HIDE);
         UpdateWindow(hWnd);
         Creation.set_value(true);
@@ -122,13 +122,10 @@ namespace BdUI{
         }
     }
 
-    bool Window::WindowSetText(const std::string*& s) {
-#ifdef WIN32
-        if(hWnd != nullptr) SetWindowText(hWnd, TEXT(s->c_str()));
-#endif
-        return true;
+    bool Window::SetHotKey(std::list<BdUI::Key> l, std::list<BdUI::Key>*& l_p) {
+
     }
-    bool Window::WindowSizeChange(BdUI::Size size,BdUI::Size*& old) {
+    bool Window::SizeChange(BdUI::Size size,BdUI::Size*& old) {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
         size.ChangeUnit(UnitType::Pixel);
@@ -138,7 +135,7 @@ namespace BdUI{
 #endif
         return true;
     }
-    bool Window::WindowLocationChange(Point location, Point*& old) {
+    bool Window::LocationChange(Point location, Point*& old) {
         if (old == nullptr) old = new BdUI::Point(location);
         else *old = location;
         location.ChangeUnit(UnitType::Pixel);
@@ -147,14 +144,14 @@ namespace BdUI{
 #endif
         return true;
     }
-    bool Window::WindowSetBackground(Color n, Color*& old) {
+    bool Window::SetBackgroundColor(Color n, Color*& old) {
         RGB rgb = n.GetRGB();
         if(IsLoadOpenGL) glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(n.GetAlpha()) / 255);
         if (old == nullptr) old = new BdUI::Color(n);
         else *old = n;
         return true;
     }
-    bool Window::WindowSetVSync(bool n, bool*& old) {
+    bool Window::SetVSync(bool n, bool*& old) {
 #ifdef _WIN32
         if (IsLoadOpenGL) {
             wglMakeCurrent(hDC, hRC);
@@ -166,7 +163,7 @@ namespace BdUI{
         else *old = n;
         return true;
     }
-    bool Window::WindowSetVisible(bool visible, bool*& old) {
+    bool Window::SetVisible(bool visible, bool*& old) {
         if (old == nullptr) old = new bool(visible);
         else *old = visible;
         if (hWnd != nullptr) {
@@ -184,7 +181,7 @@ namespace BdUI{
         }
         return true;
     }
-    bool Window::WindowSetClientSize(BdUI::Size size, BdUI::Size*& old) {
+    bool Window::SetClientSize(BdUI::Size size, BdUI::Size*& old) {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
         size.ChangeUnit(UnitType::Pixel);
