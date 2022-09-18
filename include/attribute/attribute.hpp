@@ -8,19 +8,20 @@
 
 namespace BdUI{
     template<typename... T> class Attribute; 
-    template<typename Data, typename GetData, typename SetData>
-    class Attribute<Data,GetData,SetData>{
+
+    template<typename Date, typename GetData, typename SetData>
+    class Attribute<Date,GetData,SetData>{
     private:
-        Data* Value = nullptr;
+        Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Data)> * ChangedEvent = nullptr;
-        Delegate<GetData(const Data*)> get_func;
-        Delegate<bool(SetData,Data*&)> set_func;
+        EventArray<void(Date)> * ChangedEvent = nullptr;
+        Delegate<GetData(const Date*)> get_func;
+        Delegate<bool(SetData,Date*&)> set_func;
         Attribute() {}
-        Attribute(const Delegate<GetData(Data*)>& g , const Delegate<bool(SetData,Data*&)>& s) : get_func(g),set_func(s) {}
-        Attribute(const Data &v, const Delegate<GetData(Data*)>& g , const Delegate<bool(SetData,Data*&)>& s) : get_func(g),set_func(s),Value(new Data(v)) {}
-        Attribute(const Attribute<Data, GetData, SetData>&) = delete;
+        Attribute(const Delegate<GetData(Date*)>& g , const Delegate<bool(SetData,Date*&)>& s) : get_func(g),set_func(s) {}
+        Attribute(const Date &v, const Delegate<GetData(Date*)>& g , const Delegate<bool(SetData,Date*&)>& s) : get_func(g),set_func(s),Value(new Date(v)) {}
+        Attribute(const Attribute<Date, GetData, SetData>&) = delete;
         ~Attribute() {
             delete ChangedEvent;
             delete Value;
@@ -30,7 +31,7 @@ namespace BdUI{
             if (Value == nullptr) throw error::Class::Uninitialize();
             return get_func(Value);
         }
-        operator Data() {
+        operator Date() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (Value == nullptr) throw error::Class::Uninitialize();
             return *Value;
@@ -48,7 +49,7 @@ namespace BdUI{
             Mutex.unlock();
         }
         //便于进行读写操作,给予引用并上锁,别忘解锁
-        Data* getReference() {
+        Date* getReference() {
             Mutex.lock();
             if (Value == nullptr) throw error::Class::Uninitialize();
             return Value;
@@ -57,7 +58,7 @@ namespace BdUI{
             Mutex.lock();
             if (set_func.exist()) {
                 if (set_func(value, Value)) {
-                    Data d = *Value;
+                    Date d = *Value;
                     Mutex.unlock();
                     if (ChangedEvent != nullptr) ChangedEvent->operator()(d);
                     return true;
@@ -70,11 +71,11 @@ namespace BdUI{
             }
             return false;
         }
-        Attribute<Data,GetData,SetData> &operator=(SetData value){
+        Attribute<Date,GetData,SetData> &operator=(SetData value){
             Mutex.lock();
             if(set_func.exist()){
                 if (set_func(value, Value)) {
-                    Data d = *Value;
+                    Date d = *Value;
                     Mutex.unlock();
                     if (ChangedEvent != nullptr) ChangedEvent->operator()(d);
                 }
@@ -86,34 +87,35 @@ namespace BdUI{
             }
             return *this;
         }
-        Attribute<Data,GetData,SetData> &operator=(const Attribute<Data,GetData,SetData>&) = delete;
+        Attribute<Date,GetData,SetData> &operator=(const Attribute<Date,GetData,SetData>&) = delete;
     };
-    template<typename Data>
-    class Attribute<Data> {
+
+    template<typename Date>
+    class Attribute<Date> {
     private:
-        Data* Value = nullptr;
+        Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Data)> *ChangedEvent = nullptr;
-        Delegate<Data(const Data*)>* get_func = nullptr;
-        Delegate<bool(Data,Data*&)>* set_func = nullptr;
+        EventArray<void(Date)> *ChangedEvent = nullptr;
+        Delegate<Date(const Date*)>* get_func = nullptr;
+        Delegate<bool(Date,Date*&)>* set_func = nullptr;
         Attribute() {}
-        Attribute(const Data& v) : Value(new Data(v)) {}
-        Attribute(const Delegate<Data(Data*)>& g) : get_func(new Delegate<Data(Data*)>(g)) {}
-        Attribute(const Delegate<bool(Data,Data*)>& s) : set_func(new Delegate<bool(Data,Data*)>(s)) {}
-        Attribute(const Delegate<Data(Data*)>& g, const Delegate<bool(Data, Data*)>& s) : get_func(new Delegate<Data(Data*)>(g)),
-            set_func(new Delegate<bool(Data, Data*)>(s)) {}
-        Attribute(const Data& v, const Delegate<Data(Data*)>& g) : get_func(new Delegate<Data(Data*)>(g)),Value(new Data(v)) {}
-        Attribute(const Data& v, const Delegate<bool(Data,Data*&)>& s) : set_func(new Delegate<bool(Data, Data*)>(s)),Value(new Data(v)) {}
-        Attribute(const Data& v, const Delegate<Data(Data*)>& g, const Delegate<bool(Data,Data*&)>& s) : get_func(new Delegate<Data(Data*)>(g)),
-            set_func(new Delegate<bool(Data, Data*)>(s)),Value(new Data(v)) {}
-        Attribute(const Attribute<Data>&) = delete;
+        Attribute(const Date& v) : Value(new Date(v)) {}
+        Attribute(const Delegate<Date(Date*)>& g) : get_func(new Delegate<Date(Date*)>(g)) {}
+        Attribute(const Delegate<bool(Date,Date*)>& s) : set_func(new Delegate<bool(Date,Date*)>(s)) {}
+        Attribute(const Delegate<Date(Date*)>& g, const Delegate<bool(Date, Date*)>& s) : get_func(new Delegate<Date(Date*)>(g)),
+            set_func(new Delegate<bool(Date, Date*)>(s)) {}
+        Attribute(const Date& v, const Delegate<Date(Date*)>& g) : get_func(new Delegate<Date(Date*)>(g)),Value(new Date(v)) {}
+        Attribute(const Date& v, const Delegate<bool(Date,Date*&)>& s) : set_func(new Delegate<bool(Date, Date*)>(s)),Value(new Date(v)) {}
+        Attribute(const Date& v, const Delegate<Date(Date*)>& g, const Delegate<bool(Date,Date*&)>& s) : get_func(new Delegate<Date(Date*)>(g)),
+            set_func(new Delegate<bool(Date, Date*)>(s)),Value(new Date(v)) {}
+        Attribute(const Attribute<Date>&) = delete;
         ~Attribute() {
             delete ChangedEvent;
             delete get_func;
             delete set_func;
         }
-        operator Data() {
+        operator Date() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (Value != nullptr) {
                 if (get_func != nullptr) {
@@ -133,12 +135,12 @@ namespace BdUI{
             Mutex.unlock();
         }
         //便于进行读写操作,给予引用并上锁,别忘解锁
-        Data* getReference() {
+        Date* getReference() {
             Mutex.lock();
             if (Value == nullptr) throw error::Class::Uninitialize();
             return Value;
         }
-        Data get() {
+        Date get() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (Value != nullptr) {
                 if (get_func != nullptr) {
@@ -150,18 +152,18 @@ namespace BdUI{
             }
             else throw error::Class::Uninitialize();
         }
-        bool set(Data value) {
+        bool set(Date value) {
             Mutex.lock();
             if (set_func != nullptr) {
                 if ((*set_func)(value, Value)) {
-                    Data d = *Value;
+                    Date d = *Value;
                     Mutex.unlock();
                     if (ChangedEvent != nullptr) ChangedEvent->operator()(d);
                     return true;
                 }
             }
             else {
-                if (Value == nullptr) Value = new Data(value);
+                if (Value == nullptr) Value = new Date(value);
                 else *Value = value;
                 Mutex.unlock();
                 if (ChangedEvent != nullptr) ChangedEvent->operator()(value);
@@ -169,47 +171,47 @@ namespace BdUI{
             }
             return false;
         }
-        bool setOnly(Data data) {
+        bool setOnly(Date data) {
             Mutex.lock();
-            if (Value == nullptr) Value = new Data(data);
+            if (Value == nullptr) Value = new Date(data);
             else *Value = data;
             Mutex.unlock();
             if (ChangedEvent != nullptr) ChangedEvent->operator()(data);
             return true;
         }
-        Attribute<Data> &operator=(Data value){
+        Attribute<Date> &operator=(Date value){
             Mutex.lock();
             if (set_func != nullptr) {
                 if ((*set_func)(value, Value)) {
-                    Data d = *Value;
+                    Date d = *Value;
                     Mutex.unlock();
                     if (ChangedEvent != nullptr) ChangedEvent->operator()(d);
                 }
             }
             else {
-                if (Value == nullptr) Value = new Data(value);
+                if (Value == nullptr) Value = new Date(value);
                 else *Value = value;
                 Mutex.unlock();
                 if (ChangedEvent != nullptr) ChangedEvent->operator()(value);
             }
             return *this;
         }
-        Attribute<Data> &operator=(const Attribute<Data>&) = delete;
+        Attribute<Date> &operator=(const Attribute<Date>&) = delete;
     };
 
-    template<typename Data, typename GetData, typename SetData>
-    class Attribute<Data*, GetData, SetData> {
+    template<typename Date, typename GetData, typename SetData>
+    class Attribute<Date*, GetData, SetData> {
     private:
-        Data* Value = nullptr;
+        Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Data*)>* ChangedEvent = nullptr;
-        Delegate<GetData(Data*)> get_func;
-        Delegate<bool(SetData, Data*&)> set_func;
+        EventArray<void(Date*)>* ChangedEvent = nullptr;
+        Delegate<GetData(Date*)> get_func;
+        Delegate<bool(SetData, Date*&)> set_func;
         Attribute() {}
-        Attribute(const Delegate<GetData(Data*)>& g, const Delegate<bool(SetData, Data*&)>& s) : get_func(g), set_func(s) {}
-        Attribute(Data* v, const Delegate<GetData(Data*)>& g, const Delegate<bool(SetData, Data*&)>& s) : get_func(g), set_func(s), Value(v) {}
-        Attribute(const Attribute<Data*, GetData, SetData>&) = delete;
+        Attribute(const Delegate<GetData(Date*)>& g, const Delegate<bool(SetData, Date*&)>& s) : get_func(g), set_func(s) {}
+        Attribute(Date* v, const Delegate<GetData(Date*)>& g, const Delegate<bool(SetData, Date*&)>& s) : get_func(g), set_func(s), Value(v) {}
+        Attribute(const Attribute<Date*, GetData, SetData>&) = delete;
         ~Attribute() {
             delete ChangedEvent;
             delete Value;
@@ -219,7 +221,7 @@ namespace BdUI{
             if (Value == nullptr) throw error::Class::Uninitialize();
             return get_func(Value);
         }
-        operator Data*() {
+        operator Date*() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (Value == nullptr) throw error::Class::Uninitialize();
             return Value;
@@ -236,7 +238,7 @@ namespace BdUI{
         bool set(SetData value) {
             Mutex.lock();
             if (set_func.exist()) {
-                Data* d;
+                Date* d;
                 if (set_func(value, d)) {
                     Value = d;
                     Mutex.unlock();
@@ -251,10 +253,10 @@ namespace BdUI{
             }
             return false;
         }
-        Attribute<Data*, GetData, SetData>& operator=(SetData value) {
+        Attribute<Date*, GetData, SetData>& operator=(SetData value) {
             Mutex.lock();
             if (set_func.exist()) {
-                Data* d;
+                Date* d;
                 if (set_func(value, d)) {
                     Value = d;
                     Mutex.unlock();
@@ -268,34 +270,35 @@ namespace BdUI{
             }
             return *this;
         }
-        Attribute<Data*, GetData, SetData>& operator=(const Attribute<Data*, GetData, SetData>&) = delete;
+        Attribute<Date*, GetData, SetData>& operator=(const Attribute<Date*, GetData, SetData>&) = delete;
     };
-    template<typename Data>
-    class Attribute<Data*> {
+
+    template<typename Date>
+    class Attribute<Date*> {
     private:
-        Data* Value = nullptr;
+        Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Data*)>* ChangedEvent = nullptr;
-        Delegate<Data*(Data*)>* get_func = nullptr;
-        Delegate<bool(Data*, Data*&)>* set_func = nullptr;
+        EventArray<void(Date*)>* ChangedEvent = nullptr;
+        Delegate<Date*(Date*)>* get_func = nullptr;
+        Delegate<bool(Date*, Date*&)>* set_func = nullptr;
         Attribute() {}
-        Attribute(Data* v) : Value(v) {}
-        Attribute(const Delegate<Data*(Data*)>& g) : get_func(new Delegate<Data*(Data*)>(g)) {}
-        Attribute(const Delegate<bool(Data*, Data*&)>& s) : set_func(new const Delegate<bool(Data*, Data*&)>& (s)) {}
-        Attribute(const Delegate<Data*(Data*)>& g, const Delegate<bool(Data*, Data*&)>& s) : get_func(new Delegate<Data*(Data*)>(g)),
-            set_func(new Delegate<bool(Data*, Data*&)>(s)) {}
-        Attribute(const Data& v, const Delegate<Data*(Data*)>& g) : get_func(new Delegate<Data(Data*)>(g)), Value(new Data(v)) {}
-        Attribute(const Data& v, const Delegate<bool(Data*, Data*&)>& s) : set_func(new Delegate<bool(Data, Data*)>(s)), Value(new Data(v)) {}
-        Attribute(const Data& v, const Delegate<Data*(Data*)>& g, const Delegate<bool(Data*, Data*&)>& s) : get_func(new Delegate<Data(Data*)>(g)),
-            set_func(new Delegate<bool(Data, Data*)>(s)), Value(new Data(v)) {}
-        Attribute(const Attribute<Data>&) = delete;
+        Attribute(Date* v) : Value(v) {}
+        Attribute(const Delegate<Date*(Date*)>& g) : get_func(new Delegate<Date*(Date*)>(g)) {}
+        Attribute(const Delegate<bool(Date*, Date*&)>& s) : set_func(new const Delegate<bool(Date*, Date*&)>& (s)) {}
+        Attribute(const Delegate<Date*(Date*)>& g, const Delegate<bool(Date*, Date*&)>& s) : get_func(new Delegate<Date*(Date*)>(g)),
+            set_func(new Delegate<bool(Date*, Date*&)>(s)) {}
+        Attribute(const Date& v, const Delegate<Date*(Date*)>& g) : get_func(new Delegate<Date(Date*)>(g)), Value(new Date(v)) {}
+        Attribute(const Date& v, const Delegate<bool(Date*, Date*&)>& s) : set_func(new Delegate<bool(Date, Date*)>(s)), Value(new Date(v)) {}
+        Attribute(const Date& v, const Delegate<Date*(Date*)>& g, const Delegate<bool(Date*, Date*&)>& s) : get_func(new Delegate<Date(Date*)>(g)),
+            set_func(new Delegate<bool(Date, Date*)>(s)), Value(new Date(v)) {}
+        Attribute(const Attribute<Date>&) = delete;
         ~Attribute() {
             delete ChangedEvent;
             delete get_func;
             delete set_func;
         }
-        operator Data*() {
+        operator Date*() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (Value != nullptr) {
                 if (get_func != nullptr) {
@@ -311,7 +314,7 @@ namespace BdUI{
             std::shared_lock<std::shared_mutex> lock(Mutex);
             return Value != nullptr ? true : false;
         }
-        Data* get() {
+        Date* get() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (Value != nullptr) {
                 if (get_func != nullptr) {
@@ -323,10 +326,10 @@ namespace BdUI{
             }
             else throw error::Class::Uninitialize();
         }
-        bool set(Data* value) {
+        bool set(Date* value) {
             Mutex.lock();
             if (set_func != nullptr) {
-                Data* d;
+                Date* d;
                 if ((*set_func)(value, d)) {
                     Value = d;
                     Mutex.unlock();
@@ -342,17 +345,17 @@ namespace BdUI{
             }
             return false;
         }
-        bool setOnly(Data* data) {
+        bool setOnly(Date* data) {
             Mutex.lock();
             Value = data;
             Mutex.unlock();
             if (ChangedEvent != nullptr) ChangedEvent->operator()(data);
             return true;
         }
-        Attribute<Data*>& operator=(Data* value) {
+        Attribute<Date*>& operator=(Date* value) {
             Mutex.lock();
             if (set_func != nullptr) {
-                Data* d;
+                Date* d;
                 if ((*set_func)(value, d)) {
                     Value = d;
                     Mutex.unlock();
@@ -366,7 +369,7 @@ namespace BdUI{
             }
             return *this;
         }
-        Attribute<Data*>& operator=(const Attribute<Data*>&) = delete;
+        Attribute<Date*>& operator=(const Attribute<Date*>&) = delete;
     };
 }
 #endif

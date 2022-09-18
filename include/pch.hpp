@@ -26,7 +26,7 @@
 #include "graph/shape.hpp"
 #include "graph/size.hpp"
 
-#include "attribute.hpp"
+#include "attribute/attribute.hpp"
 #include "delegate.hpp"
 #include "event.hpp"
 #include "log.hpp"
