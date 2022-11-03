@@ -9,69 +9,63 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-#include <xhash>
+#include <array>
+#include <atomic>
 
 #include <error.hpp>
 
 namespace BdUI {
-	/*
-	Layout :
-	variable use '@' to identify,escape character is '\'{
-		Level : level
-		Line : line
-		Column : column
-		Message : msg
-		file_name : file
-		function_name : func
-	}
-	*/
+	
 	class Log {
 	public:
-		enum Loglevel {
+		enum LogLevel {
 			Fatal = 0,
 			Error = 1,
 			Warning = 2,
 			Info = 3,
 			Debug = 4,
 		};
-	private:
-		struct Message {
-			Loglevel Level;
-			std::string msg;
-			std::source_location source_location;
-		};
+		
+		Log(LogLevel&& LevelMax = Debug);
+		Log(std::string&& log_file);
+		Log(LogLevel&& LevelMax, std::string&& log_file);
+		~Log();
 
-		Loglevel Level = Debug;
-		std::ofstream log_ofstream;
-		const char* Layout = "[@level]: In @file : @func / Line: @line,Column: @column , Message: @msg";
+		/*
+		@brief 可动态显示如下变量
+		@brief these variable can be showed dynamically
+		@param Line:\@line
+		@param Column:\@column
+		@param Message:\@msg
+		@param FileName:\@file
+		@param FunctionName:\@func
+		*/
+		std::array<std::atomic<std::string>, 5> Layout{
+			std::string("[Fatal]:In @func,@msg"),
+			std::string("[Error]:In @func,@msg"),
+			std::string("[Warning]: In @func,@msg"),
+			std::string("[Info]: @msg"),
+			std::string("[Debug]: In @file : @func / Line: @line,Column: @column , @msg"),
+		};
+		/*
+			最大日志输出等级
+			the max level that the data is output;
+		*/
+		std::atomic<LogLevel> LevelMax;
+
+		void SetLogFile(std::string&&);
+		void write(LogLevel Level, std::string msg, std::source_location&& source_location = std::source_location::current());
+	private:
+		typedef std::pair<std::string, std::source_location> Message;
+
+		std::ofstream* log_ofstream;
 		std::thread log_thread;
-		std::queue<Message> Queue;
+		std::queue<std::pair<LogLevel,Message>> Queue;
 		std::condition_variable condition;
 		std::mutex Mutex;
 
-		void Out(Message&&);
+		void Out(Message&&,LogLevel);
 		void Logger();
-	public:
-		Log(Loglevel&& level, const char* file) : Level(level), log_thread(std::thread(&Log::Logger, this)),log_ofstream(file) {
-			log_thread.detach();
-		}
-		Log(Loglevel&& level, const char* file, const char* layout) : Level(level), Layout(layout),log_ofstream(file),
-		log_thread(std::thread(&Log::Logger, this))
-		{
-			log_thread.detach();
-		}
-		Log(Loglevel&& level) : Level(level), log_thread(std::thread(&Log::Logger, this)){
-			log_thread.detach();
-		}
-		~Log(){}
-
-
-		void SetLayout(const char*);
-		void SetOfStream(const char*);
-		void CloseOfStream();
-		void SetLevel(Loglevel&&);
-
-		void write(Loglevel, std::string, std::source_location&& source_location = std::source_location::current());
 	};
 	extern Log log;
 }

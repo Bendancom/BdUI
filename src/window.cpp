@@ -7,7 +7,6 @@ namespace BdUI{
         WindowEventDefaultBind();
         WindowCursorDefaultBind();
 
-        Mouse = BdUI::Mouse();
         Size.setOnly(BdUI::Size( 1000, 800,UnitType::Pixel ));
         Location.setOnly(Point(5,5,0,UnitType::cm));
         BackgroundColor.setOnly(RGB{ 255,255,255 });
@@ -34,11 +33,11 @@ namespace BdUI{
     void Window::WindowEventDefaultBind(){
         delete Mouse.set_func;
         Mouse.set_func = nullptr;
-        BackgroundColor.set_func = new Delegate<bool(Color, Color*&)>(&Window::WindowSetBackground, this);
-        Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size*&)>(&Window::WindowSizeChange, this);
-        Location.set_func = new Delegate<bool(Point,Point*&)>(&Window::WindowLocationChange, this);
-        VSync.set_func = new Delegate<bool(bool, bool*&)>(&Window::WindowSetVSync, this);
-        Visible.set_func = new Delegate<bool(bool, bool*&)>(&Window::WindowSetVisible, this);
+        BackgroundColor.set_func = new Delegate<bool(Color, Color*&)>(&Window::SetBackgroundColor, this);
+        Size.set_func = new Delegate<bool(BdUI::Size,BdUI::Size*&)>(&Window::SizeChange, this);
+        Location.set_func = new Delegate<bool(Point,Point*&)>(&Window::LocationChange, this);
+        VSync.set_func = new Delegate<bool(bool, bool*&)>(&Window::SetVSync, this);
+        Visible.set_func = new Delegate<bool(bool, bool*&)>(&Window::SetVisible, this);
         //ParentEvent
     }
     void Window::WindowCursorDefaultBind() {
@@ -281,7 +280,7 @@ namespace BdUI{
                 UI* focus = w->Focus;
                 BdUI::Key key;
                 if(focus->Key.exist()) key = focus->Key;
-                key.VirtualKey = BdUI::Key::Type(wParam);
+                key.VirtualKey = BdUI::KeyType(wParam);
                 key.RepeatCount = LOWORD(lParam);
                 key.ScanCode = LOBYTE(HIWORD(lParam));
                 key.Up_Down = 1;
@@ -296,7 +295,7 @@ namespace BdUI{
                 UI* focus = w->Focus;
                 BdUI::Key key;
                 if (focus->Key.exist()) key = focus->Key;
-                key.VirtualKey = BdUI::Key::Type(wParam);
+                key.VirtualKey = BdUI::KeyType(wParam);
                 key.RepeatCount = LOWORD(lParam);
                 key.ScanCode = LOBYTE(HIWORD(lParam));
                 key.Up_Down = 0;

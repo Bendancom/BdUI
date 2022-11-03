@@ -19,7 +19,7 @@ namespace BdUI{
         Attribute<UI*> Focus;
         Attribute<Size> Size;
         Attribute<bool> VSync;
-        Attribute<std::list<BdUI::Key>> HotKey;
+        
 
         struct {
             Attribute<BdUI::Cursor> Caption;
@@ -31,7 +31,8 @@ namespace BdUI{
             Attribute<BdUI::Cursor> SysMenu;
         }WindowCursor;
 
-        EventArray<BdUI::Key>* HotKey_Tigger;
+        AttributeVector<KeyList> HotKey;
+        EventArray<KeyList>* HotKey_Tigger;
         
     private:
         std::thread *Thread;
@@ -54,8 +55,8 @@ namespace BdUI{
         UI* MouseContext = this;
         BdUI::Cursor CurrentCursor = Cursor.Client;
         
-
         bool GraphChanged = true;
+
         #ifdef _WIN32
         static std::map<HWND,Window*> WindowList;
         int dwExStyle = NULL;
