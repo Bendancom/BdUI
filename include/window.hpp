@@ -10,7 +10,6 @@ namespace BdUI{
         ~Window();
         bool Create();
         void Block();
-        void Paint(const BdUI::Size&) = delete;
         
         Attribute<Color> BackgroundColor;
         Attribute<Color> TransparentColor;
@@ -37,12 +36,13 @@ namespace BdUI{
     private:
         std::thread *Thread;
         std::mutex Mutex;
+        std::mutex OpenGLMutex;
         static bool IsLoadOpenGL;
 
         void WindowEventDefaultBind();
         void WindowCursorDefaultBind();
 
-        void Paint();
+        bool OpenGLLoader();
         
         bool SetHotKey(std::list<BdUI::Key>, std::list<BdUI::Key>*&);
         bool SizeChange(BdUI::Size,BdUI::Size*&);
@@ -65,10 +65,46 @@ namespace BdUI{
         HDC hDC = nullptr;
         HGLRC hRC = nullptr;
         std::promise<bool> Creation;
+
+
         static LRESULT CALLBACK __WndProc(HWND,UINT,WPARAM,LPARAM);
         static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);
         static void MouseVitualKey(WPARAM,BdUI::Mouse&);
         void WindThread();
+
+        const WNDCLASSEX Windowclass{
+            sizeof(WNDCLASSEX),
+            CS_VREDRAW | CS_HREDRAW | CS_OWNDC,
+            Window::__WndProc,
+            0,
+            8,
+            GetModuleHandle(NULL),
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            TEXT("BdUI_WindowClass"),
+            NULL,
+        };
+        PIXELFORMATDESCRIPTOR pfd =
+        {
+            sizeof(PIXELFORMATDESCRIPTOR),
+            1,
+            PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+            PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
+            32,                        //Colordepth of the framebuffer.
+            0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0, 0, 0, 0,
+            24,                        //Number of bits for the depthbuffer
+            8,                        //Number of bits for the stencilbuffer
+            0,                        //Number of Aux buffers in the framebuffer.
+            PFD_MAIN_PLANE,
+            0,
+            0, 0, 0
+        };
         #endif
     };
 }

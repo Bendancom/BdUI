@@ -9,7 +9,7 @@ namespace BdUI
         UI();
         ~UI() {}
 
-        Attribute<std::list<UI*>> UIList = std::list<UI*>();
+        AttributeVector<UI*> UIList;
 
         void Paint(const Size&);
 

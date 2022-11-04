@@ -1,35 +1,35 @@
 #include "log.hpp"
 
 namespace BdUI {
-	Log log = Log();
-
-	Log::Log(LogLevel&& LevelMax = Debug) {
+	Log::Log() {
+		log_thread.detach();
+	}
+	Log::Log(LogLevel&& LevelMax) {
 		this->LevelMax = LevelMax;
 		log_thread.detach();
 	}
 	Log::Log(std::string&& log_file) {
 		LevelMax = Debug;
-		log_ofstream = new std::ofstream(log_file);
+		log_ostream = new std::ofstream(log_file);
 		log_thread.detach();
 	}
 	Log::Log(LogLevel&& LevelMax, std::string&& log_file) {
 		this->LevelMax = LevelMax;
-		log_ofstream = new std::ofstream(log_file);
+		log_ostream = new std::ofstream(log_file);
 		log_thread.detach();
-	}
-	Log::~Log() {
-		delete log_ofstream;
 	}
 
 	void Log::SetLogFile(std::string&& file) {
 		Mutex.lock();
-		if (log_ofstream->is_open()) log_ofstream->close();
-		log_ofstream->open(file);
+		if (!file.empty()) log_ostream = new std::ofstream(file);
+		else log_ostream = &std::cout;
 		Mutex.unlock();
 	}
 	void Log::write(LogLevel level, std::string msg, std::source_location&& source_location) {
+		Mutex.lock();
 		Queue.push(std::pair<LogLevel, Message>{ level, { msg, source_location }});
 		condition.notify_all();
+		Mutex.unlock();
 	}
 
 	void Log::Logger() {
@@ -43,12 +43,13 @@ namespace BdUI {
 
 	void Log::Out(Log::Message&& msg,LogLevel level) {
 		if (level > LevelMax) return;
-		std::string layout = Layout[level];
+		std::string layout = Layout[level].load();
 		layout.replace(layout.find("@func"), 5, msg.second.function_name());
 		layout.replace(layout.find("@file"), 5, msg.second.file_name());
 		layout.replace(layout.find("@line"), 5, std::to_string(msg.second.line()));
 		layout.replace(layout.find("@column"), 7, std::to_string(msg.second.column()));
 		layout.replace(layout.find("@msg"), 4, msg.first);
-		*log_ofstream << layout << std::endl;
+		if (log_ostream != nullptr) *log_ostream << layout << std::endl;
+		else std::cout << layout << std::endl;
 	}
 }

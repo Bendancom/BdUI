@@ -7,20 +7,20 @@
 #include <event.hpp>
 
 namespace BdUI {
-    template<typename Date>
+    template<typename Data>
     class AttributeVector {
     private:
-        std::vector<Date> Vector;
+        std::vector<Data> Vector;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(const std::vector<Date>)>* ChangedEvent = nullptr;
+        EventArray<void(const std::vector<Data>)>* ChangedEvent = nullptr;
         AttributeVector() {}
-        AttributeVector(const std::vector<Date>& v) : Vector(v) {}
-        AttributeVector(const AttributeVector<Date>&) = delete;
+        AttributeVector(const std::vector<Data>& v) : Vector(v) {}
+        AttributeVector(const AttributeVector<Data>&) = delete;
         ~AttributeVector() {
             delete ChangedEvent;
         }
-        operator std::vector<Date>{
+        operator std::vector<Data>() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             return Vector;
         }
@@ -28,66 +28,84 @@ namespace BdUI {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             return Vector.empty();
         }
-        Date at(int n) {
+        Data at(int n) {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (!Vector.empty()) return Vector[n];
             else throw error::Class::Uninitialize();
         }
-        std::vector<Date>::size_type size() {
+        std::vector<Data>::size_type size() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             return Vector.size();
         }
 
-        void insert(Date&& value,std::size_t pos) {
-            Mutex.lock();
-            Vector.insert(Vector.cbegin()+pos,value);
+        bool insert(Data&& value,std::size_t pos) {
+            std::lock_guard<std::shared_mutex> lock(Mutex);
+            if (pos < Vector.size()) Vector.insert(Vector.cbegin() + pos, value);
+            else return false;
             if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
-            Mutex.unlock();
+            else return false;
         }
-        void insert(Date&& value,int number,std::size_t pos) {
-            Mutex.lock();
-            Vector.insert(Vector.cbegin()+pos,n,value);
+        bool insert(Data&& value,int number,std::size_t pos) {
+            std::lock_guard<std::shared_mutex> lock(Mutex);
+            if (pos < Vector.size()) Vector.insert(Vector.cbegin() + pos, number, value);
+            else return false;
             if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
-            Mutex.unlock();
+            return true;
         }
-        void insert(std::initializer_list<Date>&& value,std::size_t pos) {
-            Mutex.lock();
-            Vector.insert(Vector.cbegin()+pos,value);
+        bool insert(std::initializer_list<Data>&& value,std::size_t pos) {
+            std::lock_guard<std::shared_mutex> lock(Mutex);
+            if (pos < Vector.size()) Vector.insert(Vector.cbegin() + pos, value);
+            else return false;
             if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
-            Mutex.unlock();
+            return true;
         }
-        void emplace(Date&& value,std::size_t pos){
-            Mutex.lock();
-            Vector.emplace(Vector.begin() + pos,value);
+        bool emplace(Data&& value,std::size_t pos){
+            std::lock_guard<std::shared_mutex> lock(Mutex);
+            if (pos < Vector.size()) Vector.emplace(Vector.begin() + pos, value);
+            else return false;
             if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
-            Mutex.unlock();
+            return true;
         }
-        void push_back(Date&& value) {
-            Mutex.lock();
+        void push_back(Data&& value) {
+            std::lock_guard<std::shared_mutex> lock(Mutex);
             Vector.push_back(value);
             if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
-            Mutex.unlock();
-            return false;
         }
-        void Change(Date&& value,std::size_t n){
-            Mutex.lock();
+        bool Change(Data&& value,std::size_t n){
+            std::lock_guard<std::shared_mutex> lock(Mutex);
             if(Vector.size() > n) Vector[n] = value;
+            else return false;
             if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
-            else throw error::Function::ParamError();
+            return true;
+        }
+        bool erase(std::size_t pos) {
+            std::lock_guard<std::shared_mutex> lock(Mutex);
+            if (pos < Vector.size()) Vector.erase(Vector.begin() + pos);
+            else return false;
+            if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
+            return true;
+        }
+        bool erase(Data data) {
+            std::lock_guard<std::shared_mutex> lock(Mutex);
+            auto iter = std::find(Vector.begin(), Vector.end(), data);
+            if (iter != Vector.end()) Vector.erase(iter);
+            else return false;
+            if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
+            return true;
         }
 
-        AttributeVector<Date>& operator=(std::vector<Date>&& vector) {
+        AttributeVector<Data>& operator=(std::vector<Data>&& vector) {
             Mutex.lock();
             Vector = vector;
             if (ChangedEvent != nullptr) ChangedEvent->operator()(Vector);
             Mutex.unlock();
             return *this;
         }
-        Date operator[](std::size_t n){
+        Data operator[](std::size_t n){
             std::shared_lock<std::shared_mutex> lock(Mutex);
             return Vector[n];
         }
-        AttributeVector<Date>& operator=(const AttributeVector<Date>&) = delete;
+        AttributeVector<Data>& operator=(const AttributeVector<Data>&) = delete;
     };
 }
 #endif

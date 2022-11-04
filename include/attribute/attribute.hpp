@@ -131,15 +131,6 @@ namespace BdUI{
             std::shared_lock<std::shared_mutex> lock(Mutex);
             return Value != nullptr ? true : false;
         }
-        void unlock() {
-            Mutex.unlock();
-        }
-        //便于进行读写操作,给予引用并上锁,别忘解锁
-        Date* getReference() {
-            Mutex.lock();
-            if (Value == nullptr) throw error::Class::Uninitialize();
-            return Value;
-        }
         Date get() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             if (Value != nullptr) {

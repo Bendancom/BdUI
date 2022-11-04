@@ -2,7 +2,7 @@
 #define BDUI_ERROR
 #include <exception>
 
-#define ERRORTYPE(name,error_what) class name : public std::exception{public: virtual const char* what(){return error_what;} }
+#define ERRORTYPE(name,error_what) class name : public std::exception{public: virtual const char* what(){return string_what;} name(){} name(const char* s):string_what(s){} private: const char* string_what = error_what; }
 
 namespace BdUI{
     namespace error{

@@ -1,14 +1,13 @@
 #include "window.hpp"
 
-using namespace BdUI;
 using namespace std;
+using namespace BdUI;
 
 int main()
 {
-	std::cout << sizeof(std::list<Meta*>)<<std::endl;
-	std::cout << sizeof(std::vector<char>) << std::endl;
 	Window window;
 	bool create = window.Create();
+	window.BackgroundColor = RGB{ 0,0,0 };
 	window.Block();
 	return 0;
 }

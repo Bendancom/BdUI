@@ -26,7 +26,7 @@ namespace BdUI
     }
     void UI::Paint(const Size& size){
         Shape.get().Paint(Location, size);
-        std::list<UI*> uiList = UIList;
+        std::vector<UI*> uiList = UIList;
         if (uiList.size() == 0) return;
         for (UI* i : uiList) {
             i->Paint(size);
@@ -40,11 +40,9 @@ namespace BdUI
         return true;
     }
     bool UI::ParentSet(UI* new_parent, UI*& old_parent) {
-        old_parent->UIList.getReference()->remove(this);
-        old_parent->UIList.unlock();
-        new_parent->UIList.getReference()->push_back(this);
-        new_parent->UIList.unlock();
-        old_parent = new_parent;
+        old_parent->UIList.erase(this);
+        new_parent->UIList.push_back(this);
+        Parent = new_parent;
         return true;
     }
 

@@ -17,7 +17,7 @@ namespace BdUI{
 			Multiply = 2,
 			Division = 3,
 		}Symbol = Plus;
-		unsigned double coefficient = 1;
+		double coefficient = 1;
 		char* variable; // '\0' is the end
 		Meta* pow = nullptr;
 		std::string suffix;
