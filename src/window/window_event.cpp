@@ -1,6 +1,7 @@
 #include <window.hpp>
-#define OpenGLLock(x) if(IsLoadOpenGL){OpenGLMutex.lock();wglMakeCurrent(hDC, hRC);x;wglMakeCurrent(NULL,NULL);OpenGLMutex.unlock();}
-
+#ifdef _WIN32
+#define OpenGLLock(x) if(IsLoadOpenGL){OpenGLMutex.lock();HDC&& hdc = wglGetCurrentDC();HGLRC&& hrc = wglGetCurrentContext(); wglMakeCurrent(hDC, hRC);x;wglMakeCurrent(hdc,hrc);OpenGLMutex.unlock();}
+#endif
 namespace BdUI {
     bool Window::SetHotKey(std::list<BdUI::Key> l, std::list<BdUI::Key>*& l_p) {
         return true;
@@ -29,14 +30,15 @@ namespace BdUI {
         else *old = n;
         RGB rgb = n.GetRGB();
         OpenGLLock(glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(n.GetAlpha()) / 255))
+        GraphChanged = true;
         return true;
     }
     bool Window::SetVSync(bool n, bool*& old) {
+        if (old == nullptr) old = new bool(n);
+        else *old = n;
 #ifdef _WIN32
         OpenGLLock(wglSwapIntervalEXT(n))
 #endif
-        if (old == nullptr) old = new bool(n);
-        else *old = n;
         return true;
     }
     bool Window::SetVisible(bool visible, bool*& old) {

@@ -3,6 +3,22 @@
 namespace BdUI {
     void Window::WindThread() {
 #ifdef _WIN32
+        RGB rgb = BackgroundColor.get().GetRGB();
+        WNDCLASSEX Windowclass{
+            sizeof(WNDCLASSEX),
+            CS_VREDRAW | CS_HREDRAW | CS_OWNDC,
+            Window::__WndProc,
+            0,
+            0,
+            GetModuleHandle(NULL),
+            NULL,
+            NULL,
+            CreateSolidBrush(RGB(rgb.R,rgb.G,rgb.B)),
+            NULL,
+            TEXT("BdUI_WindowClass"),
+            NULL,
+        };
+
         if (!RegisterClassEx(&Windowclass)) { //×¢²á´°¿ÚÀà
             Creation.set_value(false);
             return;
@@ -24,15 +40,11 @@ namespace BdUI {
 
         Size = Size.get();
         Location = Location.get();
-        if (!BackgroundColor.exist()) BackgroundColor = Color(RGB{ 255,255,255 });
-        else BackgroundColor = BackgroundColor.get();
+        BackgroundColor = BackgroundColor.get();
         if (!VSync.exist()) VSync = true;
         else VSync = VSync.get();
 
         WindowList[hWnd] = this;
-
-        ShowWindow(hWnd, Visible.get() ? SW_SHOW : SW_HIDE);
-        UpdateWindow(hWnd);
         Creation.set_value(true);
 
         Mutex.lock();
@@ -126,13 +138,11 @@ namespace BdUI {
         case WM_PAINT: {
             if (w->GraphChanged == true) {
                 w->OpenGLMutex.lock();
-                wglMakeCurrent(w->hDC, w->hRC);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glFlush();
 #ifdef _WIN32
                 SwapBuffers(w->hDC);
 #endif
-                wglMakeCurrent(NULL, NULL);
                 w->OpenGLMutex.unlock();
                 w->GraphChanged = false;
             }

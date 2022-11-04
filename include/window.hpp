@@ -72,20 +72,6 @@ namespace BdUI{
         static void MouseVitualKey(WPARAM,BdUI::Mouse&);
         void WindThread();
 
-        const WNDCLASSEX Windowclass{
-            sizeof(WNDCLASSEX),
-            CS_VREDRAW | CS_HREDRAW | CS_OWNDC,
-            Window::__WndProc,
-            0,
-            8,
-            GetModuleHandle(NULL),
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            TEXT("BdUI_WindowClass"),
-            NULL,
-        };
         PIXELFORMATDESCRIPTOR pfd =
         {
             sizeof(PIXELFORMATDESCRIPTOR),
