@@ -17,7 +17,6 @@
 #include <windowsx.h>
 #include <wingdi.h>
 #include <OpenGL/glad/glad_wgl.h>
-#include <gl/GL.h>
 #endif
 
 #include "OpenGL/glad/glad.h"

@@ -1,7 +1,5 @@
 #include <window.hpp>
-#ifdef _WIN32
-#define OpenGLLock(x) if(IsLoadOpenGL){OpenGLMutex.lock();HDC&& hdc = wglGetCurrentDC();HGLRC&& hrc = wglGetCurrentContext(); wglMakeCurrent(hDC, hRC);x;wglMakeCurrent(hdc,hrc);OpenGLMutex.unlock();}
-#endif
+
 namespace BdUI {
     bool Window::SetHotKey(std::list<BdUI::Key> l, std::list<BdUI::Key>*& l_p) {
         return true;
@@ -13,7 +11,6 @@ namespace BdUI {
 #ifdef WIN32
         if (hWnd != nullptr) SetWindowPos(hWnd, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
 #endif
-        OpenGLLock(glViewport(0, 0, size.Width, size.Height))
         return true;
     }
     bool Window::LocationChange(Point location, Point*& old) {
@@ -29,7 +26,7 @@ namespace BdUI {
         if (old == nullptr) old = new BdUI::Color(n);
         else *old = n;
         RGB rgb = n.GetRGB();
-        OpenGLLock(glClearColor(float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(n.GetAlpha()) / 255))
+        Render.PushMessage(glClearColor,float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(n.GetAlpha()) / 255);
         GraphChanged = true;
         return true;
     }
@@ -37,7 +34,7 @@ namespace BdUI {
         if (old == nullptr) old = new bool(n);
         else *old = n;
 #ifdef _WIN32
-        OpenGLLock(wglSwapIntervalEXT(n))
+        Render.PushMessage(wglSwapIntervalEXT,n);
 #endif
         return true;
     }
@@ -62,7 +59,7 @@ namespace BdUI {
     bool Window::SetClientSize(BdUI::Size size, BdUI::Size*& old) {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
-        OpenGLLock(glViewport(0, 0, size.Width, size.Height))
+        Render.PushMessage(glViewport, 0, 0, size.Width, size.Height);
         return true;
     }
 }

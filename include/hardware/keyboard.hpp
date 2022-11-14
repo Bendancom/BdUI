@@ -183,15 +183,29 @@ namespace BdUI {
         Clear_OEM = VK_OEM_CLEAR
 #endif
     };
-
-    struct Key {
-        int RepeatCount;
+    struct KeyCode {
         char Code;
         unsigned char ScanCode;
+    };
+
+    struct Key {
+        int RepeatCount = 1;
+        KeyCode keyCode;
         bool Up_Down; // Up = 0,Down = 1
         KeyType VirtualKey;
     };
-    typedef std::vector<Key> KeyList;
-    
+
+    class KeyList {
+    public:
+        KeyList(){}
+        KeyList(std::initializer_list<KeyType>&& keys) : Keys(keys){}
+        ~KeyList(){}
+        std::vector<KeyType> GetKeys();
+
+        bool operator==(const KeyList&);
+        bool operator!=(const KeyList&);
+    private:
+        std::vector<KeyType> Keys;
+    };
 }
 #endif

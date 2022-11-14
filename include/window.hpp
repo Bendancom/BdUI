@@ -1,14 +1,20 @@
 #ifndef BDUI_WINDOW
 #define BDUI_WINDOW
-#include "pch.hpp"
-#include "ui.hpp"
+
+#ifdef _WIN32
+#define WM_OPENGLCONTEXT WM_USER+1
+#endif
+
+#include <pch.hpp>
+#include <ui.hpp>
+#include <renderer.hpp>
 
 namespace BdUI{
     class Window : public UI{
     public:
         Window();
         ~Window();
-        bool Create();
+        void Create();
         void Block();
         
         Attribute<Color> BackgroundColor;
@@ -34,15 +40,14 @@ namespace BdUI{
         EventArray<KeyList>* HotKey_Tigger;
         
     private:
+        std::promise<bool> Creation;
         std::thread *Thread;
         std::mutex Mutex;
         std::mutex OpenGLMutex;
-        static bool IsLoadOpenGL;
+        Renderer Render = Renderer(this);
 
         void WindowEventDefaultBind();
         void WindowCursorDefaultBind();
-
-        bool OpenGLLoader();
         
         bool SetHotKey(std::list<BdUI::Key>, std::list<BdUI::Key>*&);
         bool SizeChange(BdUI::Size,BdUI::Size*&);
@@ -62,35 +67,12 @@ namespace BdUI{
         int dwExStyle = NULL;
         int dwStyle = WS_OVERLAPPEDWINDOW;
         HWND hWnd = nullptr;
-        HDC hDC = nullptr;
-        HGLRC hRC = nullptr;
-        std::promise<bool> Creation;
-
 
         static LRESULT CALLBACK __WndProc(HWND,UINT,WPARAM,LPARAM);
         static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);
         static void MouseVitualKey(WPARAM,BdUI::Mouse&);
         void WindThread();
 
-        PIXELFORMATDESCRIPTOR pfd =
-        {
-            sizeof(PIXELFORMATDESCRIPTOR),
-            1,
-            PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
-            PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
-            32,                        //Colordepth of the framebuffer.
-            0, 0, 0, 0, 0, 0,
-            0,
-            0,
-            0,
-            0, 0, 0, 0,
-            24,                        //Number of bits for the depthbuffer
-            8,                        //Number of bits for the stencilbuffer
-            0,                        //Number of Aux buffers in the framebuffer.
-            PFD_MAIN_PLANE,
-            0,
-            0, 0, 0
-        };
         #endif
     };
 }

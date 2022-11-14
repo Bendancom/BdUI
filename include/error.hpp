@@ -17,6 +17,7 @@ namespace BdUI{
         }
         namespace Function {
             ERRORTYPE(ParamError, "Input a error parameter");
+            ERRORTYPE(CarryOut_Faild, "Faild to carry out the function");
         }
         namespace Log {
             ERRORTYPE(LayoutError, "Invaild Layout");

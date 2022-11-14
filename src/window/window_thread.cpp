@@ -19,24 +19,15 @@ namespace BdUI {
             NULL,
         };
 
-        if (!RegisterClassEx(&Windowclass)) { //×¢²á´°¿ÚÀà
-            Creation.set_value(false);
-            return;
-        }
+        if (!RegisterClassEx(&Windowclass)) throw error::Function::CarryOut_Faild("Faild to Register WindowClass");
 
         Point location = Location.get().GetData(UnitType::Pixel);
         BdUI::Size size = Size.get().GetData(UnitType::Pixel);
 
         hWnd = CreateWindowEx(dwExStyle, Windowclass.lpszClassName, "Window", dwStyle, location.X, location.Y, size.Width, size.Height, NULL, NULL, Windowclass.hInstance, NULL);
-        if (hWnd == NULL) {
-            Creation.set_value(false);
-            return;
-        }
+        if (hWnd == NULL) throw error::Function::CarryOut_Faild("Faild to create Window");
 
-        if (!OpenGLLoader()) {
-            Creation.set_value(false);
-            return;
-        }
+        Render.Initialize(hWnd);
 
         Size = Size.get();
         Location = Location.get();
@@ -45,9 +36,9 @@ namespace BdUI {
         else VSync = VSync.get();
 
         WindowList[hWnd] = this;
-        Creation.set_value(true);
 
         Mutex.lock();
+        Creation.set_value(true);
         MSG msg;
         while (GetMessage(&msg, NULL, 0, 0) > 0) {
             TranslateMessage(&msg);
@@ -59,7 +50,6 @@ namespace BdUI {
 #ifdef _WIN32
     LRESULT Window::__WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         Window* w = WindowList[hWnd];
-        //log.write(Log::Debug, std::to_string(msg));
         switch (msg) {
         case WM_MOVE: {
             w->Location.setOnly(Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, UnitType::Pixel));
@@ -67,7 +57,7 @@ namespace BdUI {
         }
         case WM_SIZE: {
             w->Size.setOnly(BdUI::Size(LOWORD(lParam), HIWORD(lParam), UnitType::Pixel));
-            glViewport(0, 0, LOWORD(lParam), HIWORD(lParam));
+            w->Render.PushMessage(glViewport,0, 0, LOWORD(lParam), HIWORD(lParam));
             w->GraphChanged = true;
             break;
         }
@@ -75,6 +65,8 @@ namespace BdUI {
             RECT* rect = reinterpret_cast<RECT*>(lParam);
             w->Size.setOnly(BdUI::Size((double)(rect->right - rect->left), (double)(rect->bottom - rect->top), UnitType::Pixel));
             w->Location.setOnly(Point(rect->left, rect->top, 0, UnitType::Pixel));
+            w->Render.PushMessage(glViewport, 0, 0, rect->right - rect->left, rect->bottom - rect->top);
+            //w->Render.PushMessage();
             w->GraphChanged = true;
             break;
         }
@@ -84,9 +76,6 @@ namespace BdUI {
             break;
         }
         case WM_DESTROY: {
-            wglMakeCurrent(NULL, NULL);
-            wglDeleteContext(w->hRC);
-            ReleaseDC(hWnd, w->hDC);
             PostQuitMessage(0);
             break;
         }
@@ -94,9 +83,9 @@ namespace BdUI {
             UI* focus = w->Focus;
             BdUI::Key key;
             if (focus->Key.exist()) key = focus->Key;
-            key.Code = wParam;
+            key.keyCode.Code = wParam;
             key.RepeatCount = LOWORD(lParam);
-            key.ScanCode = LOBYTE(HIWORD(lParam));
+            key.keyCode.ScanCode = LOBYTE(HIWORD(lParam));
             key.Up_Down = !HIWORD(lParam) & KF_UP;
             while (focus->Parent.exist()) {
                 focus->Key = std::move(key);
@@ -111,7 +100,7 @@ namespace BdUI {
             if (focus->Key.exist()) key = focus->Key;
             key.VirtualKey = BdUI::KeyType(wParam);
             key.RepeatCount = LOWORD(lParam);
-            key.ScanCode = LOBYTE(HIWORD(lParam));
+            key.keyCode.ScanCode = LOBYTE(HIWORD(lParam));
             key.Up_Down = 1;
             while (focus->Parent.exist()) {
                 focus->Key = key;
@@ -126,7 +115,7 @@ namespace BdUI {
             if (focus->Key.exist()) key = focus->Key;
             key.VirtualKey = BdUI::KeyType(wParam);
             key.RepeatCount = LOWORD(lParam);
-            key.ScanCode = LOBYTE(HIWORD(lParam));
+            key.keyCode.ScanCode = LOBYTE(HIWORD(lParam));
             key.Up_Down = 0;
             while (focus->Parent.exist()) {
                 focus->Key = key;
@@ -137,13 +126,7 @@ namespace BdUI {
         }
         case WM_PAINT: {
             if (w->GraphChanged == true) {
-                w->OpenGLMutex.lock();
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glFlush();
-#ifdef _WIN32
-                SwapBuffers(w->hDC);
-#endif
-                w->OpenGLMutex.unlock();
+                w->Render.Render();
                 w->GraphChanged = false;
             }
             break;

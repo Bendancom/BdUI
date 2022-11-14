@@ -2,7 +2,6 @@
 
 namespace BdUI{
     std::map < HWND, Window*> Window::WindowList;
-    bool Window::IsLoadOpenGL = false;
     Window::Window(){
         WindowEventDefaultBind();
         WindowCursorDefaultBind();
@@ -15,15 +14,10 @@ namespace BdUI{
     Window::~Window(){
         delete Thread;
     }
-    bool Window::Create(){
+    void Window::Create(){
         Thread = new std::thread(&Window::WindThread,this);
         Thread->detach();
-        if(!Creation.get_future().get()){
-            delete Thread;
-            Thread = nullptr;
-            return false;
-        }
-        return true;
+        Creation.get_future().get();
     }
     void Window::Block(){
         Mutex.lock();
