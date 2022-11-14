@@ -15,7 +15,7 @@ namespace BdUI{
         Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Date)> * ChangedEvent = nullptr;
+        Event<void(Date)> * ChangedEvent = nullptr;
         Delegate<GetData(const Date*)> get_func;
         Delegate<bool(SetData,Date*&)> set_func;
         Attribute() {}
@@ -96,7 +96,7 @@ namespace BdUI{
         Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Date)> *ChangedEvent = nullptr;
+        Event<void(Date)> *ChangedEvent = nullptr;
         Delegate<Date(const Date*)>* get_func = nullptr;
         Delegate<bool(Date,Date*&)>* set_func = nullptr;
         Attribute() {}
@@ -196,7 +196,7 @@ namespace BdUI{
         Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Date*)>* ChangedEvent = nullptr;
+        Event<void(Date*)>* ChangedEvent = nullptr;
         Delegate<GetData(Date*)> get_func;
         Delegate<bool(SetData, Date*&)> set_func;
         Attribute() {}
@@ -270,7 +270,7 @@ namespace BdUI{
         Date* Value = nullptr;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(Date*)>* ChangedEvent = nullptr;
+        Event<void(Date*)>* ChangedEvent = nullptr;
         Delegate<Date*(Date*)>* get_func = nullptr;
         Delegate<bool(Date*, Date*&)>* set_func = nullptr;
         Attribute() {}

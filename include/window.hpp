@@ -17,10 +17,11 @@ namespace BdUI{
         void Create();
         void Block();
         
+        Attribute<std::string> TitleText;
         Attribute<Color> BackgroundColor;
-        Attribute<Color> TransparentColor;
-        Attribute<Icon> SmIcon;
-        Attribute<Icon> Icon;
+        Attribute<Color> TransparentColor;//undo
+        Attribute<Icon> SmIcon;//nudo
+        Attribute<Icon> Icon;//undo
         Attribute<UI*> Focus;
         Attribute<Size> Size;
         Attribute<bool> VSync;
@@ -37,7 +38,7 @@ namespace BdUI{
         }WindowCursor;
 
         AttributeVector<KeyList> HotKey;
-        EventArray<KeyList>* HotKey_Tigger;
+        Event<KeyList>* HotKey_Tigger;
         
     private:
         std::promise<bool> Creation;
@@ -49,7 +50,8 @@ namespace BdUI{
         void WindowEventDefaultBind();
         void WindowCursorDefaultBind();
         
-        bool SetHotKey(std::list<BdUI::Key>, std::list<BdUI::Key>*&);
+        bool SetTitleText(std::string,std::string*&);
+        bool SetHotKey(std::vector<BdUI::Key>, std::vector<BdUI::Key>*&);
         bool SizeChange(BdUI::Size,BdUI::Size*&);
         bool LocationChange(Point, Point*&);
         bool SetBackgroundColor(Color, Color*&);

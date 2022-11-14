@@ -13,7 +13,7 @@ namespace BdUI {
         std::vector<Data> Vector;
         std::shared_mutex Mutex;
     public:
-        EventArray<void(const std::vector<Data>)>* ChangedEvent = nullptr;
+        Event<void(const std::vector<Data>)>* ChangedEvent = nullptr;
         AttributeVector() {}
         AttributeVector(const std::vector<Data>& v) : Vector(v) {}
         AttributeVector(const AttributeVector<Data>&) = delete;

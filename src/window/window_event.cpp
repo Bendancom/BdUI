@@ -1,7 +1,16 @@
 #include <window.hpp>
 
 namespace BdUI {
-    bool Window::SetHotKey(std::list<BdUI::Key> l, std::list<BdUI::Key>*& l_p) {
+    bool Window::SetTitleText(std::string new_string, std::string*& old_string) {
+        *old_string = new_string;
+#ifdef _WIN32
+        SetWindowText(hWnd, new_string.c_str());
+#endif
+        return true;
+    }
+
+    bool Window::SetHotKey(std::vector<BdUI::Key> l, std::vector<BdUI::Key>*& l_p) {
+
         return true;
     }
     bool Window::SizeChange(BdUI::Size size, BdUI::Size*& old) {
