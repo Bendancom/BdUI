@@ -34,13 +34,15 @@ namespace BdUI {
         BackgroundColor = BackgroundColor.get();
         if (!VSync.exist()) VSync = true;
         else VSync = VSync.get();
+        if (TitleText.exist()) TitleText = TitleText.get();
+        else TitleText = "Window";
 
         WindowList[hWnd] = this;
 
         Mutex.lock();
         Creation.set_value(true);
         MSG msg;
-        while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        while (GetMessage(&msg, hWnd, 0, 0) > 0) {
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
         }
@@ -50,6 +52,7 @@ namespace BdUI {
 #ifdef _WIN32
     LRESULT Window::__WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         Window* w = WindowList[hWnd];
+        if (w == nullptr) return DefWindowProc(hWnd, msg, wParam, lParam);
         switch (msg) {
         case WM_MOVE: {
             w->Location.setOnly(Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, UnitType::Pixel));
@@ -132,7 +135,6 @@ namespace BdUI {
             break;
         }
         default: {
-            if (w == nullptr) return DefWindowProc(hWnd, msg, wParam, lParam);
             return MouseProc(hWnd, msg, wParam, lParam, w);
         }
         }

@@ -189,19 +189,22 @@ namespace BdUI {
     };
 
     struct Key {
-        int RepeatCount = 1;
+        unsigned short RepeatCount = 1;
         KeyCode keyCode;
-        bool Up_Down; // Up = 0,Down = 1
+        // Up = 0,Down = 1
+        bool Up_Down; 
         KeyType VirtualKey;
     };
 
     class KeyList {
     public:
         KeyList(){}
-        KeyList(std::initializer_list<KeyType>&& keys) : Keys(keys){}
+        KeyList(std::initializer_list<KeyType>&&);
         ~KeyList(){}
         std::vector<KeyType> GetKeys();
 
+        KeyList& operator+=(KeyType&&);
+        KeyList& operator-=(KeyType&&);
         bool operator==(const KeyList&);
         bool operator!=(const KeyList&);
     private:

@@ -21,6 +21,15 @@ namespace BdUI {
         WindowCursor.Reduce = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
         WindowCursor.Help = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
         WindowCursor.SysMenu = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        
+        Cursor.Border.Left = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
+        Cursor.Border.Right = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
+        Cursor.Border.Top = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
+        Cursor.Border.Bottom = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
+        Cursor.Border.BottomLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
+        Cursor.Border.BottomRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
+        Cursor.Border.TopLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
+        Cursor.Border.TopRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
 #endif
     }
 }

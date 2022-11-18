@@ -2,9 +2,10 @@
 
 namespace BdUI {
     bool Window::SetTitleText(std::string new_string, std::string*& old_string) {
-        *old_string = new_string;
+        if (old_string == nullptr) old_string = new std::string(new_string);
+        else *old_string = new_string;
 #ifdef _WIN32
-        SetWindowText(hWnd, new_string.c_str());
+        if(hWnd != nullptr) SetWindowText(hWnd, new_string.c_str());
 #endif
         return true;
     }

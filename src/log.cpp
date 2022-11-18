@@ -27,7 +27,7 @@ namespace BdUI {
 	}
 	void Log::write(LogLevel level, std::string msg, std::source_location&& source_location) {
 		Mutex.lock();
-		Queue.push(std::pair<LogLevel, Message>{ level, { msg, source_location }});
+		Queue.push(std::pair<LogLevel, LogMessage>{ level, { msg, source_location }});
 		condition.notify_all();
 		Mutex.unlock();
 	}
@@ -36,12 +36,12 @@ namespace BdUI {
 		std::unique_lock<std::mutex> unique_lock(Mutex);
 		while (true) {
 			if (Queue.size() == 0) condition.wait(unique_lock);
-			Out(std::move(Queue.front().second),std::move(Queue.front().first));
+			DefaultProcess(std::move(Queue.front().second),std::move(Queue.front().first));
 			Queue.pop();
 		}
 	}
 
-	void Log::Out(Log::Message&& msg,LogLevel level) {
+	void Log::DefaultProcess(LogMessage&& msg, LogLevel level) {
 		if (level > LevelMax) return;
 		std::string layout = Layout[level].load();
 		layout.replace(layout.find("@func"), 5, msg.second.function_name());
@@ -49,7 +49,21 @@ namespace BdUI {
 		layout.replace(layout.find("@line"), 5, std::to_string(msg.second.line()));
 		layout.replace(layout.find("@column"), 7, std::to_string(msg.second.column()));
 		layout.replace(layout.find("@msg"), 4, msg.first);
-		if (log_ostream != nullptr) *log_ostream << layout << std::endl;
-		else std::cout << layout << std::endl;
+		layout.replace(layout.find("@time"), 5, Time_Layout_Replace());
+		*log_ostream << layout << std::endl;
+	}
+
+	std::string Log::Time_Layout_Replace() {
+		std::time_t time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		std::time(&time_t);
+		std::tm* tm_t = std::localtime(&time_t);
+		std::string time_layout = Time_Layout.load();
+		time_layout.replace(time_layout.find("@year"), 5, std::to_string(tm_t->tm_year + 1900));
+		time_layout.replace(time_layout.find("@month"), 6, std::to_string(tm_t->tm_mon + 1));
+		time_layout.replace(time_layout.find("@day"), 4, std::to_string(tm_t->tm_mday));
+		time_layout.replace(time_layout.find("@hour"), 5, std::to_string(tm_t->tm_hour));
+		time_layout.replace(time_layout.find("@minute"), 7, std::to_string(tm_t->tm_min));
+		time_layout.replace(time_layout.find("@second"), 7, std::to_string(tm_t->tm_sec));
+		return time_layout;
 	}
 }

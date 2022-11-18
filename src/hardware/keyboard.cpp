@@ -5,6 +5,16 @@ namespace BdUI {
 		return Keys;
 	}
 
+	KeyList& KeyList::operator+=(KeyType&& key) {
+		if (std::find(Keys.begin(), Keys.end(), key) == Keys.end())
+			Keys.push_back(key);
+		return *this;
+	}
+	KeyList& KeyList::operator-=(KeyType&& key) {
+		Keys.erase(std::find(Keys.begin(), Keys.end(), key));
+		return *this;
+	}
+
 	bool KeyList::operator==(const KeyList& keylist) {
 		if (Keys.size() != keylist.Keys.size()) return false;
 		else {

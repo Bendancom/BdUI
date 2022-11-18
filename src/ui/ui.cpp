@@ -6,24 +6,6 @@ namespace BdUI
         UIEventDefaultBind();
         Visible = true;
     }
-    void UI::UICursorDefaultBind(){
-#ifdef WIN32
-        Cursor.Client = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        Cursor.Menu = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        Cursor.Border.Left = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        Cursor.Border.Right = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        Cursor.Border.Top = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
-        Cursor.Border.Bottom = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
-        Cursor.Border.BottomLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
-        Cursor.Border.BottomRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        Cursor.Border.TopLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        Cursor.Border.TopRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
-#endif
-    }
-    void UI::UIEventDefaultBind() {
-        Mouse.set_func = new Delegate<bool(BdUI::Mouse,BdUI::Mouse*&)>(&UI::MouseRelativePos, this);
-        Parent.set_func = new Delegate<bool(UI*, UI*&)>(&UI::ParentSet, this);
-    }
     void UI::Paint(const Size& size){
         Shape.get().Paint(Location, size);
         std::vector<UI*> uiList = UIList;
