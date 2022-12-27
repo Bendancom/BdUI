@@ -2,15 +2,22 @@
 #define BDUI_SHAPE
 
 #include <vector>
-#include "point.hpp"
-#include "color.hpp"
-#include "size.hpp"
-#include "unit.hpp"
+#include <any>
+#include <graph/point.hpp>
+#include <graph/color.hpp>
+#include <graph/size.hpp>
+#include <graph/unit.hpp>
 
-#include "OpenGL/glad/glad.h"
+#include <OpenGL/glad/glad.h>
+
+#ifdef _WIN32
+#include <OpenGL/glad/glad_wgl.h>
+#endif
 
 namespace BdUI {
-	namespace ShapeType {
+	
+	class Shape {
+	public:
 		enum ShapeType {
 			Unknown = 0,
 			Polygon = 1,
@@ -19,38 +26,25 @@ namespace BdUI {
 			Circle = 4,
 			Rectangle = 5,
 		};
-	}
-	class Shape : public std::vector<Point> {
 	private:
-		ShapeType::ShapeType Type = ShapeType::Unknown;
-		unsigned int VBO;
-		void Changed();
+		std::vector<Point> Points;
+		ShapeType Type = ShapeType::Unknown;
+		unsigned int VBO = 0;
+		std::any Parameter;
 	public:
 		Shape() {}
-		template<ShapeType::ShapeType type> requires(Type == ShapeType::Polygon || Type == ShapeType::Bezier)
-		Shape(const std::vector<Point>& points) : std::vector<Point>(points), Type(Type) {}
-		template<const ShapeType::ShapeType& type> requires(Type == ShapeType::Circle)
-		Shape(const Point& center,const Unit& radius) {
-			this->insert(this->cend(), center);
-			this->insert(this->cend(), Point(radius, 0, radius.GetType()));
-			Type = type;
-		}
-		template<const ShapeType::ShapeType& type> requires(Type == ShapeType::Rectangle)
-		Shape(const Point& point,const Size& size) {
-			Point&& p = point;
-			if (p.GetType() != UnitType::Pixel) {
-				p.ChangeUnit(UnitType::Pixel);
-				this->insert(this->cend(), p);
-			}
-			else this->insert(this->cend(), p);
-			this->insert(this->cend(), Point(size.Width, size.Height, size.GetType()));
-			Type = type;
-		}
-		void SetShapeType(const ShapeType::ShapeType&);
-		void SetCircle(const Point&, const Unit&);
-		void SetQuad(const Point&,const Size&);
-		ShapeType::ShapeType GetShapeType();
-		void Paint(const Point&,const Size&) const;
+		Shape(std::vector<Point>&& points, ShapeType type = Unknown);
+		Shape(Point&& center, Unit&& radius);
+		Shape(Point&& point, Size&& size);
+
+		//Callback fuction,you needn't to call it
+		void Paint(Point origin);
+
+		Shape& operator=(std::pair<std::vector<Point>,ShapeType>&& points);
+		Shape& operator=(std::pair<Point, Unit>&& circle);
+		Shape& operator=(std::pair<Point, Size>&& rectangle);
+
+		ShapeType GetShapeType();
 	};
 }
 #endif

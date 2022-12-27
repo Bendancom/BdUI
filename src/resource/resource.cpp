@@ -4,86 +4,89 @@ namespace BdUI
 {
     Resource::Resource(const std::string &s)
     {
-        IsProcess = false;
-        FileStream = new std::fstream(s, std::ios::in | std::ios::out | std::ios::binary);
-        if(!FileStream->operator bool()) FileStream->open(s,std::ios::out|std::ios::binary);
-        if(!FileStream->good()) throw error::File::Open_Failed();
-        FilePath = new std::string(s);
+        OpenFile(s);
     }
     
     Resource::Resource(const Resource &resource)
     {
-        IsProcess = false;
-        delete[] Data;
         Size = resource.Size;
         Data = new unsigned char[Size];
-        Source = resource.Source;
         memcpy(Data, resource.Data, Size);
     }
 
     Resource::~Resource()
     {
         delete[] Data;
+        delete[] AllData;
     }
 
     void Resource::OpenFile(const std::string &s)
     {
-        FileStream = new std::fstream(s,std::ios::in|std::ios::out|std::ios::binary);
-        if(!FileStream->operator bool()) FileStream = new std::fstream(s,std::ios::out|std::ios::binary);
-        if(!FileStream->good()) throw error::File::Open_Failed();
-        FilePath = new std::string(s);
+        FilePath = s;
+        std::string&& file_ext = FilePath.substr(FilePath.find_last_of('.') + 1);
+        std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), std::tolower);
+        File_Ext = file_ext;
     }
 
-    void Resource::OpenMemory(void* data, unsigned long long size) {
-        IsProcess = false;
-        delete[] Data;
-        Data = reinterpret_cast<unsigned char*>(data);
+    void Resource::Malloc(unsigned long long size) {
+        Clear();
+        Data = new unsigned char[size];
         Size = size;
-        Source = Where::Memory;
-        Process();
     }
 
-    void Resource::MemoryCopy(void* data, unsigned long long size) {
-        IsProcess = false;
-        delete[] Data;
+    void Resource::Copy(void* data, unsigned long long size) {
+        Clear();
         Data = new unsigned char[size];
         memcpy(Data, data, size);
         Size = size;
-        Source = Where::Memory;
-        Process();
     }
 
-    std::pair<void*, unsigned long long> Resource::getData() {
+    void Resource::Clear() {
+        free(Data);
+        Data = nullptr;
+    }
+
+    Resource::ResourceType Resource::GetResourceType() {
+        return Resource_Type;
+    }
+
+    std::pair<void*, unsigned long long> Resource::getDataPointer() {
         if (Data == nullptr) throw error::Class::Uninitialize();
         return std::pair<void*, unsigned long long>(Data, Size);
     }
 
-    void Resource::LoadFile()
+    void Resource::LoadFromFile()
     {
-        IsProcess = false;
-        delete[] Data;
-        if (FileStream == nullptr) throw error::Class::Uninitialize();
-        Size = FileStream->rdbuf()->in_avail();
+        Clear();
+        if (FilePath.empty() == true) throw error::File::Open_Failed("Haven't opened the File");
+        std::fstream fstream(FilePath,std::ios::binary|std::ios::in);
+        Size = fstream.rdbuf()->in_avail();
         Data = new unsigned char[Size];
-        FileStream->read((char *)Data, Size);
-        Source = Where::File;
-        Process();
+        fstream.read((char *)Data, Size);
+    }
+    void Resource::LoadFromMemory(void* pos,unsigned long long size) {
+        Clear();
+        Copy(pos, size);
     }
 
-    void Resource::SaveFile()
+    void Resource::SaveToFile()
     {
-        if (FileStream == nullptr) throw error::Class::Uninitialize();
-        FileStream->write((char *)Data, Size);
+        if (FilePath.empty() == true) throw error::File::Open_Failed("Haven't opened the File");
+        std::fstream fstream(FilePath, std::ios::out || std::ios::binary);
+        fstream.write((char*)Data, Size);
+    }
+    std::pair<void*,unsigned long long> Resource::SaveToMemory() {
+        void* dst = malloc(Size);
+        memcpy(dst, Data, Size);
+        return { dst,Size };
     }
 
     Resource &Resource::operator=(const Resource &resource)
     {
-        IsProcess = false;
         delete[] Data;
         Size = resource.Size;
         Data = new unsigned char[Size];
-        Source = resource.Source;
-        memcpy(Data, resource.Data, Size);
+        if(resource.Data != nullptr) memcpy(Data, resource.Data, Size);
         return *this;
     }
 }

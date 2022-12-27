@@ -25,7 +25,6 @@ namespace BdUI{
         Attribute<UI*> Focus;
         Attribute<Size> Size;
         Attribute<bool> VSync;
-        
 
         struct {
             Attribute<BdUI::Cursor> Caption;
@@ -38,8 +37,13 @@ namespace BdUI{
         }WindowCursor;
 
         AttributeVector<KeyList> HotKey;
-        Event<KeyList>* HotKey_Tigger;
+        Event<void(KeyList)>* HotKey_Tigger = nullptr;
+        Event<void(BdUI::Cursor)>* CurrentCursorChanged = nullptr;
         
+#ifdef _WIN32
+        Delegate<LRESULT(HWND, UINT, WPARAM, LPARAM, Window*)> DefWindowProcess = std::bind(DefWindowProc, std::placeholders::_1,
+            std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+#endif
     private:
         std::promise<bool> Creation;
         std::thread *Thread;
@@ -58,8 +62,9 @@ namespace BdUI{
         bool SetVSync(bool,bool*&);
         bool SetClientSize(BdUI::Size, BdUI::Size*&);
         bool SetVisible(bool, bool*&);
+        bool SetIcon(BdUI::Icon, BdUI::Icon*&);
 
-        UI* MouseContext = this;
+        UI* CurrentMouseAtUI = this;
         BdUI::Cursor CurrentCursor = Cursor.Client;
         
         bool GraphChanged = true;
@@ -74,7 +79,6 @@ namespace BdUI{
         static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);
         static void MouseVitualKey(WPARAM,BdUI::Mouse&);
         void WindThread();
-
         #endif
     };
 }

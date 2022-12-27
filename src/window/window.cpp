@@ -8,8 +8,10 @@ namespace BdUI{
 
         Size = BdUI::Size(1000, 800, UnitType::Pixel);
         Location = Point(5, 5, 0, UnitType::cm);
-        BackgroundColor = RGB{ 255, 255, 255 };
+        BackgroundColor = RGBA{ 255, 255, 255,0 };
         Focus = this;
+
+        Icon = BdUI::Icon(LoadIcon(NULL,IDI_APPLICATION));
     }
     Window::~Window(){
         delete Thread;

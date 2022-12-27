@@ -1,39 +1,78 @@
 #ifndef BDUI_ICON
 #define BDUI_ICON
-#include "bitmap.hpp"
+
+#include <resource/image/image.hpp>
+#include <memory>
 
 namespace BdUI {
-	class Icon : virtual public Resource,protected Bitmap {
+	class Icon : virtual public Resource,protected Image{
 	private:
 #ifdef WIN32
 		HICON icon = nullptr;
+		void CreateHIcon();
 #endif
 	protected:
-		struct IconFileHeader {
-			std::int16_t Reserved = 0;
-			std::int16_t Type = 1;
-			std::int16_t Count = 1;
-		}*icon_fileheader = nullptr;
-		struct IconInfoHeader {
-			std::int8_t Width;
-			std::int8_t Height;
-			std::int8_t ColorCount;
-			std::int8_t Reserved = 0;
-			std::int16_t Planes;
-			std::int16_t BitCount;
-			std::int32_t ByteInRes;
-			std::int32_t Offset;
-		}*icon_infoheader = nullptr;
-		void *icon_And = nullptr;
+
+		void GetMask();
+#pragma pack(1)
+		struct IconDir{
+			std::uint16_t reserved;//must be 0
+			std::uint16_t type; //icon = 1
+			std::uint16_t nfiles;
+		};
+		struct IconDirentry {
+			unsigned char bwidth; // width, in pixels, of the image
+			unsigned char bheight; // height, in pixels, of the image
+			unsigned char bcolorcount; // number of colors in image (0 if >=8bpp)
+			unsigned char breserved; // reserved ( must be 0)
+			std::uint16_t wplanes; // color planes
+			std::uint16_t wbitcount;
+			std::uint32_t dwbytesinres; // how many bytes in this resource?
+			std::uint32_t dwimageoffset; // where in the file is this image?
+		};
+		struct Bitmap_FileHeader {
+			std::uint16_t bfType;
+			std::uint32_t bfSize;
+			std::uint16_t bfReserved1;
+			std::uint16_t bfReserved2;
+			std::uint32_t bfOffBits;
+		};
+		struct Bitmap_InfoHeader {
+			std::uint32_t biSize;
+			std::int32_t biWidth;
+			std::int32_t biHeight;
+			std::uint16_t biPlanes;
+			std::uint16_t biBitCount;
+			std::uint32_t biCompression;
+			std::uint32_t biSizeImage;
+			std::int32_t biXPelsPerMeter;
+			std::int32_t biYPelsPerMeter;
+			std::uint32_t biClrUsed;
+			std::uint32_t biClrImportant;
+		};
+#pragma pack()
+		unsigned char *mask = nullptr;
 	public:
-		using Resource::Resource;
+		const int& Width = _Width;
+		const int& Height = _Height;
+		const int& BitCount = _BitCount;
+
+		using Image::ImageType;
+		using Image::SetImageType;
+
 		Icon(){}
-		~Icon() {
-			if (Source == Where::Memory) delete icon_fileheader;
-		}
-		virtual void Process();
-		virtual void SaveFile();
+		Icon(const std::string&);
 		Icon(const Icon&);
+		~Icon();
+
+		Icon& Resize(BdUI::Size);
+
+		virtual void OpenFile(const std::string&);
+		virtual void SaveToFile();
+		virtual void LoadFromFile();
+		virtual void LoadFromMemory(void* pos,unsigned long long size);
+		virtual std::pair<void*, unsigned long long> SaveToMemory();
+		
 		Icon& operator=(const Icon&);
 #ifdef WIN32
 		Icon(HICON);
@@ -41,6 +80,7 @@ namespace BdUI {
 		operator HICON();
 		HICON getIndex();
 		void setIndex(HICON);
+		unsigned char* getMask();
 #endif
 	};
 }

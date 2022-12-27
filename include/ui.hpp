@@ -19,8 +19,8 @@ namespace BdUI
         Attribute<Shape> Shape;
         Attribute<Point> Location;
         Attribute<bool> Visible;
-        Attribute<Mouse> Mouse;
         Attribute<Key> Key;
+        Attribute<Mouse> Mouse;
 
         Attribute<HMENU> PopMenu;
         Attribute<unsigned int> MouseHoverTime;
@@ -39,6 +39,8 @@ namespace BdUI
                 Attribute<Cursor> TopRight;
             }Border;
         }Cursor;
+
+        Event<void(BdUI::Mouse)>* MouseEvent = nullptr;
         
         static UI* SearchUI_NearPos(const Point&,UI*);
         static BdUI::Cursor Search_Area_Cursor(const Point&,UI*);

@@ -1,6 +1,20 @@
 #include <hardware/keyboard.hpp>
 
 namespace BdUI {
+	KeyList::KeyList(std::initializer_list<KeyType>&& keys) {
+		std::vector<KeyType> k = keys;
+		for (unsigned int i = 0; i < k.size();i++) {
+			bool repeat = false;
+			for (unsigned int j = i + 1; j < k.size(); j++) {
+				if (k[i] == k[j]) {
+					repeat = true;
+					break;
+				}
+			}
+			if (!repeat) Keys.push_back(k[i]);
+		}
+	}
+
 	std::vector<KeyType> KeyList::GetKeys() {
 		return Keys;
 	}

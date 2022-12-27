@@ -6,6 +6,7 @@
 namespace BdUI {
     struct Mouse {
         Point Location = { 0,0,0 };
+        //Up = 0, Down = 1;
         struct {
             unsigned Left : 1;
             unsigned Right : 1;
@@ -15,11 +16,14 @@ namespace BdUI {
             unsigned Ctrl : 1;
             unsigned Shift : 1;
             unsigned Alt : 1;
-        }Button{ 0,0,0,0,0 };    //Up = 0, Down = 1;
+        }Button{ 0,0,0,0,0 };
         struct {
-            unsigned IsLeaved : 1;  // false = 0, true = 1
-            unsigned Hover_Move : 1;  //Hover = 0, Move = 1
-            unsigned Client_Border : 1; //Client =0, Border = 1
+            // false = 0, true = 1
+            unsigned IsLeaved : 1;
+            //Hover = 0, Move = 1
+            unsigned Hover_Move : 1;  
+            //Client =0, Border = 1
+            unsigned Client_Border : 1; 
         }Content{ 0,0,0 };
         int WheelDelta = 0;
     };

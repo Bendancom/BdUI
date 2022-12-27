@@ -4,10 +4,12 @@ namespace BdUI
     UI::UI(){
         UICursorDefaultBind();
         UIEventDefaultBind();
+
         Visible = true;
+        Mouse.setOnly(BdUI::Mouse());
     }
     void UI::Paint(const Size& size){
-        Shape.get().Paint(Location, size);
+        Shape.get().Paint(Location);
         std::vector<UI*> uiList = UIList;
         if (uiList.size() == 0) return;
         for (UI* i : uiList) {

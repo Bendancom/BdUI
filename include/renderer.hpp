@@ -49,9 +49,9 @@ namespace BdUI {
 
 
 #ifdef _WIN32
-        HWND hWnd;
-		HDC hDC;
-        HGLRC hRC;
+        HWND hWnd = nullptr;
+		HDC hDC = nullptr;
+        HGLRC hRC = nullptr;
 
         PIXELFORMATDESCRIPTOR pfd =
         {

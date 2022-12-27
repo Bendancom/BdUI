@@ -6,9 +6,9 @@ namespace BdUI {
 		Width = *list.data();
 		Height = *(list.data() + 1);
 	}
-	void Size::ChangeUnit(const UnitType::UnitType& type) {
+	Size& Size::ChangeUnit(const UnitType::UnitType& type) {
 		if (type == UnitType::PixelHorizon || type == UnitType::PixelVertical) throw error::Function::ParamError();
-		if (type == Type) return;
+		if (type == Type) return *this;
 		if (type == UnitType::Pixel) {
 			Width = Unit(Width, Type).GetData(UnitType::PixelHorizon);
 			Height = Unit(Height, Type).GetData(UnitType::PixelVertical);
@@ -19,6 +19,7 @@ namespace BdUI {
 			Height = Unit(Height, Type).GetData(type);
 			Type = type;
 		}
+		return *this;
 	}
 	UnitType::UnitType Size::GetType() const {
 		return Type;

@@ -29,11 +29,11 @@
 #include "attribute/attribute.hpp"
 #include "attribute/attribute_vector.hpp"
 
-#include "hardware/keyboard.hpp"
+#include <hardware/keyboard.hpp>
 #include <hardware/mouse.hpp>
 
-#include "delegate.hpp"
-#include "event.hpp"
+#include <delegate.hpp>
+#include <event.hpp>
 #include "log.hpp"
 #include "readonly.hpp"
 
@@ -41,7 +41,7 @@
 
 #include "resource/resource.hpp"
 #include "resource/cursor.hpp"
-#include "resource/bitmap.hpp"
+#include "resource/image.hpp"
 #include "resource/icon.hpp"
 
 namespace BdUI

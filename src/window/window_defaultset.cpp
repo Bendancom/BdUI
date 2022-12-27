@@ -10,26 +10,27 @@ namespace BdUI {
         Location.set_func = new Delegate<bool(Point, Point*&)>(&Window::LocationChange, this);
         VSync.set_func = new Delegate<bool(bool, bool*&)>(&Window::SetVSync, this);
         Visible.set_func = new Delegate<bool(bool, bool*&)>(&Window::SetVisible, this);
+        Icon.set_func = new Delegate<bool(BdUI::Icon, BdUI::Icon*&)>(&Window::SetIcon, this);
         //ParentEvent
     }
     void Window::WindowCursorDefaultBind() {
 #ifdef WIN32
-        WindowCursor.Caption = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        WindowCursor.Close = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        WindowCursor.Size = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        WindowCursor.Zoom = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        WindowCursor.Reduce = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        WindowCursor.Help = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
-        WindowCursor.SysMenu = BdUI::Cursor(LoadCursor(NULL, IDC_ARROW));
+        WindowCursor.Caption = LoadCursor(NULL, IDC_ARROW);
+        WindowCursor.Close = LoadCursor(NULL, IDC_ARROW);
+        WindowCursor.Size = LoadCursor(NULL, IDC_ARROW);
+        WindowCursor.Zoom = LoadCursor(NULL, IDC_ARROW);
+        WindowCursor.Reduce = LoadCursor(NULL, IDC_ARROW);
+        WindowCursor.Help = LoadCursor(NULL, IDC_ARROW);
+        WindowCursor.SysMenu = LoadCursor(NULL, IDC_ARROW);
         
-        Cursor.Border.Left = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        Cursor.Border.Right = BdUI::Cursor(LoadCursor(NULL, IDC_SIZEWE));
-        Cursor.Border.Top = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
-        Cursor.Border.Bottom = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENS));
-        Cursor.Border.BottomLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
-        Cursor.Border.BottomRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        Cursor.Border.TopLeft = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENWSE));
-        Cursor.Border.TopRight = BdUI::Cursor(LoadCursor(NULL, IDC_SIZENESW));
+        Cursor.Border.Left = LoadCursor(NULL, IDC_SIZEWE);
+        Cursor.Border.Right = LoadCursor(NULL, IDC_SIZEWE);
+        Cursor.Border.Top = LoadCursor(NULL, IDC_SIZENS);
+        Cursor.Border.Bottom = LoadCursor(NULL, IDC_SIZENS);
+        Cursor.Border.BottomLeft = LoadCursor(NULL, IDC_SIZENESW);
+        Cursor.Border.BottomRight = LoadCursor(NULL, IDC_SIZENWSE);
+        Cursor.Border.TopLeft = LoadCursor(NULL, IDC_SIZENWSE);
+        Cursor.Border.TopRight = LoadCursor(NULL, IDC_SIZENESW);
 #endif
     }
 }

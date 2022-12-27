@@ -15,7 +15,7 @@ namespace BdUI {
 		Size(const std::array<double,2>&);
 		Size(const double& width, const double& height, const UnitType::UnitType& type = UnitType::Unknown) : Width(width), Height(height), Type(type) {}
 
-		void ChangeUnit(const UnitType::UnitType& type);
+		Size& ChangeUnit(const UnitType::UnitType& type);
 		UnitType::UnitType GetType() const;
 		std::array<double, 2> GetData(UnitType::UnitType) const;
 

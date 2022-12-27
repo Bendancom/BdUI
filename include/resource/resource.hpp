@@ -3,36 +3,43 @@
 #include <string>
 #include <fstream>
 #include <cstdint>
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-#include "error.hpp"
+#include <algorithm>
+
+#include <error.hpp>
 
 namespace BdUI{
     class Resource{
+    public:
+        enum ResourceType {
+            Unknown = 0,
+            Image = 1,
+            Menu = 2,
+        };
     protected:
-        std::string* FilePath = nullptr;
-        std::fstream* FileStream = nullptr;
-        enum class Where {
-            Unknow = 0,
-            File = 1,
-            Memory = 2,
-        }Source = Where::Unknow;
+        ResourceType Resource_Type = Unknown;
+        std::string FilePath;
+        std::string File_Ext;
         unsigned long long Size = 0;
         unsigned char* Data = nullptr;
-        bool IsProcess = false;
+        unsigned char* AllData = nullptr;
     public:
         Resource() {}
-        Resource(const std::string&);
+        Resource(const std::string& filename);
         Resource(const Resource&);
         ~Resource();
-        void OpenFile(const std::string&);
-        void OpenMemory(void*,unsigned long long);
-        void MemoryCopy(void*, unsigned long long);
-        std::pair<void*, unsigned long long> getData();
-        void LoadFile();
-        virtual void SaveFile();
-        virtual void Process() {}
+
+        ResourceType GetResourceType();
+        void Malloc(unsigned long long size);
+        void Copy(void* pos, unsigned long long size);
+        void Clear();
+        std::pair<void*, unsigned long long> getDataPointer();
+
+        virtual void OpenFile(const std::string& filename);
+        virtual void LoadFromFile();
+        virtual void LoadFromMemory(void* pos,unsigned long long size);
+        virtual void SaveToFile();
+        virtual std::pair<void*,unsigned long long> SaveToMemory();
+
         Resource &operator=(const Resource& resource);
     };
 }

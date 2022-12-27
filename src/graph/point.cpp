@@ -8,9 +8,9 @@ namespace BdUI {
 		Z = *(p + 2);
 	}
 
-	void Point::ChangeUnit(const UnitType::UnitType& type) { // TODO: 实现Z的转换
+	Point& Point::ChangeUnit(const UnitType::UnitType& type) { // TODO: 实现Z的转换
 		if (type == UnitType::PixelHorizon || type == UnitType::PixelVertical) throw error::Function::ParamError();
-		else if (type == Type) return;
+		else if (type == Type) return *this;
 		else if (type == UnitType::Pixel) {
 			X = Unit(X, Type).GetData(UnitType::PixelHorizon);
 			Y = Unit(Y, Type).GetData(UnitType::PixelVertical);
@@ -21,6 +21,7 @@ namespace BdUI {
 			Y = Unit(Y, Type).GetData(type);
 			Z = Z;
 		}
+		return *this;
 	}
 	UnitType::UnitType Point::GetType() const {
 		return Type;

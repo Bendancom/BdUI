@@ -31,8 +31,10 @@ namespace BdUI{
         std::size_t key;
     public:
         Delegate() {}
-        template<typename T>
+        template<typename T> requires(std::is_function_v<T>)
         Delegate(T f) : function(f),key(reinterpret_cast<std::size_t>(f)) {}
+        template<typename T>
+        Delegate(T f) : function(f) {};
         template<typename T>
         Delegate(Return(T::* f)(Param...), T* t) : function(_Bind(f, t)) {
             char buf[sizeof(void*) * 16] = { 0 };

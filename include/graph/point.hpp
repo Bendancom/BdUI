@@ -18,7 +18,7 @@ namespace BdUI {
 		Point(const std::array<double,3>&);
 		Point(const double& x,const double& y,const double& z,const UnitType::UnitType& type = UnitType::Unknown) : X(x),Y(y),Z(z), Type(type) {}
 		
-		void ChangeUnit(const UnitType::UnitType&);
+		Point& ChangeUnit(const UnitType::UnitType&);
 		std::array<double, 3> GetData(const UnitType::UnitType&) const;
 		UnitType::UnitType GetType() const;
 

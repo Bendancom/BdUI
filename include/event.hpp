@@ -10,22 +10,39 @@ namespace BdUI{
     class Event<Return(Param...)>{
     public:
         Delegate<void(std::vector<Return>)> ReturnCallBack;
+        Event(Delegate<void(std::vector<Return>)> rd) : ReturnCallBack(rd){}
         Event(Delegate<void(std::vector<Return>)> rd, std::initializer_list<Delegate<Return(Param...)>>&& d) : Delegate_list(d), ReturnCallBack(rd) {}
-        void operator()(Param... args){
+        void CarryOut(Param... args) {
             std::lock_guard<std::mutex> lock(Mutex);
-            if (Delegate_list.size() != 0){
+            if (Delegate_list.size() != 0) {
                 std::vector<Return>&& temp;
-                for(auto i : Delegate_list){
+                for (auto i : Delegate_list) {
                     temp.push_back(i(args...));
                 }
                 ReturnCallBack(temp);
             }
         }
+        void add(Delegate<Return(Param...)> d) {
+            std::lock_guard<std::mutex> lock(Mutex);
+            if (Delegate_list.size() != 0)
+                if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end()) return;
+                else Delegate_list.push_back(d);
+        }
+        void erase(Delegate<Return(Param...)> d) {
+            std::lock_guard<std::mutex> lock(Mutex);
+            if (Delegate_list.size() != 0) {
+                auto i = std::find(Delegate_list.begin(), Delegate_list.end(), d);
+                if (i != Delegate_list.end()) Delegate_list.erase(i);
+            }
+        }
+        
+        void operator()(Param... args){
+            CarryOut(args...);
+        }
         Event<Return(Param...)> &operator+=(const Delegate<Return(Param...)> &d){
             std::lock_guard<std::mutex> lock(Mutex);
             if (Delegate_list.size() != 0)
-                if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end())
-                    Delegate_list.push_back();
+                if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end()) return *this;
             else Delegate_list.push_back(d);
             return *this;
         }
@@ -56,19 +73,36 @@ namespace BdUI{
     template<typename... Param>
     class Event<void(Param...)> {
     public:
+        Event(){}
         Event(std::initializer_list<Delegate<void(Param...)>> init_list) : Delegate_list(init_list){}
-        void operator()(Param... args){
-            if(Delegate_list.size() != 0){
-                for(auto i : Delegate_list){
+        void CarryOut(Param... args) {
+            std::lock_guard<std::mutex> lock(Mutex);
+            if (Delegate_list.size() != 0) {
+                for (auto i : Delegate_list) {
                     i(args...);
                 }
             }
         }
+        void add(Delegate<void(Param...)> d) {
+            std::lock_guard<std::mutex> lock(Mutex);
+            if (Delegate_list.size() != 0)
+                if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end()) return;
+                else Delegate_list.push_back(d);
+        }
+        void erase(Delegate<void(Param...)> d) {
+            std::lock_guard<std::mutex> lock(Mutex);
+            if (Delegate_list.size() != 0) {
+                auto i = std::find(Delegate_list.begin(), Delegate_list.end(), d);
+                if (i != Delegate_list.end()) Delegate_list.erase(i);
+            }
+        }
+        void operator()(Param... args){
+            CarryOut(args...);
+        }
         Event<void(Param...)>& operator+=(const Delegate<void(Param...)>& d) {
             std::lock_guard<std::mutex> lock(Mutex);
             if (Delegate_list.size() != 0)
-                if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end())
-                    Delegate_list.push_back();
+                if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end()) return *this;
                 else Delegate_list.push_back(d);
             return *this;
         }

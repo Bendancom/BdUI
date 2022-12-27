@@ -1,19 +1,17 @@
 #ifndef BdUI_CURSOR
 #define BdUI_CURSOR
-#include "bitmap.hpp"
+#include <resource/image/icon.hpp>
+#include <graph/point.hpp>
 
 namespace BdUI {
-	class Cursor : virtual protected Bitmap,virtual public Resource {
+	class Cursor : protected Icon,virtual public Resource {
 	private:
 #ifdef WIN32
 		HCURSOR cursor = nullptr;
+		void CreateHCursor();
 #endif
 	protected:
-		struct CursorFileHeader {
-			std::int16_t Reserved = 0;//必须为0
-			std::int16_t Type = 2;//为2 == 光标
-			std::int16_t Count = 1;//光标个数
-		}*cursor_fileheader = nullptr;
+		typedef IconDir CursorFileHeader;
 		struct CursorInfoHeader {
 			std::int8_t Width;
 			std::int8_t Height;
@@ -23,15 +21,27 @@ namespace BdUI {
 			std::int16_t Y_hotspot;
 			std::int32_t ByteSize;
 			std::int32_t Offset;//从文件头起算
-		}*cursor_infoheader = nullptr;
-		void* cursor_And = nullptr;
+		};
+		short _X;
+		short _Y;
 	public:
-		using Resource::Resource;
+		const short& X = _X;
+		const short& Y = _Y;
+
 		Cursor() {}
+		Cursor(const std::string&);
 		Cursor(const Cursor&);
 		~Cursor();
-		virtual void SaveFile();
-		virtual void Process();
+
+		void SetHotPoint(Point);
+
+		virtual void OpenFile(const std::string&);
+		virtual void SaveToFile();
+		virtual std::pair<void*,unsigned long long> SaveToMemory();
+		virtual void LoadFromFile();
+		virtual void LoadFromMemory(void*, unsigned long long);
+
+		Cursor& Resize(BdUI::Size);
 		Cursor& operator=(const Cursor&);
 #ifdef WIN32
 		Cursor(HCURSOR);
