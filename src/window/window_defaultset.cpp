@@ -2,8 +2,6 @@
 
 namespace BdUI {
     void Window::WindowEventDefaultBind() {
-        delete Mouse.set_func;
-        Mouse.set_func = nullptr;
         TitleText.set_func = new Delegate<bool(std::string, std::string*&)>(&Window::SetTitleText, this);
         BackgroundColor.set_func = new Delegate<bool(Color, Color*&)>(&Window::SetBackgroundColor, this);
         Size.set_func = new Delegate<bool(BdUI::Size, BdUI::Size*&)>(&Window::SizeChange, this);

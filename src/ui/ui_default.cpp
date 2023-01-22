@@ -16,7 +16,5 @@ namespace BdUI {
 #endif
     }
     void UI::UIEventDefaultBind() {
-        Mouse.set_func = new Delegate<bool(BdUI::Mouse, BdUI::Mouse*&)>(&UI::MouseRelativePos, this);
-        Parent.set_func = new Delegate<bool(UI*, UI*&)>(&UI::ParentSet, this);
     }
 }

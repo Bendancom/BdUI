@@ -9,7 +9,7 @@ namespace BdUI {
         WNDCLASSEX Windowclass{
             sizeof(WNDCLASSEX),
             CS_VREDRAW | CS_HREDRAW | CS_OWNDC,
-            Window::__WndProc,
+            __WndProc,
             0,
             0,
             GetModuleHandle(NULL),
@@ -46,8 +46,16 @@ namespace BdUI {
         Creation.set_value(true);
         MSG msg;
         while (GetMessage(&msg, hWnd, 0, 0) > 0) {
-            TranslateMessage(&msg);
-            DispatchMessageA(&msg);
+            if (!TranslateAccelerator(hWnd, nullptr, &msg)) {
+                if (msg.message == WM_KEYDOWN) {
+                    if (msg.wParam == VK_PROCESSKEY)
+                    {
+                        msg.wParam = ImmGetVirtualKey(msg.hwnd);
+                    }
+                }
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
         }
         Mutex.unlock();
 #endif
@@ -87,47 +95,61 @@ namespace BdUI {
         }
         case WM_CHAR: {
             UI* focus = w->Focus;
-            BdUI::Key key;
-            if (focus->Key.exist()) key = focus->Key;
-            key.keyCode.Code = wParam;
-            key.RepeatCount = LOWORD(lParam);
-            key.keyCode.ScanCode = LOBYTE(HIWORD(lParam));
-            key.Up_Down = !HIWORD(lParam) & KF_UP;
-            while (focus->Parent.exist()) {
-                focus->Key = std::move(key);
-                if (focus->Key.ChangedEvent != nullptr) break;
-                focus = focus->Parent;
+            if (wParam >= 0x80 && wParam <= 0xff) {
+                if (w->ANSI[0] == 0) {
+                    w->ANSI[0] = wParam;
+                }
+                else {
+                    w->ANSI[1] = wParam;
+                    if (focus->KeyCharEvent != nullptr)
+                        focus->KeyCharEvent->CarryOut(Character(w->ANSI));
+                    w->ANSI = { 0,0 };
+                }
+            }
+            else {
+                if (w->ANSI[0] != 0) {
+                    w->ANSI[1] = wParam;
+                    if (focus->KeyCharEvent != nullptr)
+                        focus->KeyCharEvent->CarryOut(Character(w->ANSI));
+                    w->ANSI = { 0,0 };
+                }
+                else {
+                    if (focus->KeyCharEvent != nullptr)
+                        focus->KeyCharEvent->CarryOut(Character((char)wParam));
+                }
             }
             break;
         }
         case WM_KEYDOWN: {
             UI* focus = w->Focus;
             BdUI::Key key;
-            if (focus->Key.exist()) key = focus->Key;
             key.VirtualKey = BdUI::KeyType(wParam);
             key.RepeatCount = LOWORD(lParam);
-            key.keyCode.ScanCode = LOBYTE(HIWORD(lParam));
+            key.ScanCode = LOBYTE(HIWORD(lParam));
             key.Up_Down = 1;
-            while (focus->Parent.exist()) {
-                focus->Key = key;
-                if (focus->Key.ChangedEvent != nullptr) break;
-                focus = focus->Parent;
+            if (w->keylist.first != focus) {
+                w->keylist.second.clear();
+                w->keylist.first = focus;
             }
+            else w->keylist.second += key.VirtualKey;
+            if (focus->PopMenuKey.Isfind(w->keylist.second)) {
+                focus->PopMenu.getReference()->PopUp(hWnd);
+            };
+            if (focus->KeyboardEvent != nullptr)
+                focus->KeyboardEvent->CarryOut(key);
             break;
         }
         case WM_KEYUP: {
             UI* focus = w->Focus;
             BdUI::Key key;
-            if (focus->Key.exist()) key = focus->Key;
             key.VirtualKey = BdUI::KeyType(wParam);
             key.RepeatCount = LOWORD(lParam);
-            key.keyCode.ScanCode = LOBYTE(HIWORD(lParam));
+            key.ScanCode = LOBYTE(HIWORD(lParam));
             key.Up_Down = 0;
-            while (focus->Parent.exist()) {
-                focus->Key = key;
-                if (focus->Key.ChangedEvent != nullptr) break;
-                focus = focus->Parent;
-            }
+            if (w->keylist.first != focus) w->keylist.second.clear();
+            else w->keylist.second -= key.VirtualKey;
+            if (focus->KeyboardEvent != nullptr)
+                focus->KeyboardEvent->CarryOut(key);
             break;
         }
         case WM_PAINT: {
@@ -145,7 +167,7 @@ namespace BdUI {
     }
 
     LRESULT Window::MouseProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, Window* w) {
-        BdUI::Mouse mouse = w->Mouse;
+        BdUI::Mouse mouse;
         UI*& MouseUI = w->CurrentMouseAtUI;
         BdUI::Cursor& Cur = w->CurrentCursor;
         switch (msg)
@@ -227,20 +249,19 @@ namespace BdUI {
         }
         case WM_MOUSEWHEEL: {
             mouse.WheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+            break;
         }
         case WM_MOUSELEAVE: {
-            w->TitleText = "Leave";
-            mouse.Content.IsLeaved = 1;
+            mouse.Content = Mouse::Leave;
             break;
         }
         case WM_MOUSEHOVER: {
-            w->TitleText = "Hover";
-            mouse.Content.Hover_Move = 0;
+            mouse.Content = Mouse::Hover;
             mouse.Location = Point{ (double)GET_X_LPARAM(lParam),(double)GET_Y_LPARAM(lParam),0,UnitType::Pixel };
             break;
         }
         case WM_MOUSEMOVE: {
-            if (mouse.Content.IsLeaved || !mouse.Content.Hover_Move) {
+            if (mouse.Content == Mouse::Leave || mouse.Content == Mouse::Hover) {
                 TRACKMOUSEEVENT tme;
                 tme.cbSize = sizeof(tme);
                 tme.hwndTrack = hWnd;
@@ -248,10 +269,8 @@ namespace BdUI {
                 tme.dwHoverTime = 1000;
                 TrackMouseEvent(&tme);
             }
-            w->TitleText = "Window";
-            mouse.Content.Hover_Move = 1;
+            mouse.Content = Mouse::Move;
             mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, UnitType::Pixel);
-            mouse.Content.IsLeaved = 0;
             break;
         }
         default: {
@@ -259,6 +278,28 @@ namespace BdUI {
         }
         }
         UI* c = MouseUI;
+        UI* focus = w->Focus;
+        if (w->keylist.first != focus) {
+            w->keylist.second.clear();
+            w->keylist.first = focus;
+        }
+        if (mouse.Button.Right == 0)
+            w->keylist.second -= KeyType::RButton;
+        else w->keylist.second += KeyType::RButton;
+        if (mouse.Button.Left == 0)
+            w->keylist.second -= KeyType::LButton;
+        else w->keylist.second += KeyType::LButton;
+        if (mouse.Button.Middle == 0)
+            w->keylist.second -= KeyType::MButton;
+        else w->keylist.second += KeyType::MButton;
+        if (mouse.Button.X1 == 0)
+            w->keylist.second -= KeyType::XButton1;
+        else w->keylist.second += KeyType::XButton1;
+        if (mouse.Button.X2 == 0)
+            w->keylist.second -= KeyType::XButton2;
+        else w->keylist.second += KeyType::XButton2;
+        if (focus->PopMenuKey.Isfind(w->keylist.second))
+            focus->PopMenu.getReference()->PopUp(hWnd);
         return 0;
     }
 

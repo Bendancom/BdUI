@@ -3,19 +3,23 @@
 using namespace std;
 using namespace BdUI;
 
+Window window;
+
+void AAAA(unsigned int a) {
+	printf("%d",a);
+}
+
 int main(int argv,char** args)
 {
-	Icon a("C:\\Users\\施昊光\\Downloads\\favicon.png");
-	Cursor b("C:\\Users\\施昊光\\Downloads\\favicon.png");
-	a.LoadFromFile();
-	a.Resize({ 64,64 });
-	b.LoadFromFile();
-	b.Resize({ 64,64 });
-	b.SetHotPoint({ 32,32,0 });
-	Window window;
+	PopMenu menu;
+	MenuItem menu_item;
+	menu_item.context = "hahhahaha";
+	menu_item.Click_function = AAAA;
+	menu.AppendItem(menu_item);
+
+	window.PopMenu = menu;
+	window.PopMenuKey.push_back(KeyList(RButton));
 	window.Create();
-	window.Icon = a;
-	window.Cursor.Client = b;
 	window.Visible = true;
 	window.Block();
 	return 0;

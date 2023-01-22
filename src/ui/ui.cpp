@@ -6,7 +6,6 @@ namespace BdUI
         UIEventDefaultBind();
 
         Visible = true;
-        Mouse.setOnly(BdUI::Mouse());
     }
     void UI::Paint(const Size& size){
         Shape.get().Paint(Location);
@@ -15,6 +14,14 @@ namespace BdUI
         for (UI* i : uiList) {
             i->Paint(size);
         }
+    }
+
+    UI* UI::GetRootUI() {
+        UI* root = Parent;
+        while (root->Parent != nullptr) {
+            root = root->Parent;
+        }
+        return root;
     }
 
     bool UI::MouseRelativePos(BdUI::Mouse get, BdUI::Mouse*& set) {

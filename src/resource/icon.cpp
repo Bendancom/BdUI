@@ -1,4 +1,4 @@
-#include "resource/icon.hpp"
+#include "resource/image/icon.hpp"
 
 #define ROTATE_LEFT(x,n) ((x) << (n)) | ((x) >> ((sizeof(x)) - (n))) 
 #define ROTATE_RIGHT(x,n) ((x) >> (n)) | ((x) << ((sizeof(x)) - (n)))

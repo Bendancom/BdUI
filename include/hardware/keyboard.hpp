@@ -9,6 +9,11 @@
 namespace BdUI {
     enum KeyType {
 #ifdef WIN32
+        LButton = VK_LBUTTON,
+        RButton = VK_RBUTTON,
+        MButton = VK_MBUTTON,
+        XButton1 = VK_XBUTTON1,
+        XButton2 = VK_XBUTTON2,
         //0x7 undefined
         BackSpace = VK_BACK,
         Tab = VK_TAB,
@@ -51,31 +56,31 @@ namespace BdUI {
         Key_9 = 0x39,
         //0x3A - 0x40 Undefined
         A = 0x41,
-        B = 0x41,
-        C = 0x41,
-        D = 0x41,
-        E = 0x41,
-        F = 0x41,
-        G = 0x41,
-        H = 0x41,
-        I = 0x41,
-        J = 0x41,
-        K = 0x41,
-        L = 0x41,
-        M = 0x41,
-        N = 0x41,
-        O = 0x41,
-        P = 0x41,
-        Q = 0x41,
-        R = 0x41,
-        S = 0x41,
-        T = 0x41,
-        U = 0x41,
-        V = 0x41,
-        W = 0x41,
-        X = 0x41,
-        Y = 0x41,
-        Z = 0x41,
+        B = 0x42,
+        C = 0x43,
+        D = 0x44,
+        E = 0x45,
+        F = 0x46,
+        G = 0x47,
+        H = 0x48,
+        I = 0x49,
+        J = 0x4A,
+        K = 0x4B,
+        L = 0x4C,
+        M = 0x4D,
+        N = 0x4E,
+        O = 0x4F,
+        P = 0x50,
+        Q = 0x51,
+        R = 0x52,
+        S = 0x53,
+        T = 0x54,
+        U = 0x55,
+        V = 0x56,
+        W = 0x57,
+        X = 0x58,
+        Y = 0x59,
+        Z = 0x5A,
         LWin = VK_LWIN,
         RWin = VK_RWIN,
         Apps = VK_APPS,
@@ -183,32 +188,32 @@ namespace BdUI {
         Clear_OEM = VK_OEM_CLEAR
 #endif
     };
-    struct KeyCode {
-        char Code;
-        unsigned char ScanCode;
+
+    struct KeyState {
+        bool IsAlt;
+        bool IsCtrl;
+        bool IsShift;
+        bool IsCAPS;
     };
 
     struct Key {
         unsigned short RepeatCount = 1;
-        KeyCode keyCode;
+        unsigned char ScanCode;
         // Up = 0,Down = 1
         bool Up_Down; 
         KeyType VirtualKey;
+        KeyState KeyState{0};
     };
 
-    class KeyList {
+    class KeyList : public std::vector<KeyType>{
     public:
-        KeyList(){}
-        KeyList(std::initializer_list<KeyType>&&);
-        ~KeyList(){}
-        std::vector<KeyType> GetKeys();
+        using std::vector<KeyType>::vector;
+        using std::vector<KeyType>::operator=;
 
-        KeyList& operator+=(KeyType&&);
-        KeyList& operator-=(KeyType&&);
-        bool operator==(const KeyList&);
-        bool operator!=(const KeyList&);
-    private:
-        std::vector<KeyType> Keys;
+        KeyList(KeyType);
+
+        KeyList& operator+=(KeyType);
+        KeyList& operator-=(KeyType);
     };
 }
 #endif

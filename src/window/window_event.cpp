@@ -5,7 +5,7 @@ namespace BdUI {
         if (old_string == nullptr) old_string = new std::string(new_string);
         else *old_string = new_string;
 #ifdef _WIN32
-        if(hWnd != nullptr) SetWindowText(hWnd, new_string.c_str());
+        if(hWnd != nullptr) SetWindowText(hWnd, old_string->c_str());
 #endif
         return true;
     }

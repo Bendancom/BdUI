@@ -17,7 +17,6 @@ namespace BdUI
     Resource::~Resource()
     {
         delete[] Data;
-        delete[] AllData;
     }
 
     void Resource::OpenFile(const std::string &s)

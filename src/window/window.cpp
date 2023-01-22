@@ -10,6 +10,7 @@ namespace BdUI{
         Location = Point(5, 5, 0, UnitType::cm);
         BackgroundColor = RGBA{ 255, 255, 255,0 };
         Focus = this;
+        keylist.first = this;
 
         Icon = BdUI::Icon(LoadIcon(NULL,IDI_APPLICATION));
     }

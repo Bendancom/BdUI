@@ -14,6 +14,7 @@ namespace BdUI{
             Unknown = 0,
             Image = 1,
             Menu = 2,
+            PopMenu = 3,
         };
     protected:
         ResourceType Resource_Type = Unknown;
@@ -21,7 +22,6 @@ namespace BdUI{
         std::string File_Ext;
         unsigned long long Size = 0;
         unsigned char* Data = nullptr;
-        unsigned char* AllData = nullptr;
     public:
         Resource() {}
         Resource(const std::string& filename);

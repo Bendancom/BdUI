@@ -1,4 +1,4 @@
-#include "resource/cursor.hpp"
+#include "resource/image/cursor.hpp"
 
 namespace BdUI {
 	Cursor::Cursor(const std::string& str) {

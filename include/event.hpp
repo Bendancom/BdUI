@@ -24,9 +24,11 @@ namespace BdUI{
         }
         void add(Delegate<Return(Param...)> d) {
             std::lock_guard<std::mutex> lock(Mutex);
-            if (Delegate_list.size() != 0)
+            if (Delegate_list.size() != 0) {
                 if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end()) return;
                 else Delegate_list.push_back(d);
+            }
+            else Delegate_list.push_back(d);
         }
         void erase(Delegate<Return(Param...)> d) {
             std::lock_guard<std::mutex> lock(Mutex);
@@ -85,9 +87,11 @@ namespace BdUI{
         }
         void add(Delegate<void(Param...)> d) {
             std::lock_guard<std::mutex> lock(Mutex);
-            if (Delegate_list.size() != 0)
+            if (Delegate_list.size() != 0) {
                 if (std::find(Delegate_list.begin(), Delegate_list.end(), d) == Delegate_list.end()) return;
                 else Delegate_list.push_back(d);
+            }
+            else Delegate_list.push_back(d);
         }
         void erase(Delegate<void(Param...)> d) {
             std::lock_guard<std::mutex> lock(Mutex);

@@ -69,6 +69,9 @@ namespace BdUI{
             return function(args...);
         }
 
+        Return carry_out(Param... args) {
+            return function(args...);
+        }
         bool exist() {
             return function.operator bool();
         }

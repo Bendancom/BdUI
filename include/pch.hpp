@@ -34,15 +34,17 @@
 
 #include <delegate.hpp>
 #include <event.hpp>
+#include <character.hpp>
 #include "log.hpp"
 #include "readonly.hpp"
 
 #include "math/meta.hpp"
 
-#include "resource/resource.hpp"
-#include "resource/cursor.hpp"
-#include "resource/image.hpp"
-#include "resource/icon.hpp"
+#include <resource/resource.hpp>
+#include <resource/popmenu.hpp>
+#include <resource/image/image.hpp>
+#include <resource/image/icon.hpp>
+#include <resource/image/cursor.hpp>
 
 namespace BdUI
 {

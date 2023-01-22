@@ -19,10 +19,9 @@ namespace BdUI
         Attribute<Shape> Shape;
         Attribute<Point> Location;
         Attribute<bool> Visible;
-        Attribute<Key> Key;
-        Attribute<Mouse> Mouse;
-
-        Attribute<HMENU> PopMenu;
+        Attribute<PopMenu> PopMenu;
+        AttributeVector<KeyList> PopMenuKey;
+        
         Attribute<unsigned int> MouseHoverTime;
 
         struct {
@@ -40,8 +39,11 @@ namespace BdUI
             }Border;
         }Cursor;
 
-        Event<void(BdUI::Mouse)>* MouseEvent = nullptr;
+        Event<void(Mouse)>* MouseEvent = nullptr;
+        Event<void(Key)>* KeyboardEvent = nullptr;
+        Event<void(Character)>* KeyCharEvent = nullptr;
         
+        UI* GetRootUI();
         static UI* SearchUI_NearPos(const Point&,UI*);
         static BdUI::Cursor Search_Area_Cursor(const Point&,UI*);
     private:

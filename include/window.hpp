@@ -45,6 +45,8 @@ namespace BdUI{
             std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 #endif
     private:
+        std::pair<UI*, KeyList> keylist;
+        Mouse mouse;
         std::promise<bool> Creation;
         std::thread *Thread;
         std::mutex Mutex;
@@ -70,12 +72,14 @@ namespace BdUI{
         bool GraphChanged = true;
 
         #ifdef _WIN32
+        std::array<char,2> ANSI = {0,0};
+
         static std::map<HWND,Window*> WindowList;
         int dwExStyle = NULL;
         int dwStyle = WS_OVERLAPPEDWINDOW;
         HWND hWnd = nullptr;
 
-        static LRESULT CALLBACK __WndProc(HWND,UINT,WPARAM,LPARAM);
+        static LRESULT CALLBACK __WndProc(HWND, UINT, WPARAM, LPARAM);
         static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);
         static void MouseVitualKey(WPARAM,BdUI::Mouse&);
         void WindThread();

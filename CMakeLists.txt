@@ -14,7 +14,7 @@ file(GLOB_RECURSE SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 message(STATUS ${OPENGL})
 if(WIN32)
-set(PLATFORM_LIB "dwmapi" "opengl32" glad_wgl)
+set(PLATFORM_LIB "dwmapi" "opengl32" "imm32" glad_wgl)
 endif()
 if(Shared)
 add_library(${PROJECT_NAME} SHARED ${SRC})
