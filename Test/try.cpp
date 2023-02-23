@@ -24,6 +24,14 @@ int main(int argv,char** args)
 	menu.SetMenuInfo(info);
 	window.PopMenu = menu;*/
 
+	cout << sizeof(Function) << endl;
+	cout << sizeof(Meta) << endl;
+
+	Meta a = 1;
+	a += 1;
+	std::list<std::pair<Calculation, Meta>>::const_iterator iter = a.content.begin();
+	a.erase(iter);
+	cout << a() << endl;
 	window.Create();
 	window.PopMenuKey.push_back(KeyList{Control,M});
 	window.PopMenuKey.push_back(RButton);

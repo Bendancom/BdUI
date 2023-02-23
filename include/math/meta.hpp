@@ -33,9 +33,10 @@ namespace BdUI{
 		void Addvariable(const Meta&);
 		std::vector<Variable> _variables;
 		std::variant<double, Variable> coefficient;
-		std::list<std::pair<Calculation,Meta>> Content;
 		std::optional<Calculation> operator_calculation;
+		std::list<std::pair<Calculation, Meta>> Content;
 	public:
+		const std::list<std::pair<Calculation, Meta>>& content = Content;
 		const std::vector<Variable>& variables = _variables;
 
 		Meta(const double& d) : coefficient(d){}
@@ -46,6 +47,10 @@ namespace BdUI{
 
 		double calculate(const std::map<Variable,double>&) const;
 		double calculate() const;
+
+		Meta& erase(const std::list<std::pair<Calculation,Meta>>::const_iterator&);
+		Meta& emplace(const std::list<std::pair<Calculation, Meta>>::const_iterator&, const std::pair<Calculation, Meta>&);
+		Meta& insert(const std::list<std::pair<Calculation, Meta>>::const_iterator&, const std::pair<Calculation, Meta>&);
 
 		Meta& pow(const Meta&);
 		Meta& log(const Meta&);

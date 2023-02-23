@@ -12,14 +12,13 @@
 
 #include <OpenGL/glad/glad.h>
 
+#include <math/function.hpp>
+
 #ifdef _WIN32
 #include <OpenGL/glad/glad_wgl.h>
 #endif
 
 namespace BdUI {
-	class Function {
-
-	};
 	class Shape {
 	friend class UI;
 	private:

@@ -86,6 +86,19 @@ namespace BdUI {
 			_variables.push_back(std::get<Variable>(coefficient));
 	}
 
+	Meta& Meta::erase(const std::list<std::pair<Calculation, Meta>>::const_iterator& iter) {
+		Content.erase(iter);
+		return *this;
+	}
+	Meta& Meta::emplace(const std::list<std::pair<Calculation, Meta>>::const_iterator& iter, const std::pair<Calculation, Meta>& p) {
+		Content.emplace(iter, p);
+		return *this;
+	}
+	Meta& Meta::insert(const std::list<std::pair<Calculation, Meta>>::const_iterator& iter, const std::pair<Calculation, Meta>& p) {
+		Content.insert(iter, p);
+		return *this;
+	}
+
 	Meta& Meta::pow(const Meta& meta) {
 		Content.push_back({ Calculation::pow,meta });
 		Addvariable(meta);

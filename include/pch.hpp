@@ -40,6 +40,7 @@
 #include <readonly.hpp>
 
 #include <math/meta.hpp>
+#include <math/function.hpp>
 
 #include <resource/resource.hpp>
 #include <resource/popmenu.hpp>
