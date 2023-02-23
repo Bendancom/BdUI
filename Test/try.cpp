@@ -5,21 +5,28 @@ using namespace BdUI;
 
 Window window;
 
-void AAAA(unsigned int a) {
-	printf("%d",a);
+void AAAA() {
+	printf("込込込込込込");
 }
 
 int main(int argv,char** args)
 {
+	/*
+	std::shared_ptr<Image> i(new Image("C:\\Users\\仏蟷高\\Downloads\\favicon.png"));
+	i->LoadFromFile();
 	PopMenu menu;
-	MenuItem menu_item;
-	menu_item.context = "hahhahaha";
-	menu_item.Click_function = AAAA;
-	menu.AppendItem(menu_item);
+	MenuItem item;
+	item.context = "hahahahaha";
+	item.carry_out = AAAA;
+	MenuInfo info;
+	info.background = Color(RGBA{ 0,0,0,0 });
+	menu.AppendItem(item);
+	menu.SetMenuInfo(info);
+	window.PopMenu = menu;*/
 
-	window.PopMenu = menu;
-	window.PopMenuKey.push_back(KeyList(RButton));
 	window.Create();
+	window.PopMenuKey.push_back(KeyList{Control,M});
+	window.PopMenuKey.push_back(RButton);
 	window.Visible = true;
 	window.Block();
 	return 0;

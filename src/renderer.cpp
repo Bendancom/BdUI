@@ -3,43 +3,61 @@
 namespace BdUI {
     bool Renderer::IsLoadOpenGL = false;
 
+#ifdef _WIN32
+    Renderer::Renderer(HWND hWnd) {
+        this->hWnd = hWnd;
+        Initialize();
+    }
+    Renderer::Renderer(HDC hDC) {
+        this->hDC = hDC;
+        Initialize();
+    }
+#endif
+
     Renderer::~Renderer() {
+        join();
         delete Renderer_Thread;
 #ifdef _WIN32
         wglDeleteContext(hRC);
-        ReleaseDC(hWnd, hDC);
+        if(hWnd != nullptr) ReleaseDC(hWnd, hDC);
 #endif
     }
-
-    void Renderer::Render() {
-        PushMessage(&Renderer::_Render, this);
-    }
-    void Renderer::_Render() {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glFlush();
-#ifdef _WIN32
-        SwapBuffers(hDC);
-#endif
+    void Renderer::Render(Delegate<void()> d) {
+        Push(std::move(d));
     }
 
+    void Renderer::join() {
+        Mutex.lock();
+        Mutex.unlock();
+    }
 
+    void Renderer::operator()(Delegate<void()> d) {
+        Push(std::move(d));
+    }
+
+    void Renderer::Initialize() {
 #ifdef _WIN32
-	void Renderer::Initialize(HWND hWnd) {
-        this->hWnd = hWnd;
-
-        hDC = GetDC(hWnd);
-        int error = GetLastError();
-        int&& render = ChoosePixelFormat(hDC, &pfd);
+        if (hDC == nullptr) hDC = GetDC(hWnd);
+        int&& render = ChoosePixelFormat(hDC, &Pfd);
         if (render == 0) throw error::Class::Initialize_Failed("PixelFormat initialization faild");
-        SetPixelFormat(hDC, render, &pfd);
+        SetPixelFormat(hDC, render, &Pfd);
+        DescribePixelFormat(hDC, render, sizeof(PIXELFORMATDESCRIPTOR), &Pfd);
         hRC = wglCreateContext(hDC);
-        if (hRC == 0) throw error::Class::Initialize_Failed("OpenGL Context creation faild");
-
-        Renderer_Thread = new std::thread(&Renderer::RenderMessageLoop,this);
+        if (hRC == 0) {
+            Pfd.dwFlags &= ~PFD_DOUBLEBUFFER;
+            Pfd.dwFlags |= PFD_SUPPORT_GDI;
+            int&& ren = ChoosePixelFormat(hDC, &Pfd);
+            if (ren == 0) throw error::Class::Initialize_Failed("PixelFormat initialization faild");
+            SetPixelFormat(hDC, ren, &Pfd);
+            DescribePixelFormat(hDC, ren, sizeof(PIXELFORMATDESCRIPTOR), &Pfd);
+            hRC = wglCreateContext(hDC);
+        }
+        Renderer_Thread = new std::thread(&Renderer::RenderMessageLoop, this);
         Renderer_Thread->detach();
         Initialization.get_future().get();
-	}
 #endif
+    }
+
     void Renderer::RenderMessageLoop() {
 #ifdef _WIN32
         wglMakeCurrent(hDC, hRC);

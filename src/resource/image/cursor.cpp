@@ -1,14 +1,13 @@
 #include "resource/image/cursor.hpp"
 
 namespace BdUI {
-	Cursor::Cursor(const std::string& str) {
+	Cursor::Cursor(const std::filesystem::path& str) {
 		OpenFile(str);
 	}
 
-	void Cursor::OpenFile(const std::string& str) {
+	void Cursor::OpenFile(const std::filesystem::path& str) {
 		Resource::OpenFile(str);
-		if (File_Ext == "cur") Image_Type = CUR;
-		if (File_Ext == "ani") Image_Type = ANI;
+		if (str.extension() == "cur") Image_Type = CUR;
 	}
 
 	void Cursor::LoadFromFile() {
@@ -59,9 +58,6 @@ namespace BdUI {
 				file.read((char*)mask, mask_size);
 
 				free(bitmap);
-			}
-			else if (Image_Type == ANI) {
-
 			}
 		}
 		else {
@@ -153,9 +149,6 @@ namespace BdUI {
 			file.write((char*)bitmap_fileheader + bitmap_fileheader->bfOffBits, bitmap.second - bitmap_fileheader->bfOffBits);
 			file.write((char*)mask, Width * Height / 8);
 		}
-		else if (Image_Type == ANI) {
-
-		}
 		else Image::SaveToFile();
 	}
 
@@ -195,9 +188,6 @@ namespace BdUI {
 			memcpy(cur + infoheader->Offset + sizeof(Bitmap_InfoHeader) + bitmap_infoheader->biBitCount * Width * Height, mask, Width * Height / 8);
 			free(bitmap.first);
 			return { cur,sizeof(CursorFileHeader) + sizeof(CursorInfoHeader) + sizeof(Bitmap_InfoHeader) + bitmap_sizeimage };
-		}
-		else if (Image_Type == ANI) {
-			return { 0,0 };
 		}
 		else return Image::SaveToMemory();
 	}

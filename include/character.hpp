@@ -16,22 +16,24 @@ namespace BdUI {
 		Unicode unicode;
 		Unicode WCharToUnicode(const wchar_t&);
 	public:
-		explicit Character(wchar_t);
-		explicit Character(char);
-		explicit Character(char8_t);
-		explicit Character(char16_t);
-		explicit Character(char32_t);
+		Character(wchar_t);
+		Character(char);
+		Character(char8_t);
+		Character(char16_t);
+		Character(char32_t);
 		Character(std::array<char,2>);
 		Character(std::array<char8_t,4>);
 		Character(std::array<char16_t,2>);
 		
+		bool operator==(const Character&) const;
+		bool operator!=(const Character&) const;
 
-		std::array<char8_t, 4> GetUTF_8();
-		std::array<char16_t, 2> GetUTF_16();
-		char32_t GetUTF_32();
-		wchar_t GetWchar();
-		Unicode GetUnicode();
-		std::array<char, 2> GetChar();
+		std::array<char8_t, 4> GetUTF_8() const;
+		std::array<char16_t, 2> GetUTF_16() const;
+		char32_t GetUTF_32() const;
+		wchar_t GetWchar() const;
+		Unicode GetUnicode() const;
+		std::array<char, 2> GetChar() const;
 	};
 }
 

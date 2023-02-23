@@ -1,12 +1,14 @@
 #include <resource/popmenu.hpp>
 
 namespace BdUI {
+	std::map<UINT, MenuItem*> PopMenu::PopMenuMap;
+
 	PopMenu::PopMenu() {
 		Resource_Type = Resource::PopMenu;
 	}
-
-	PopMenu::PopMenu(const std::string& str) {
+	PopMenu::PopMenu(const std::filesystem::path& str) {
 		Resource_Type = Resource::PopMenu;
+		FilePath = str;
 	}
 	PopMenu::PopMenu(const PopMenu& m) {
 		Resource_Type = Resource::PopMenu;
@@ -17,7 +19,11 @@ namespace BdUI {
 	}
 	PopMenu::~PopMenu() {
 #ifdef _WIN32
+		for (int i = 0; i < ItemList.size(); i++)
+			RemoveMenu(menu, i, MF_BYPOSITION);
 		DestroyMenu(menu);
+		for (size_t i = 0; i < ItemList.size(); i++)
+			PopMenuMap.erase(PopMenuMap.find(ID[i]));
 #endif
 	}
 
@@ -48,7 +54,7 @@ namespace BdUI {
 			flags |= TPM_BOTTOMALIGN;
 			break;
 		}
-		std::array<double,3>p = menuinfo.Origin.GetData(UnitType::Pixel);
+		std::array<float, 3>p = menuinfo.Origin.GetData(UnitType::Pixel);
 		switch (menuinfo.relative)
 		{
 		case MenuInfo::ScreenPosition: {
@@ -69,8 +75,9 @@ namespace BdUI {
 			break;
 		}
 		}
-		if (int id = TrackPopupMenuEx(menu, flags, p[0], p[1], hWnd, nullptr); id > 0)
-			ItemList[id - 1].Click_function(id - 1);
+		if (UINT id = TrackPopupMenuEx(menu, flags, p[0], p[1], hWnd, nullptr); id > 0) {
+			std::get<Delegate<void()>>(PopMenuMap[id]->carry_out)();
+		}
 #endif
 	}
 
@@ -84,7 +91,7 @@ namespace BdUI {
 	PopMenu& PopMenu::InsertItem(unsigned int pos, const MenuItem& item) {
 		if (pos <= ItemList.size()) {
 			std::vector<MenuItem>::iterator iter = ItemList.begin() + pos;
-			ItemList.insert(iter,item);
+			ItemList.insert(iter, item);
 		}
 		else throw error::Function::ParamError("Position not find");
 #ifdef _WIN32
@@ -99,10 +106,10 @@ namespace BdUI {
 #endif
 		return *this;
 	}
-	PopMenu& PopMenu::InsertItems(unsigned int pos,const std::vector<MenuItem>& items) {
+	PopMenu& PopMenu::InsertItems(unsigned int pos, const std::vector<MenuItem>& items) {
 		if (pos <= ItemList.size()) {
 			std::vector<MenuItem>::iterator iter = ItemList.begin() + pos;
-			ItemList.insert(iter, items.begin(),items.end());
+			ItemList.insert(iter, items.begin(), items.end());
 		}
 		else throw error::Function::ParamError("Position not find");
 #ifdef _WIN32
@@ -124,15 +131,30 @@ namespace BdUI {
 	}
 
 #ifdef _WIN32
+	void PopMenu::DrawItem(UINT id) {
+		if (auto color = std::get_if<Color>(&menuinfo.background); color) {
+			GLRGBA c = color->GetGLRGBA();
+			glClearColor(c.R, c.G, c.B, c.A);
+			glClear(GL_COLOR_BUFFER_BIT);
+		}
+		else {
+
+		}
+	}
+
 	void PopMenu::CreateHMenu() {
-		if (menu != nullptr) DestroyMenu(menu);
+		if (menu != nullptr) {
+			for (int i = 0; i < ItemList.size(); i++)
+				RemoveMenu(menu, i, MF_BYPOSITION);
+			DestroyMenu(menu);
+		}
 		menu = CreatePopupMenu();
 
 		SetMenuInfo(menuinfo);
 
 		for (size_t id = 0; id < ItemList.size(); id++) {
 			MENUITEMINFO info = TransformMenuItemInfo(id);
-			InsertMenuItem(menu, id + 1, true, &info);
+			InsertMenuItem(menu, id, true, &info);
 		}
 	}
 
@@ -140,26 +162,35 @@ namespace BdUI {
 		const MenuItem& item = ItemList.at(pos);
 		MENUITEMINFO&& menuiteminfo = { 0 };
 		menuiteminfo.cbSize = sizeof(MENUITEMINFO);
-		menuiteminfo.wID = pos + 1;
-		menuiteminfo.fMask = MIIM_ID | MIIM_STATE | MIIM_FTYPE;
-		if (item.SubMenu != nullptr) {
+		
+		menuiteminfo.fMask = MIIM_STATE | MIIM_DATA;
+		menuiteminfo.dwItemData = reinterpret_cast<ULONG_PTR>(&item);
+		if (auto i = std::get_if<std::shared_ptr<PopMenu>>(&item.carry_out);i != nullptr) {
 			menuiteminfo.fMask |= MIIM_SUBMENU;
-			menuiteminfo.hSubMenu = item.SubMenu->getIndex();
+			menuiteminfo.hSubMenu = i->get()->getIndex();
 		}
-		else menuiteminfo.hSubMenu = NULL;
-
-		// TODO: 给窗体自定义menuitem处理
-		//menuiteminfo.fType |= MFT_OWNERDRAW;
+		else {
+			menuiteminfo.hSubMenu = NULL;
+			menuiteminfo.fMask |= MIIM_ID | MIIM_FTYPE;
+			UINT id = 1;
+			while (PopMenuMap.find(id) != PopMenuMap.end()) {
+				id = rand() + 1;
+			}
+			if (ID.find(pos) != ID.end()) {
+				PopMenuMap.erase(PopMenuMap.find(ID[pos]));
+				ID.erase(ID.find(pos));
+			}
+			PopMenuMap[id] = const_cast<MenuItem*>(&item);
+			ID[pos] = id;
+			menuiteminfo.wID = id;
+		}
+		menuiteminfo.fType = MFT_OWNERDRAW;
 		if (auto i = std::get_if<std::shared_ptr<BdUI::Image>>(&item.context); i) {
-			menuiteminfo.fType = MFT_BITMAP;
-#if(WINVER >= 0x0500)
+			menuiteminfo.fMask |= MIIM_BITMAP;
 			menuiteminfo.hbmpItem = i->get()->getIndex();
-#elif
-			menuiteminfo.dwTypeData = reinterpret_cast<char*>(i->get()->getIndex());
-#endif 
 		}
 		else if (auto i = std::get_if<std::string>(&item.context); i) {
-			menuiteminfo.fType = MFT_STRING;
+			menuiteminfo.fMask |= MIIM_STRING;
 			menuiteminfo.dwTypeData = const_cast<char*>(i->c_str());
 			menuiteminfo.cch = i->size();
 		}
@@ -208,26 +239,18 @@ namespace BdUI {
 	}
 
 	PopMenu& PopMenu::SetMenuInfo(const MenuInfo& info) {
-		if (menu == nullptr) return *this;
 		menuinfo = info;
-		HBRUSH brush;
-		if (BdUI::Color* color = std::get_if<BdUI::Color>(&menuinfo.background); color) {
-			RGBA rgba = color->GetRGBA();
-			brush = CreateSolidBrush(RGB(rgba.R, rgba.G, rgba.B));
-		}
-		else if (std::shared_ptr<BdUI::Image>* image = std::get_if<std::shared_ptr<BdUI::Image>>(&menuinfo.background); image) {
-			brush = CreatePatternBrush(image->get()->getIndex());
-		}
-		MENUINFO menu_info = {
+#ifdef _WIN32
+		MENUINFO minfo = {
 			sizeof(MENUINFO),
-			MIM_BACKGROUND | MIM_MAXHEIGHT | MIM_STYLE,
-			MNS_AUTODISMISS,
-			menuinfo.MaxHeight,
-			brush,
-			NULL,
-			NULL
+			MIM_STYLE | MIM_MAXHEIGHT | MIM_MENUDATA,
+			MNS_DRAGDROP,
+			info.MaxHeight,
+			0,0,
+			reinterpret_cast<ULONG_PTR>(this)
 		};
-		::SetMenuInfo(menu, &menu_info);
+		::SetMenuInfo(menu,&minfo);
+#endif
 		return *this;
 	}
 
@@ -259,6 +282,7 @@ namespace BdUI {
 
 	PopMenu& PopMenu::operator=(const PopMenu& m) {
 		ItemList = m.ItemList;
+		menuinfo = m.menuinfo;
 #ifdef _WIN32
 		CreateHMenu();
 #endif

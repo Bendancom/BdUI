@@ -13,7 +13,11 @@ namespace BdUI {
 		color.hsva = hsv;
 		Type = ColorType_HSVA;
 	}
-	RGBA Color::GetRGBA() {
+	Color::Color(const GLRGBA& glrgba) {
+		SetColor(glrgba);
+	}
+
+	RGBA Color::GetRGBA() const {
 		if (Type == ColorType_RGBA) return color.rgba;
 		else {
 			switch (Type) {
@@ -56,7 +60,7 @@ namespace BdUI {
 			}
 		}
 	}
-	YUVA Color::GetYUVA() {
+	YUVA Color::GetYUVA() const {
 		if (Type == ColorType_YUVA) return color.yuva;
 		else {
 			switch (Type) {
@@ -101,7 +105,7 @@ namespace BdUI {
 			}
 		}
 	}
-	HSVA Color::GetHSVA() {
+	HSVA Color::GetHSVA() const {
 		if (Type == ColorType_HSVA) return color.hsva;
 		else {
 			switch (Type) {
@@ -167,6 +171,10 @@ namespace BdUI {
 			}
 		}
 	}
+	GLRGBA Color::GetGLRGBA() const {
+		RGBA rgba = GetRGBA();
+		return GLRGBA{ float(rgba.R) / 255,float(rgba.G) / 255,float(rgba.B) / 255,float(rgba.A) / 255 };
+	}
 
 	void Color::SetColor(const RGBA& rgb) {
 		color.rgba = rgb;
@@ -179,6 +187,9 @@ namespace BdUI {
 	void Color::SetColor(const HSVA& hsv) {
 		color.hsva = hsv;
 		Type = ColorType_HSVA;
+	}
+	void Color::SetColor(const GLRGBA& glrgba) {
+		SetColor(RGBA{ unsigned char(glrgba.R * 255),unsigned char(glrgba.G * 255),unsigned char(glrgba.B * 255),unsigned char(glrgba.A * 255) });
 	}
 
 	Color& Color::operator=(const RGBA& rgb) {
@@ -194,6 +205,10 @@ namespace BdUI {
 	Color& Color::operator=(const HSVA& hsv) {
 		color.hsva = hsv;
 		Type = ColorType_HSVA;
+		return *this;
+	}
+	Color& Color::operator=(const GLRGBA& glrgba) {
+		SetColor(glrgba);
 		return *this;
 	}
 	Color& Color::operator=(const Color& c) {

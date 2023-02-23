@@ -35,8 +35,8 @@ namespace BdUI {
     bool Window::SetBackgroundColor(Color n, Color*& old) {
         if (old == nullptr) old = new BdUI::Color(n);
         else *old = n;
-        RGBA rgb = n.GetRGBA();
-        Render.PushMessage(glClearColor,float(rgb.R) / 255, float(rgb.G) / 255, float(rgb.B) / 255, float(rgb.A) / 255);
+        GLRGBA color = n.GetGLRGBA();
+        if (Render != nullptr) Render->Push(glClearColor, color.R, color.G, color.B, color.A);
         GraphChanged = true;
         return true;
     }
@@ -44,7 +44,7 @@ namespace BdUI {
         if (old == nullptr) old = new bool(n);
         else *old = n;
 #ifdef _WIN32
-        Render.PushMessage(wglSwapIntervalEXT,n);
+        if (Render != nullptr) Render->Push(wglSwapIntervalEXT,n);
 #endif
         return true;
     }
@@ -69,7 +69,7 @@ namespace BdUI {
     bool Window::SetClientSize(BdUI::Size size, BdUI::Size*& old) {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
-        Render.PushMessage(glViewport, 0, 0, size.Width, size.Height);
+        if (Render != nullptr) Render->Push(glViewport, 0, 0, size.Width, size.Height);
         return true;
     }
 

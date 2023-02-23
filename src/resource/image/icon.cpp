@@ -4,7 +4,7 @@
 #define ROTATE_RIGHT(x,n) ((x) >> (n)) | ((x) << ((sizeof(x)) - (n)))
 
 namespace BdUI {
-	Icon::Icon(const std::string& str) {
+	Icon::Icon(const std::filesystem::path& str) {
 		OpenFile(str);
 	}
 
@@ -15,9 +15,9 @@ namespace BdUI {
 #endif
 	}
 
-	void Icon::OpenFile(const std::string& str) {
+	void Icon::OpenFile(const std::filesystem::path& str) {
 		Image::OpenFile(str);
-		if (File_Ext == "ico") Image_Type = ICO;
+		if (str.extension() == "ico") Image_Type = ICO;
 	}
 
 	void Icon::LoadFromFile() {

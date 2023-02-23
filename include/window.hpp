@@ -7,7 +7,6 @@
 
 #include <pch.hpp>
 #include <ui.hpp>
-#include <renderer.hpp>
 
 namespace BdUI{
     class Window : public UI{
@@ -51,7 +50,7 @@ namespace BdUI{
         std::thread *Thread;
         std::mutex Mutex;
         std::mutex OpenGLMutex;
-        Renderer Render = Renderer(this);
+        Renderer* Render;
 
         void WindowEventDefaultBind();
         void WindowCursorDefaultBind();
@@ -69,15 +68,15 @@ namespace BdUI{
         UI* CurrentMouseAtUI = this;
         BdUI::Cursor CurrentCursor = Cursor.Client;
         
+        void _Render();
         bool GraphChanged = true;
-
         #ifdef _WIN32
+        HWND hWnd = nullptr;
         std::array<char,2> ANSI = {0,0};
 
         static std::map<HWND,Window*> WindowList;
         int dwExStyle = NULL;
         int dwStyle = WS_OVERLAPPEDWINDOW;
-        HWND hWnd = nullptr;
 
         static LRESULT CALLBACK __WndProc(HWND, UINT, WPARAM, LPARAM);
         static LRESULT MouseProc(HWND, UINT, WPARAM, LPARAM, Window*);

@@ -19,15 +19,15 @@
 #include <OpenGL/glad/glad_wgl.h>
 #endif
 
-#include "OpenGL/glad/glad.h"
-#include "graph/unit.hpp"
-#include "graph/point.hpp"
-#include "graph/color.hpp"
-#include "graph/shape.hpp"
-#include "graph/size.hpp"
+#include <OpenGL/glad/glad.h>
+#include <graph/unit.hpp>
+#include <graph/point.hpp>
+#include <graph/color.hpp>
+#include <graph/shape.hpp>
+#include <graph/size.hpp>
 
-#include "attribute/attribute.hpp"
-#include "attribute/attribute_vector.hpp"
+#include <attribute/attribute.hpp>
+#include <attribute/attribute_vector.hpp>
 
 #include <hardware/keyboard.hpp>
 #include <hardware/mouse.hpp>
@@ -35,10 +35,11 @@
 #include <delegate.hpp>
 #include <event.hpp>
 #include <character.hpp>
-#include "log.hpp"
-#include "readonly.hpp"
+#include <renderer.hpp>
+#include <log.hpp>
+#include <readonly.hpp>
 
-#include "math/meta.hpp"
+#include <math/meta.hpp>
 
 #include <resource/resource.hpp>
 #include <resource/popmenu.hpp>
@@ -48,7 +49,6 @@
 
 namespace BdUI
 {
-    class UI;
     struct Margin{
         int Left = 0;
         int Right = 0;

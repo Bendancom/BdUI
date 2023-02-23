@@ -2,7 +2,7 @@
 
 namespace BdUI
 {
-    Resource::Resource(const std::string &s)
+    Resource::Resource(const std::filesystem::path &s)
     {
         OpenFile(s);
     }
@@ -19,12 +19,9 @@ namespace BdUI
         delete[] Data;
     }
 
-    void Resource::OpenFile(const std::string &s)
+    void Resource::OpenFile(const std::filesystem::path &s)
     {
         FilePath = s;
-        std::string&& file_ext = FilePath.substr(FilePath.find_last_of('.') + 1);
-        std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), std::tolower);
-        File_Ext = file_ext;
     }
 
     void Resource::Malloc(unsigned long long size) {

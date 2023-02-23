@@ -10,19 +10,20 @@ namespace BdUI {
 	private:
 		UnitType::UnitType Type = UnitType::Unknown;
 	public:
-		double X = 0;
-		double Y = 0;
-		double Z = 0;
+		float X = 0;
+		float Y = 0;
+		float Z = 0;
 
 		Point(){}
-		Point(const std::array<double,3>&);
-		Point(const double& x,const double& y,const double& z,const UnitType::UnitType& type = UnitType::Unknown) : X(x),Y(y),Z(z), Type(type) {}
+		Point(const std::array<float,3>&);
+		Point(const float& x,const float& y,const float& z,const UnitType::UnitType& type = UnitType::Unknown) : X(x),Y(y),Z(z), Type(type) {}
 		
 		Point& ChangeUnit(const UnitType::UnitType&);
-		std::array<double, 3> GetData(const UnitType::UnitType&) const;
+		std::array<float, 3> GetData(const UnitType::UnitType&) const;
 		UnitType::UnitType GetType() const;
+		float* GetPointPtr();
 
-		Point& operator=(const std::array<double,3>&);
+		Point& operator=(const std::array<float,3>&);
 		Point& operator=(const Point&);
 
 		Point& operator+(Point&);
@@ -30,5 +31,6 @@ namespace BdUI {
 		Point& operator-(Point&);
 		Point& operator-=(Point&);
 	};
+	typedef Point Vertex;
 }
 #endif

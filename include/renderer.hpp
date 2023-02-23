@@ -12,31 +12,33 @@
 #include <queue>
 #include <functional>
 #include <error.hpp>
+#include <atomic>
 #include <OpenGL/glad/glad.h>
 
 namespace BdUI {
     class Window;
 	class Renderer {
 	public:
-        Renderer(Window* parent) : Parent(parent) {}
+#ifdef _WIN32
+        Renderer(HWND hWnd);
+        Renderer(HDC hDC);
+#endif
         ~Renderer();
 
         template<typename gl_Func,typename... Args>
-        void PushMessage(gl_Func gl_func, Args... args) {
+        void Push(gl_Func gl_func, Args... args) {
             Mutex.lock();
             if (IsLoadOpenGL) {
                 RendeMessage_Queue.push(std::bind(gl_func, args...));
                 condition.notify_all();
             }
+            else throw error::OpenGL::UnInitialization();
             Mutex.unlock();
         }
-        void Render();
-
-#ifdef _WIN32
-        void Initialize(HWND hWnd);
-#endif
+        void join();
+        void Render(Delegate<void()> render_func);
+        void operator()(Delegate<void()>);
 	private:
-        Window* Parent;
         static bool IsLoadOpenGL;
         std::promise<bool> Initialization;
         std::mutex Mutex;
@@ -45,23 +47,22 @@ namespace BdUI {
         std::thread* Renderer_Thread = nullptr;
 
         void RenderMessageLoop();
-        void _Render();
-
+        void Initialize();
 
 #ifdef _WIN32
         HWND hWnd = nullptr;
 		HDC hDC = nullptr;
         HGLRC hRC = nullptr;
-
-        PIXELFORMATDESCRIPTOR pfd =
-        {
+        PIXELFORMATDESCRIPTOR Pfd{
             sizeof(PIXELFORMATDESCRIPTOR),
             1,
-            PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+            PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_GENERIC_FORMAT | PFD_GENERIC_ACCELERATED,    //Flags
             PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
             32,                        //Colordepth of the framebuffer.
-            0, 0, 0, 0, 0, 0,
-            0,
+            8, 0, 
+            8, 0, 
+            8, 0,
+            8,
             0,
             0,
             0, 0, 0, 0,

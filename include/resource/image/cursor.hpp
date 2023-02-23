@@ -29,13 +29,13 @@ namespace BdUI {
 		const short& Y = _Y;
 
 		Cursor() {}
-		Cursor(const std::string&);
+		Cursor(const std::filesystem::path&);
 		Cursor(const Cursor&);
 		~Cursor();
 
 		void SetHotPoint(Point);
 
-		virtual void OpenFile(const std::string&);
+		virtual void OpenFile(const std::filesystem::path&);
 		virtual void SaveToFile();
 		virtual std::pair<void*,unsigned long long> SaveToMemory();
 		virtual void LoadFromFile();

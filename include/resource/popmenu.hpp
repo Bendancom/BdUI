@@ -10,6 +10,8 @@
 #include <graph/color.hpp>
 #include <variant>
 #include <graph/point.hpp>
+#include <map>
+#include <renderer.hpp>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -32,9 +34,8 @@ namespace BdUI {
 		MenuItem_State state = MenuItem_State::Enable;
 		MenuItem_Layout layout = MenuItem_Layout::None;
 		bool IsHiLite = false;
-		PopMenu* SubMenu = nullptr;
+		std::variant<std::shared_ptr<PopMenu>, Delegate<void()>> carry_out;
 		std::variant<std::shared_ptr<BdUI::Image>, std::string,std::monostate> context;
-		Delegate<void(unsigned int)> Click_function;
 	};
 	struct MenuInfo {
 		std::variant<BdUI::Color, std::shared_ptr<BdUI::Image>> background = BdUI::Color(RGBA{255,255,255,0});
@@ -60,16 +61,19 @@ namespace BdUI {
 
 	class PopMenu : public Resource{
 	private:
+		
 		std::vector<MenuItem> ItemList;
 		MenuInfo menuinfo;
 #ifdef _WIN32
+		static std::map<UINT, MenuItem*> PopMenuMap;
+		std::map<std::size_t,UINT> ID;
 		HMENU menu = nullptr;
 		void CreateHMenu();
 		MENUITEMINFO TransformMenuItemInfo(unsigned int pos);
 #endif
 	public:
 		PopMenu();
-		PopMenu(const std::string&);
+		PopMenu(const std::filesystem::path&);
 		PopMenu(const PopMenu&);
 		~PopMenu();
 
@@ -83,6 +87,7 @@ namespace BdUI {
 
 
 #ifdef _WIN32
+		void DrawItem(UINT);
 		PopMenu(HMENU);
 		operator HMENU();
 		HMENU getIndex();

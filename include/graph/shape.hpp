@@ -2,11 +2,13 @@
 #define BDUI_SHAPE
 
 #include <vector>
+#include <variant>
 #include <any>
 #include <graph/point.hpp>
 #include <graph/color.hpp>
 #include <graph/size.hpp>
 #include <graph/unit.hpp>
+#include <memory>
 
 #include <OpenGL/glad/glad.h>
 
@@ -15,36 +17,22 @@
 #endif
 
 namespace BdUI {
-	
+	class Function {
+
+	};
 	class Shape {
-	public:
-		enum ShapeType {
-			Unknown = 0,
-			Polygon = 1,
-			Bezier = 2,
-			Function = 3,
-			Circle = 4,
-			Rectangle = 5,
-		};
+	friend class UI;
 	private:
-		std::vector<Point> Points;
-		ShapeType Type = ShapeType::Unknown;
-		unsigned int VBO = 0;
-		std::any Parameter;
+		std::vector<std::variant<std::shared_ptr<Shape>,Function>> Content;
+		void Paint(Point origin);
 	public:
 		Shape() {}
-		Shape(std::vector<Point>&& points, ShapeType type = Unknown);
-		Shape(Point&& center, Unit&& radius);
-		Shape(Point&& point, Size&& size);
 
-		//Callback fuction,you needn't to call it
-		void Paint(Point origin);
+		// void SetVertexs(const std::vector<BdUI::Vertex>& vertexs);
+		// void SetVertexs_Index(const std::vector<size_t>& verteexs_index);
 
-		Shape& operator=(std::pair<std::vector<Point>,ShapeType>&& points);
-		Shape& operator=(std::pair<Point, Unit>&& circle);
-		Shape& operator=(std::pair<Point, Size>&& rectangle);
-
-		ShapeType GetShapeType();
+		// Shape& operator+=(const Vertex&);
+		// Shape& operator=(std::vector<BdUI::Vertex>);
 	};
 }
 #endif

@@ -29,7 +29,7 @@ namespace BdUI {
         hWnd = CreateWindowEx(dwExStyle, Windowclass.lpszClassName, "Window", dwStyle, location.X, location.Y, size.Width, size.Height, NULL, NULL, Windowclass.hInstance, NULL);
         if (hWnd == NULL) throw error::Function::CarryOut_Faild("Faild to create Window");
 
-        Render.Initialize(hWnd);
+        Render = new Renderer(hWnd);
 
         Size = Size.get();
         Location = Location.get();
@@ -56,6 +56,7 @@ namespace BdUI {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
+            WaitMessage();
         }
         Mutex.unlock();
 #endif
@@ -71,7 +72,7 @@ namespace BdUI {
         }
         case WM_SIZE: {
             w->Size.setOnly(BdUI::Size(LOWORD(lParam), HIWORD(lParam), UnitType::Pixel));
-            w->Render.PushMessage(glViewport,0, 0, LOWORD(lParam), HIWORD(lParam));
+            w->Render->Push(glViewport,0, 0, LOWORD(lParam), HIWORD(lParam));
             w->GraphChanged = true;
             break;
         }
@@ -79,7 +80,7 @@ namespace BdUI {
             RECT* rect = reinterpret_cast<RECT*>(lParam);
             w->Size.setOnly(BdUI::Size((double)(rect->right - rect->left), (double)(rect->bottom - rect->top), UnitType::Pixel));
             w->Location.setOnly(Point(rect->left, rect->top, 0, UnitType::Pixel));
-            w->Render.PushMessage(glViewport, 0, 0, rect->right - rect->left, rect->bottom - rect->top);
+            w->Render->Push(glViewport, 0, 0, rect->right - rect->left, rect->bottom - rect->top);
             //w->Render.PushMessage();
             w->GraphChanged = true;
             break;
@@ -134,6 +135,7 @@ namespace BdUI {
             else w->keylist.second += key.VirtualKey;
             if (focus->PopMenuKey.Isfind(w->keylist.second)) {
                 focus->PopMenu.getReference()->PopUp(hWnd);
+                w->keylist.second.clear();
             };
             if (focus->KeyboardEvent != nullptr)
                 focus->KeyboardEvent->CarryOut(key);
@@ -154,8 +156,41 @@ namespace BdUI {
         }
         case WM_PAINT: {
             if (w->GraphChanged == true) {
-                w->Render.Render();
+                w->Render->Render(Delegate<void()>(&Window::_Render,w));
+                w->Render->join();
                 w->GraphChanged = false;
+            }
+            break;
+        }
+        case WM_MEASUREITEM: {
+            MEASUREITEMSTRUCT* item = reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
+            switch (item->CtlType)
+            {
+            case ODT_MENU: {
+                BdUI::MenuItem* menu = reinterpret_cast<BdUI::MenuItem*>(item->itemData);
+                break;
+            }
+            default:
+                return DefWindowProc(hWnd,msg,wParam,lParam);
+            }
+            return DefWindowProc(hWnd, msg, wParam, lParam);
+            break;
+        }
+        case WM_DRAWITEM: {
+            DRAWITEMSTRUCT* item = reinterpret_cast<DRAWITEMSTRUCT*>(lParam);
+            switch (item->CtlType)
+            {
+            case ODT_MENU: {
+                MENUINFO info = { 0 };
+                info.cbSize = sizeof(MENUINFO);
+                info.fMask = MIM_MENUDATA;
+                GetMenuInfo((HMENU)item->hwndItem, &info);
+                BdUI::PopMenu* menu  = reinterpret_cast<BdUI::PopMenu*>(info.dwMenuData);
+                Renderer render(item->hDC);
+                render(std::bind(&PopMenu::DrawItem, menu, item->itemID));
+                break;
+            }
+            default: return DefWindowProc(hWnd, msg, wParam, lParam); break;
             }
             break;
         }
@@ -257,12 +292,12 @@ namespace BdUI {
         }
         case WM_MOUSEHOVER: {
             mouse.Content = Mouse::Hover;
-            mouse.Location = Point{ (double)GET_X_LPARAM(lParam),(double)GET_Y_LPARAM(lParam),0,UnitType::Pixel };
+            mouse.Location = Point{ (float)GET_X_LPARAM(lParam),(float)GET_Y_LPARAM(lParam),0,UnitType::Pixel };
             break;
         }
         case WM_MOUSEMOVE: {
             if (mouse.Content == Mouse::Leave || mouse.Content == Mouse::Hover) {
-                TRACKMOUSEEVENT tme;
+                TRACKMOUSEEVENT tme{0};
                 tme.cbSize = sizeof(tme);
                 tme.hwndTrack = hWnd;
                 tme.dwFlags = TME_LEAVE | TME_HOVER;
@@ -298,8 +333,13 @@ namespace BdUI {
         if (mouse.Button.X2 == 0)
             w->keylist.second -= KeyType::XButton2;
         else w->keylist.second += KeyType::XButton2;
-        if (focus->PopMenuKey.Isfind(w->keylist.second))
+        if (focus->PopMenuKey.Isfind(w->keylist.second)){
             focus->PopMenu.getReference()->PopUp(hWnd);
+            w->keylist.second.clear();
+        }
+
+        if (w->MouseEvent != nullptr)
+            w->MouseEvent->CarryOut(mouse);
         return 0;
     }
 

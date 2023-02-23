@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.18)
-project(BdUI LANGUAGES "CXX")
+cmake_minimum_required(VERSION 3.20)
+project(BdUI LANGUAGES CXX)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 option("Shared" "Compile to Shared lib" OFF)

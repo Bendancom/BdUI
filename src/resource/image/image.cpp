@@ -17,18 +17,19 @@ namespace BdUI {
 		for (int i = 0; i < size; i++) buffer->push_back(*((unsigned char*)data + i));
 	}
 
-	Image::Image(const std::string& str) {
+	Image::Image(const std::filesystem::path& str) {
 		Resource_Type = Resource::Image;
 		OpenFile(str);
 	}
 
-	void Image::OpenFile(const std::string& str) {
+	void Image::OpenFile(const std::filesystem::path& str) {
 		Resource::OpenFile(str);
-		if (File_Ext == "jpeg" || File_Ext == "jpg") Image_Type = JPEG;
-		else if (File_Ext == "bmp") Image_Type = BMP;
-		else if (File_Ext == "png") Image_Type = PNG;
-		else if (File_Ext == "hdr") Image_Type = HDR;
-		else if (File_Ext == "tga") Image_Type = TGA;
+		auto FileExt = str.extension();
+		if (FileExt == "jpeg" || FileExt == "jpg") Image_Type = JPEG;
+		else if (FileExt == "bmp") Image_Type = BMP;
+		else if (FileExt == "png") Image_Type = PNG;
+		else if (FileExt == "hdr") Image_Type = HDR;
+		else if (FileExt == "tga") Image_Type = TGA;
 	}
 
 	Image::~Image() {
@@ -75,19 +76,19 @@ namespace BdUI {
 		switch (Image_Type)
 		{
 		case BdUI::Image::BMP:
-			stbi_write_bmp(FilePath.c_str(), Width, Height, BitCount / 8, Data);
+			stbi_write_bmp(FilePath.string().c_str(), Width, Height, BitCount / 8, Data);
 			break;
 		case BdUI::Image::JPEG:
-			stbi_write_jpg(FilePath.c_str(), Width, Height, BitCount / 8, Data, 90);
+			stbi_write_jpg(FilePath.string().c_str(), Width, Height, BitCount / 8, Data, 90);
 			break;
 		case BdUI::Image::PNG:
-			stbi_write_png(FilePath.c_str(), Width, Height, BitCount / 8, Data, Width * BitCount / 8);
+			stbi_write_png(FilePath.string().c_str(), Width, Height, BitCount / 8, Data, Width * BitCount / 8);
 			break;
 		case BdUI::Image::HDR:
-			stbi_write_hdr(FilePath.c_str(), Width, Height, BitCount / 8, (float*)Data);
+			stbi_write_hdr(FilePath.string().c_str(), Width, Height, BitCount / 8, (float*)Data);
 			break;
 		case BdUI::Image::TGA:
-			stbi_write_tga(FilePath.c_str(), Width, Height, BitCount / 8, Data);
+			stbi_write_tga(FilePath.string().c_str(), Width, Height, BitCount / 8, Data);
 			break;
 		default:
 			throw error::File::Type_Invalid("Can't Output this format");

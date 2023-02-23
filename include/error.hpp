@@ -25,7 +25,13 @@ namespace BdUI{
         }
         namespace OpenGL {
             ERRORTYPE(Initialization_Failed, "OpenGL Load Error");
+            ERRORTYPE(UnInitialization, "UnLoad OpenGL");
+        }
+        namespace Math {
+            ERRORTYPE(operator_error, "Unkonwn Operator");
+            ERRORTYPE(variable_num_error, "The number of variables is error");
         }
     }
 }
+#undef ERRORTYPE
 #endif

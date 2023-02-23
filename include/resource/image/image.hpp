@@ -24,7 +24,6 @@ namespace BdUI {
 			TGA = 4,
 			ICO = 5,
 			CUR = 6,
-			ANI = 7
 		};
 	protected:
 		ImageType Image_Type;
@@ -43,7 +42,7 @@ namespace BdUI {
 		const int& BitCount = _BitCount;
 
 		Image() {}
-		Image(const std::string&);
+		Image(const std::filesystem::path&);
 		Image(const Image&);
 		~Image();
 
@@ -51,7 +50,7 @@ namespace BdUI {
 
 		void SetImageType(ImageType);
 
-		virtual void OpenFile(const std::string&);
+		virtual void OpenFile(const std::filesystem::path&);
 		virtual void SaveToFile();
 		virtual std::pair<void*,unsigned long long> SaveToMemory();
 		virtual void LoadFromFile();

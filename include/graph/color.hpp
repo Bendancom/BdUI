@@ -20,6 +20,12 @@ namespace BdUI {
 		unsigned char V = 0;
 		unsigned char A = 0;
 	};
+	struct GLRGBA {
+		float R;
+		float G;
+		float B;
+		float A;
+	};
 	class Color {
 	private:
 		/*
@@ -52,18 +58,22 @@ namespace BdUI {
 		Color(const RGBA&);
 		Color(const YUVA&);
 		Color(const HSVA&);
+		Color(const GLRGBA&);
 
-		RGBA GetRGBA();
-		YUVA GetYUVA();
-		HSVA GetHSVA();
+		RGBA GetRGBA() const;
+		YUVA GetYUVA() const;
+		HSVA GetHSVA() const;
+		GLRGBA GetGLRGBA() const;
 
 		void SetColor(const RGBA&);
 		void SetColor(const YUVA&);
 		void SetColor(const HSVA&);
+		void SetColor(const GLRGBA&);
 
 		Color& operator=(const RGBA&);
 		Color& operator=(const YUVA&);
 		Color& operator=(const HSVA&);
+		Color& operator=(const GLRGBA&);
 
 		Color& operator=(const Color&);
 	};

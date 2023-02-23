@@ -85,7 +85,7 @@ namespace BdUI {
 		}
 	}
 
-	std::array<char, 2> Character::GetChar() {
+	std::array<char, 2> Character::GetChar() const{
 		if (sizeof(wchar_t) == 2) {
 			auto utf16 = GetUTF_16();
 			if (utf16[1] == 0)
@@ -137,7 +137,7 @@ namespace BdUI {
 		
 	}
 
-	std::array<char8_t, 4> Character::GetUTF_8() {
+	std::array<char8_t, 4> Character::GetUTF_8() const{
 		if (unicode.Block_ID > 0 || unicode.Plane > 0 || unicode.Block >= 128) {
 			char8_t utf8[4] = {0};
 			unsigned char bit = 0;
@@ -173,7 +173,7 @@ namespace BdUI {
 		else return { unicode.Block,0,0,0 };
 	}
 
-	std::array<char16_t, 2> Character::GetUTF_16() {
+	std::array<char16_t, 2> Character::GetUTF_16() const{
 		if (unicode.Plane > 0) {
 			char16_t utf16[2] = { 0 };
 			utf16[0] = unicode.Block | (((char16_t)unicode.Block_ID) & 0b11) | 0b1101110000000000;
@@ -183,20 +183,33 @@ namespace BdUI {
 		else return { char16_t((char16_t)unicode.Block | (char16_t)unicode.Block_ID << 8),0 };
 	}
 
-	char32_t Character::GetUTF_32() {
+	char32_t Character::GetUTF_32() const{
 		return ((char32_t)unicode.Plane << 16) | ((char32_t)unicode.Block_ID << 8) | unicode.Block;
 	}
 
-	Unicode Character::GetUnicode() {
+	Unicode Character::GetUnicode() const{
 		return unicode;
 	}
-	wchar_t Character::GetWchar() {
+	wchar_t Character::GetWchar() const{
 		if (sizeof(wchar_t) == 2) {
 			return (wchar_t)unicode.Block_ID << 8 | unicode.Block;
 		}
 		else {
 			return (wchar_t)unicode.Plane << 16 | (wchar_t)unicode.Block_ID << 8 | unicode.Block;
 		}
+	}
+
+	bool Character::operator==(const Character& c) const {
+		if (unicode.Block != c.unicode.Block) return false;
+		if (unicode.Block_ID != c.unicode.Block_ID) return false;
+		if (unicode.Plane != c.unicode.Plane) return false;
+		return true;
+	}
+	bool Character::operator!=(const Character& c) const {
+		if (unicode.Block != c.unicode.Block) return true;
+		if (unicode.Block_ID != c.unicode.Block_ID) return true;
+		if (unicode.Plane != c.unicode.Plane) return true;
+		return false;
 	}
 
 	Unicode Character::WCharToUnicode(const wchar_t& w) {

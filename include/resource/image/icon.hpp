@@ -61,13 +61,13 @@ namespace BdUI {
 		using Image::SetImageType;
 
 		Icon(){}
-		Icon(const std::string&);
+		Icon(const std::filesystem::path&);
 		Icon(const Icon&);
 		~Icon();
 
 		Icon& Resize(BdUI::Size);
 
-		virtual void OpenFile(const std::string&);
+		virtual void OpenFile(const std::filesystem::path&);
 		virtual void SaveToFile();
 		virtual void LoadFromFile();
 		virtual void LoadFromMemory(void* pos,unsigned long long size);

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cstdint>
 #include <algorithm>
+#include <filesystem>
 
 #include <error.hpp>
 
@@ -15,16 +16,16 @@ namespace BdUI{
             Image = 1,
             Menu = 2,
             PopMenu = 3,
+            FontType = 4,
         };
     protected:
         ResourceType Resource_Type = Unknown;
-        std::string FilePath;
-        std::string File_Ext;
+        std::filesystem::path FilePath;
         unsigned long long Size = 0;
         unsigned char* Data = nullptr;
     public:
         Resource() {}
-        Resource(const std::string& filename);
+        Resource(const std::filesystem::path& filename);
         Resource(const Resource&);
         ~Resource();
 
@@ -34,7 +35,7 @@ namespace BdUI{
         void Clear();
         std::pair<void*, unsigned long long> getDataPointer();
 
-        virtual void OpenFile(const std::string& filename);
+        virtual void OpenFile(const std::filesystem::path& filename);
         virtual void LoadFromFile();
         virtual void LoadFromMemory(void* pos,unsigned long long size);
         virtual void SaveToFile();
