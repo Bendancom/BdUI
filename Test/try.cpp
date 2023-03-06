@@ -5,11 +5,7 @@ using namespace BdUI;
 
 Window window;
 
-void AAAA() {
-	printf("込込込込込込");
-}
-
-int main(int argv,char** args)
+int main(int argv, char** args)
 {
 	/*
 	std::shared_ptr<Image> i(new Image("C:\\Users\\仏蟷高\\Downloads\\favicon.png"));
@@ -24,14 +20,8 @@ int main(int argv,char** args)
 	menu.SetMenuInfo(info);
 	window.PopMenu = menu;*/
 
-	cout << sizeof(Function) << endl;
-	cout << sizeof(Meta) << endl;
-
-	Meta a = 1;
-	a += 1;
-	std::list<std::pair<Calculation, Meta>>::const_iterator iter = a.content.begin();
-	a.erase(iter);
-	cout << a() << endl;
+	Bezier b{ {0,0,0},{1,0,1},{0,0,2} };
+	auto c = b.calculate(0.5);
 	window.Create();
 	window.PopMenuKey.push_back(KeyList{Control,M});
 	window.PopMenuKey.push_back(RButton);

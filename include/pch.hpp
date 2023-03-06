@@ -41,6 +41,7 @@
 
 #include <math/meta.hpp>
 #include <math/function.hpp>
+#include <math/bezier.hpp>
 
 #include <resource/resource.hpp>
 #include <resource/popmenu.hpp>

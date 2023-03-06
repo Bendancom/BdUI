@@ -2,43 +2,31 @@
 #define BDUI_FUNCTION
 
 #include <math/meta.hpp>
-#include <array>
+#include <list>
 
 namespace BdUI {
 
-	class Function : public Meta {
-	private:
-		Variable dependent_variable;
+	class function : public Meta {
 	public:
-		Function(const Variable& c,const Meta& m) : dependent_variable(c), Meta(m) {}
-		Function(const Function&) = default;
+		Variable dependent_variable;
+		function(const Variable& c,const Meta& m) : dependent_variable(c), Meta(m) {}
+		function(const function&);
 
-		std::pair<Variable, double> calculate(const std::map<Variable, double>& = std::map<Variable,double>());
-		std::pair<Variable, double> operator()(const std::map<Variable, double>& = std::map<Variable,double>());
+		std::pair<Variable, double> calculate(const std::map<Variable, double>& = std::map<Variable,double>()) const;
+		std::pair<Variable, double> operator()(const std::map<Variable, double>& = std::map<Variable,double>()) const;
 
-		Function& operator=(const Function&) = default;
+		function& operator=(const function&);
 		using Meta::operator=;
 	};
 
-	template<int number>
-	class Parametric_func : private std::array<Function,number>{
+	class Parametricfunc : public std::vector<function>{
 	public:
-		using std::array<Function, number>::array;
+		using std::vector<function>::vector;
 
-		inline std::map<Variable, double> calculate(const std::map<Variable, double>& m = std::map<Variable, double>()) {
-			std::map<Variable, double>&& temp = std::map<Variable, double>();
-			for (Function i : this)
-				temp.insert(i.calculate(m));
-			return temp;
-		}
-		inline std::map<Variable, double> operator()(const std::map<Variable, double>& m = std::map<Variable, double>()) {
-			std::map<Variable, double>&& temp = std::map<Variable, double>();
-			for (Function i : this)
-				temp.insert(i.calculate(m));
-			return temp;
-		}
+		std::vector<std::pair<Variable, double>> calculate(const std::map<Variable, double>& m = std::map<Variable, double>()) const;
+		std::vector<std::pair<Variable, double>> operator()(const std::map<Variable, double>& m = std::map<Variable, double>()) const;
 
-		using std::array<Function, number>::operator=;
+		using std::vector<function>::operator=;
 	};
 }
 

@@ -30,6 +30,8 @@ namespace BdUI{
         namespace Math {
             ERRORTYPE(operator_error, "Unkonwn Operator");
             ERRORTYPE(variable_num_error, "The number of variables is error");
+            ERRORTYPE(no_variable, "This doesn't have any variable");
+            ERRORTYPE(variable_subscript_error, "The variable's subscript is invalid");
         }
     }
 }

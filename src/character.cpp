@@ -1,6 +1,16 @@
 #include <character.hpp>
 
 namespace BdUI {
+	std::weak_ordering Unicode::operator<=>(const Unicode& u) const{
+		if (Plane < u.Plane) return std::weak_ordering::less;
+		else if (Plane > u.Plane) return std::weak_ordering::greater;
+		else {
+			if (Block_ID < u.Block_ID) return std::weak_ordering::less;
+			else if (Block_ID > u.Block_ID) return std::weak_ordering::greater;
+			else return Block <=> u.Block;
+		}
+	}
+
 	Character::Character(wchar_t c) {
 		unicode = WCharToUnicode(c);
 	}
@@ -210,6 +220,9 @@ namespace BdUI {
 		if (unicode.Block_ID != c.unicode.Block_ID) return true;
 		if (unicode.Plane != c.unicode.Plane) return true;
 		return false;
+	}
+	std::weak_ordering Character::operator<=>(const Character& c) const{
+		return unicode <=> c.unicode;
 	}
 
 	Unicode Character::WCharToUnicode(const wchar_t& w) {

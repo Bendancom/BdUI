@@ -19,13 +19,14 @@
 #endif
 
 namespace BdUI {
-	class Shape {
+	class Shape : public std::vector<Bezier> {
 	friend class UI;
 	private:
-		std::vector<std::variant<std::shared_ptr<Shape>,Function>> Content;
+		static const char* HGL;
 		void Paint(Point origin);
 	public:
-		Shape() {}
+		using std::vector<Bezier>::vector;
+		using std::vector<Bezier>::operator=;
 
 		// void SetVertexs(const std::vector<BdUI::Vertex>& vertexs);
 		// void SetVertexs_Index(const std::vector<size_t>& verteexs_index);
