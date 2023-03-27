@@ -12,7 +12,7 @@
 
 #include <OpenGL/glad/glad.h>
 
-#include <math/function.hpp>
+#include <math/bezier.hpp>
 
 #ifdef _WIN32
 #include <OpenGL/glad/glad_wgl.h>

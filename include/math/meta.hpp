@@ -10,101 +10,106 @@
 #include <map>
 #include <cmath>
 #include <numbers>
-#include <array>
 #include <any>
 #include <deque>
 #include <codecvt>
+#include <stack>
+#include <regex>
+#include <set>
+#include <memory>
+#include <forward_list>
 
 namespace BdUI{
-	enum class Calculation {
-		plus,		// 加法运算
-		minus,		// 减法运算
-		multi,		// 乘法运算
-		divide,		// 除法运算
-		pow,		// 幂运算
-		log,		// 对数运算
-		derivate,	// 求导运算
-		sum,		// 求和运算
-		fac,		// 阶乘运算
-	};
-
 	class Variable : public std::pair < Character,
-		std::variant<std::monostate,
-		std::vector<int>,
-		std::vector<Character>>> {
+		std::vector<std::variant<int, std::string>>> {
+	private:
+		static const std::regex variable_regex;
 	public:
-		static const std::variant<std::monostate,
-			std::vector<int>,
-			std::vector<Character>> no_subscript;
+		static const std::vector<std::variant<int, std::string>> no_subscript;
 		bool changable_subscript = true;
 
-		Variable(const Character&, const std::string&);
-		Variable(const Character&, const std::initializer_list<char>&);
-		Variable(const Character& c, const std::initializer_list<int>& init) : std::pair < Character,
-			std::variant<std::monostate,
-			std::vector<int>,
-			std::vector<Character>>>{c,init} {}
+		Variable(const char c) : std::pair<Character,std::vector<std::variant<int, std::string>>>{ c,no_subscript } {}
+		Variable(const Character& c, const std::vector<std::variant<int,std::string>>& init = std::vector<std::variant<int, std::string>>()) : std::pair < Character,
+			std::vector<std::variant<int, std::string>>>{ c,init } {}
+		Variable(const std::string& Latex);
 
-		Variable(char c) : std::pair < Character,
-			std::variant<std::monostate,
-			std::vector<int>,
-			std::vector<Character>>>{c, no_subscript} {}
-		Variable(const Character& c) : std::pair < Character,
-			std::variant<std::monostate,
-			std::vector<int>,
-			std::vector<Character>>>{ c, no_subscript } {}
+		static std::vector<Variable> GetVariables(const std::string& Latex);
 
 		using std::pair < Character,
-			std::variant<std::monostate,
-			std::vector<int>,
-			std::vector<Character>>>::pair;
+			std::vector<std::variant<int, std::string>>>::pair;
 		using std::pair < Character,
-			std::variant<std::monostate,
-			std::vector<int>,
-			std::vector<Character>>>::operator=;
+			std::vector<std::variant<int, std::string>>>::operator=;
 
 		bool operator==(const Variable&) const = default;
-		bool operator<(const Variable&) const;
+		bool operator<(const Variable&) const = default;
 	};
-	inline constexpr std::variant<std::monostate,
-		std::vector<int>,
-		std::vector<Character>> Variable::no_subscript;
 
 	class Meta {
 	private:
-		std::vector<Variable> all_variables;
-		std::variant<double,size_t> coefficient;
-		std::optional<Calculation> operator_calculation;
-		std::list<std::pair<Calculation, Meta>> Content;
-		std::deque<std::pair<Calculation, std::any>> operation;
+		enum class Calculation {
+			plus,		// 加法运算
+			minus,		// 减法运算
+			multi,		// 乘法运算
+			divide,		// 除法运算
 
-		void Add(const Meta&);
-		void Minus(const Meta&);
-		static double _calculate(const Meta&,std::deque<std::pair<Calculation, std::any>>&,std::map<Variable, double>&);
+			pow,		// 幂运算
+			log,		// 对数运算
+
+			fac,		// 阶乘运算
+			cos,		// 余弦运算
+			sin,		// 正弦运算
+
+			derivate,	// 求导运算
+			intergeral,	// 积分运算
+			sum,		// 求和运算
+			multiply,	// 求乘积运算
+
+			left_bracket,	//左括号
+			right_bracket,	//右括号
+		};
+
+		static long double _calculate(std::stack<std::variant<Meta, Calculation>>&, std::map<Variable, long double>&);
+		static long double _calculate(Meta&, std::map<Variable, long double>&);
+		static Meta StrToVariables(const std::string&);
+
+		static const std::map<std::string, Calculation> function_name;
+		static const std::map<Calculation, std::regex> function_regex;
+		static const std::map<Calculation, unsigned char> operation_parameter_number;
+		static const std::map<Calculation, unsigned char> opera;
+		static const std::map<char, Calculation> opera_calculation;
+
+		static const std::regex function_name_regex;
+		static const std::regex vari_with_num_regex;
+		
+		std::variant<long double, std::unique_ptr<Variable>,
+			std::unique_ptr<std::pair<std::vector<Variable>,std::stack<std::variant<Meta,Calculation>>>>> content;
+
+		void CalculationAdd(Calculation, const std::vector<Meta>& = std::vector<Meta>());
 	public:
-		const std::vector<Variable>& Allvariables = all_variables;
-		const std::list<std::pair<Calculation, Meta>>& content = Content;
-
-		Meta(const double& d) : coefficient(d) {}
-		Meta(const int& i) : coefficient((double)i) {}
-		Meta(const char& c) : coefficient(size_t(0)), all_variables{ c } {}
-		Meta(const Variable& v) : coefficient(size_t(0)), all_variables{ v } {}
-		Meta(const Meta&) = default;
+		Meta(const long double& d) : content(d) {}
+		Meta(const int& i) : content((long double)i) {}
+		Meta(const char& c) : content(std::make_unique<Variable>(c)) {}
+		Meta(const Variable& v) :content(std::make_unique<Variable>(v)) {}
+		Meta(const Meta&);
 		Meta(const std::string& LATEX_expression);
+		Meta(const char*);
 
-		double calculate(const std::map<Variable,double>& = std::map<Variable,double>()) const;
+		long double calculate(const std::map<Variable,long double>& = std::map<Variable,long double>()) const;
 
-		Meta& erase(const std::list<std::pair<Calculation, Meta>>::const_iterator&);
-		Meta& emplace(const std::list<std::pair<Calculation, Meta>>::const_iterator&, const std::pair<Calculation, Meta>&);
-		Meta& insert(const std::list<std::pair<Calculation, Meta>>::const_iterator&, const std::pair<Calculation, Meta>&);
 		Meta& pow(const Meta&);
-		Meta& log(const Meta&);
-		Meta& plus(const Meta&);
 		Meta& minus(const Meta&);
 		Meta& multi(const Meta&);
 		Meta& divide(const Meta&);
-		Meta& sum(const std::array<Character, 2>&);
+
+		Meta& log(const Meta&);
+		Meta& plus(const Meta&);
+
 		Meta& fac();
+		Meta& sin();
+		Meta& cos();
+
+		Meta& sum(const std::pair<Meta, Meta>&);
+		
 
 		Meta& operator+(const Meta&);
 		Meta& operator-(const Meta&);
@@ -115,15 +120,12 @@ namespace BdUI{
 		Meta& operator*=(const Meta&);
 		Meta& operator/=(const Meta&);
 
-		double operator()(const std::map<Variable, double>& = std::map<Variable,double>());
-		std::partial_ordering operator<=>(const Meta&) const;
-		bool operator==(const Meta&) const;
-
 		Meta& operator=(const Meta&);
-		
-		Meta& operator<<(Calculation&&);
-		Meta& operator>>(const Meta&);
-		Meta& operator>>(const std::array<Character, 2>&);
+
+		long double operator()(const std::map<Variable, long double>& = std::map<Variable,long double>());
+
+		std::partial_ordering operator<=>(const Meta&) const = default;
+		bool operator==(const Meta&) const = default;
 	};
 }
 #endif

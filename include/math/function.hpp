@@ -6,25 +6,22 @@
 
 namespace BdUI {
 
-	class function : public Meta {
+	class function : public std::pair <Variable,Meta> {
 	public:
-		Variable dependent_variable;
-		function(const Variable& c,const Meta& m) : dependent_variable(c), Meta(m) {}
-		function(const function&);
+		using std::pair<Variable, Meta>::pair;
 
-		std::pair<Variable, double> calculate(const std::map<Variable, double>& = std::map<Variable,double>()) const;
-		std::pair<Variable, double> operator()(const std::map<Variable, double>& = std::map<Variable,double>()) const;
+		std::pair<Variable,long double> calculate(const std::map<Variable,long double>& = std::map<Variable,long double>()) const;
+		std::pair<Variable,long double> operator()(const std::map<Variable,long double>& = std::map<Variable,long double>()) const;
 
-		function& operator=(const function&);
-		using Meta::operator=;
+		using std::pair<Variable,Meta>::operator=;
 	};
 
 	class Parametricfunc : public std::vector<function>{
 	public:
 		using std::vector<function>::vector;
 
-		std::vector<std::pair<Variable, double>> calculate(const std::map<Variable, double>& m = std::map<Variable, double>()) const;
-		std::vector<std::pair<Variable, double>> operator()(const std::map<Variable, double>& m = std::map<Variable, double>()) const;
+		std::vector<std::pair<Variable,long double>> calculate(const std::map<Variable,long double>& m = std::map<Variable,long double>()) const;
+		std::vector<std::pair<Variable,long double>> operator()(const std::map<Variable,long double>& m = std::map<Variable,long double>()) const;
 
 		using std::vector<function>::operator=;
 	};

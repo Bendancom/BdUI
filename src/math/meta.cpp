@@ -1,395 +1,392 @@
 #include "math/meta.hpp"
 
 namespace BdUI {
-	Variable::Variable(const Character& c, const std::string& str) : 
-		std::pair < Character,
-		std::variant<std::monostate,
-		std::vector<int>,
-		std::vector<Character>>>{ c , Variable::no_subscript }
+	const std::regex Variable::variable_regex("([A-Za-z])_\\{([\\w-^_]+)(?:,([\\w-^_]+))*\\}|([A-Za-z])(?:_([A-Za-z]))?");
+	const std::vector<std::variant<int, std::string>> Variable::no_subscript = std::vector<std::variant<int, std::string>>();
+
+	const std::map<Meta::Calculation, unsigned char> Meta::opera{
+		{Calculation::plus,0},	{Calculation::minus,0},
+		{Calculation::multi,1},	{Calculation::divide,1},
+		{Calculation::log,2},		{Calculation::pow,2},
+		{Calculation::sin,2},		{Calculation::fac,2},		{Calculation::cos,2},
+		{Calculation::sum,3},		{Calculation::intergeral,3},	{Calculation::derivate,3},	{Calculation::multiply,3}
+	};
+	const std::map<char, Meta::Calculation> Meta::opera_calculation{
+			{'+',Calculation::plus},	{'-',Calculation::minus},
+			{'*',Calculation::multi},	{'/',Calculation::divide},
+			{'!',Calculation::fac},		{'^',Calculation::pow},
+			{'(',Calculation::left_bracket},{')',Calculation::right_bracket},
+	};
+
+	
+	const std::map<std::string, Meta::Calculation> Meta::function_name{
+		{"sum",Calculation::sum}, {"cos",Calculation::cos}, {"sin",Calculation::sin}
+	};
+	
+	const std::map<Meta::Calculation, unsigned char> Meta::operation_parameter_number{
+		{Calculation::fac,0},{Calculation::sin,0},{Calculation::cos,0},
+		{Calculation::plus,1}, {Calculation::multi,1}, {Calculation::divide,1}, {Calculation::minus,1},
+		{Calculation::derivate,1}, {Calculation::pow,1}, {Calculation::log,1},
+		{Calculation::sum,2},{Calculation::multiply,2},{Calculation::intergeral,2}
+	};
+
+	const std::map<Meta::Calculation, std::regex> Meta::function_regex{
+	{Calculation::sum,std::regex("\\\\sum\\{([\\w^_])\\}\\{([\\w^_])\\}\\{(.+)\\}")},
+	{Calculation::cos,std::regex("\\\\cos\\{(.+)\\}")},
+	{Calculation::sin,std::regex("\\\\sin\\{(.+)\\}")},
+	};
+	const std::regex Meta::function_name_regex("(\\\\([A-Za-z]+)(?:\\{.+?\\})+)");
+	const std::regex Meta::vari_with_num_regex("([0-9\\.\\-]+)?(\\.*)");
+	
+	Variable::Variable(const std::string& Latex) : std::pair < Character,
+		std::vector<std::variant<int, std::string>>>{'\0',std::vector<std::variant<int,std::string>>()}
 	{
-		std::u32string u32_string = std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t>{}.from_bytes(str);
-		std::vector<Character>&& chars = std::vector<Character>();
-		for (int i = 0; i < u32_string.size(); i++)
-			chars.push_back(u32_string[i]);
-		second = chars;
-	}
-	Variable::Variable(const Character& c, const std::initializer_list<char>& v) : std::pair < Character,
-		std::variant<std::monostate,
-		std::vector<int>,
-		std::vector<Character>>>{ c, Variable::no_subscript } 
-	{
-		std::vector<Character>&& temp{};
-		for (char i : v)
-			temp.push_back(Character(i));
-		second = temp;
-	}
-	bool Variable::operator<(const Variable& v) const {
-		if (first == v.first) {
-			if (second.index() == v.second.index()) {
-				if (second.index() == 0) return false;
-				if (second.index() == 1) {
-					const std::vector<int>* i = std::get_if<1>(&second);
-					const std::vector<int>* j = std::get_if<1>(&v.second);
-					if (i->size() < j->size()) return true;
-					else if (i->size() > j->size()) return false;
-					else {
-						for (int k = 0; k < i->size(); k++)
-							if (i->at(k) < j->at(k))
-								return true;
-						return false;
-					}
-				}
-				else {
-					const std::vector<Character>* i = std::get_if<2>(&second);
-					const std::vector<Character>* j = std::get_if<2>(&v.second);
-					if (i->size() < j->size()) return true;
-					else if (i->size() > j->size()) return false;
-					else {
-						for (int k = 0; k < i->size(); k++)
-							if (i->at(k) < j->at(k))
-								return true;
-						return false;
-					}
-				}
-			}
-			else if (second.index() < v.second.index()) return true;
-			else return false;
-		}
-		else if (first < v.first) return true;
-		else return false;
-	}
-	Meta::Meta(const std::string& LATEX_expression) {
-		std::string latex = LATEX_expression;
-		size_t index = 0;
-
-
-		latex.find('+');
-		latex.find('-');
-		latex.find('*');
-		latex.find('/');
-		latex.find('^');
-	}
-
-	double Meta::_calculate(const Meta& meta,std::deque<std::pair<Calculation, std::any>>& deq,std::map<Variable, double>& temp_date) {
-		if (deq.size() > 0) {
-			std::pair<Calculation, std::any> p = deq.back();
-			deq.pop_back();
-			switch (p.first)
-			{
-			case Calculation::sum: {
-				std::array<Character, 2> arr = std::any_cast<std::array<Character, 2>>(p.second);
-				double result = 0;
-				for (int i = temp_date.at(arr[0]); i <= temp_date.at(arr[1]); i++){
-					std::deque<std::pair<Calculation, std::any>> d(deq);
-					temp_date[arr[0]] = i;
-					result += _calculate(meta, d, temp_date);
-				}
-				return result;
-			}
-			case Calculation::derivate: {
-				break;
-			}
-			}
-			
-		}
-
-		double result;
-		if (const double* e = std::get_if<double>(&meta.coefficient); e)
-			result = *e;
-		else {
-			size_t i = std::get<size_t>(meta.coefficient);
-			if (meta.all_variables[i].changable_subscript && meta.all_variables[i].second != Variable::no_subscript) {
-				if (const std::vector<Character>* chars = std::get_if<std::vector<Character>>(&meta.all_variables[i].second); chars) {
-					std::vector<int> arr;
-					for (Character j : *chars) {
-						if (j == meta.all_variables[i].first) throw error::Math::variable_subscript_error();
-						if (std::vector<Variable>::const_iterator iter =
-							std::find(meta.all_variables.cbegin(), meta.all_variables.cend(), j);
-							iter != meta.all_variables.cend())
-							arr.push_back(temp_date[*iter]);
-					}
-					result = temp_date[Variable{ meta.all_variables[i].first,arr }];
-				}
-				else throw error::Math::variable_subscript_error();
-			}
-			else result = temp_date[meta.all_variables[i]];
-		}
-		if (!meta.Content.empty()) {
-			for (auto i = meta.Content.begin(); i != meta.Content.end();i++) {
-				std::deque<std::pair<Calculation, std::any>> d = i->second.operation;
-				switch (i->first) {
-				case Calculation::plus:
-					result += i->second._calculate(i->second,d,temp_date);
+		if (std::smatch match; std::regex_match(Latex, match, variable_regex)) {
+			size_t i = 1;
+			for (; i < match.size(); i++)
+				if (match[i].matched)
 					break;
-				case Calculation::minus:
-					result -= i->second._calculate(i->second,d,temp_date);
-					break;
-				case Calculation::multi:
-					result *= i->second._calculate(i->second,d,temp_date);
-					break;
-				case Calculation::divide:
-					result /= i->second._calculate(i->second,d,temp_date);
-					break;
-				case Calculation::pow: {
-					double res = i->second._calculate(i->second, d, temp_date);
-					if (res != 0) result = ::pow(result, res);
-					else result = 1;
-					break;
-				}
-				case Calculation::log:
-					result = ::log(result) / ::log(i->second._calculate(i->second,d,temp_date));
-					break;
-				case Calculation::fac:
-					double&& res = 1;
-					for (unsigned int j = 1; j <= ::floor(result); j++)
-						res *= j;
-					result = res;
-					break;
-				}
-			}
-		}
-		return result;
-	}
-
-	double Meta::calculate(const std::map<Variable, double>& date) const {
-		if (date.size() < all_variables.size()) throw error::Math::variable_num_error();
-		std::map<Variable, double> temp_date = date;
-		std::deque<std::pair<Calculation, std::any>> deq = operation;
-		return _calculate( *this,deq,temp_date);
-	}
-
-	Meta& Meta::erase(const std::list<std::pair<Calculation, Meta>>::const_iterator& iter) {
-		if (iter->second.coefficient.index() == 1) {
-			size_t k = 0;
-			for (std::pair<Calculation,Meta> i : Content)
-				if (i.second.coefficient == iter->second.coefficient)
-					k++;
-			if (k == 1) all_variables.erase(all_variables.begin() + std::get<size_t>(iter->second.coefficient));
-		}
-		Content.erase(iter);
-		Minus(iter->second);
-		return *this;
-	}
-	Meta& Meta::emplace(const std::list<std::pair<Calculation, Meta>>::const_iterator& iter, const std::pair<Calculation, Meta>& p) {
-		Content.emplace(iter, std::pair<Calculation, Meta>{ p.first, p.second });
-		Add(iter->second);
-		return *this;
-	}
-	Meta& Meta::insert(const std::list<std::pair<Calculation, Meta>>::const_iterator& iter, const std::pair<Calculation, Meta>& p) {
-		Content.insert(iter, std::pair<Calculation, Meta>{ p.first, p.second });
-		Add(iter->second);
-		return *this;
-	}
-
-	Meta& Meta::pow(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::pow, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::log(const Meta& meta) {
-		Content.push_back(std::pair<Calculation,Meta>{ Calculation::log, meta });
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::plus(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::plus, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::minus(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::minus, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::multi(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::multi, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::divide(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::divide, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::sum(const std::array<Character, 2>& ac) {
-		if (ac.size() == 2) {
-			for (Variable i : ac) {
-				bool have = false;
-				for (Variable j : all_variables)
-					if (i == j) {
-						have = true;
+			first = match[i].str()[0];
+			for (i++; i < match.size(); i++) {
+				if (!match[i].matched) continue;
+				std::string&& s = match[i].str();
+				bool IsNum = true;
+				for (char c : s) {
+					if ((c > '9' || c < '0') && c != '-') {
+						IsNum = false;
 						break;
 					}
-				if (!have) all_variables.push_back(i);
+				}
+				if (IsNum) second.push_back(std::stoi(s));
+				else second.push_back(s);
 			}
-			operation.push_back({ operator_calculation.value(), ac });
 		}
-		else throw error::Math::variable_num_error();
-		return *this;
+		else throw error::Math::variable_string_error();
 	}
-	Meta& Meta::fac() {
-		Content.push_back({ Calculation::fac,Meta(0) });
-		return *this;
-	}
-
-	Meta& Meta::operator+(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::plus, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::operator-(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::minus, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::operator*(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::multi, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::operator/(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::divide, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::operator+=(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::plus, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::operator-=(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::minus, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::operator*=(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::multi, meta});
-		Add(meta);
-		return *this;
-	}
-	Meta& Meta::operator/=(const Meta& meta) {
-		Content.push_back(std::pair<Calculation, Meta>{Calculation::divide, meta});
-		Add(meta);
-		return *this;
+	std::vector<Variable> Variable::GetVariables(const std::string& Latex) {
+		std::vector<Variable>&& variables{};
+		std::smatch match;
+		for (std::string str = Latex;!str.empty(); str = match.suffix().str())
+			if (std::regex_search(str, match, variable_regex))
+				variables.push_back(match[0].str());
+			else throw error::Math::variable_string_error();
+		return variables;
 	}
 
-	void Meta::Add(const Meta& meta) {
-		for (auto i : meta.all_variables) {
-			bool have = false;
-			for (auto j : all_variables) {
-				if (i == j) {
-					have = true;
+	Meta Meta::StrToVariables(const std::string& str) {
+		if (std::smatch match; std::regex_match(str, match, vari_with_num_regex)) {
+			std::unique_ptr<Meta> meta;
+			if (match[1].matched)
+				meta.reset(new Meta(std::stold(match[1].str())));
+			if (match[2].matched) {
+				std::vector<Variable> vs = Variable::GetVariables(match[2].str());
+				if (meta != nullptr)
+					for (Variable v : vs)
+						meta->multi(v);
+				else {
+					meta.reset(new Meta(vs[0]));
+					for (size_t i = 1; i < vs.size(); i++)
+						meta->multi(vs[i]);
+				}
+			}
+			return *meta.get();
+		}
+		else throw error::Math::latex_string_invalid();
+	}
+
+	Meta::Meta(const Meta& meta) {
+		switch (meta.content.index()) {
+		case 0: content = std::get<long double>(meta.content); break;
+		case 1: content = std::make_unique<Variable>(*std::get<std::unique_ptr<Variable>>(meta.content));
+			break;
+		case 2: content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
+			*std::get<2>(meta.content));
+			break;
+		}
+	}
+	Meta::Meta(const char* ch) { content = Meta::Meta(std::string(ch)).content; };
+	Meta::Meta(const std::string& str) {
+		std::string variable_num;
+		std::stack<std::variant<Meta, Calculation>> stack;
+		std::stack<Calculation> calcul;
+		std::vector<Variable>&& variables{};
+		for (char ch : str) {
+			if (ch == ' ') continue;
+			else if (auto o = opera_calculation.find(ch); o != opera_calculation.end()) {
+				if (!variable_num.empty()) {
+					stack.push(StrToVariables(variable_num));
+					switch (std::get<Meta>(stack.top()).content.index()) {
+					case 0:break;
+					case 1: if (auto i = *std::get<1>(std::get<Meta>(stack.top()).content);
+						std::find(variables.begin(), variables.end(), i) == variables.end()) variables.push_back(i);
+						break;
+					case 2: {
+						std::vector<Variable>& temp = std::get<2>(std::get<Meta>(stack.top()).content)->first;
+						for (Variable v : temp)
+							if (std::find(variables.begin(), variables.end(), v) == variables.end()) variables.push_back(v);
+						break;
+					}
+					}
+				}
+				variable_num = std::string();
+				if (o->second == Calculation::left_bracket)
+					calcul.push(o->second);
+				else if (o->second == Calculation::right_bracket) {
+					for (; calcul.top() != Calculation::left_bracket; calcul.pop())
+						stack.push(calcul.top());
+					calcul.pop();
+				}
+				else while (true) {
+					if (calcul.empty())
+						calcul.push(o->second);
+					else if (calcul.top() == Calculation::left_bracket)
+						calcul.push(o->second);
+					else if (opera.at(calcul.top()) < opera.at(o->second))
+						calcul.push(o->second);
+					else {
+						stack.push(calcul.top());
+						calcul.pop();
+						continue;
+					}
 					break;
 				}
 			}
-			if (!have) all_variables.push_back(i);
-		}
-	}
-	void Meta::Minus(const Meta& meta) {
-		std::vector<size_t> num;
-		size_t c = 0;
-		for (auto i : meta.all_variables) {
-			num[c] = 0;
-			for (auto j : Content) {
-				for (auto k : j.second.all_variables)
-					if (k == i) num[c]++;
+			else if (ch == '\\') {
+
 			}
-			c++;
+			else variable_num += ch;
 		}
-		for (auto i : num)
-			if (i == 1) all_variables.erase(all_variables.begin() + i);
+		if (!variable_num.empty()) {
+			stack.push(StrToVariables(variable_num));
+			switch (std::get<Meta>(stack.top()).content.index()) {
+			case 0:break;
+			case 1: if (auto i = *std::get<1>(std::get<Meta>(stack.top()).content);
+				std::find(variables.begin(), variables.end(), i) == variables.end()) variables.push_back(i);
+				break;
+			case 2: {
+				std::vector<Variable>& temp = std::get<2>(std::get<Meta>(stack.top()).content)->first;
+				for (Variable v : temp)
+					if (std::find(variables.begin(), variables.end(), v) == variables.end()) variables.push_back(v);
+				break;
+			}
+			}
+		}
+		for (; !calcul.empty(); calcul.pop())
+			stack.push(calcul.top());
+		std::stack<std::variant<Meta, Calculation>> r_stack;
+		for (; !stack.empty(); stack.pop())
+			r_stack.push(stack.top());
+		content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
+			std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>{ variables,r_stack });
 	}
 
-	double Meta::operator()(const std::map<Variable, double>& m) {
-		return calculate(m);
+	long double Meta::_calculate(std::stack<std::variant<Meta, Calculation>>& content,std::map<Variable, long double>& date) {
+		std::stack<Meta> temp;
+		for (; !content.empty(); ) {
+			std::variant<Meta,Calculation> con = content.top();
+			content.pop();
+			if (con.index() == 0)
+				temp.push(std::get<Meta>(con));
+			else {
+				Calculation& calcul = std::get<Calculation>(con);
+				std::vector<Meta> metas;
+				for (size_t i = 0; i < operation_parameter_number.at(calcul) + 1; i++) {
+					metas.push_back(temp.top());
+					temp.pop();
+				}
+
+				switch (calcul) {
+				case Calculation::fac: {
+					long double floor = ::floor(_calculate(metas[0], date));
+					if (floor < 0) throw error::Math::operator_error();
+					else if (floor == 0) return 1;
+					else {
+						size_t i = 1;
+						for (; i < floor; i++)
+							i *= i;
+						temp.push((long double)i);
+					}
+					break;
+				}
+				case Calculation::sin: temp.push(::sinl(_calculate(metas[0], date))); break;
+				case Calculation::cos: temp.push(::cosl(_calculate(metas[0], date))); break;
+
+				case Calculation::plus: temp.push(_calculate(metas[0], date) + _calculate(metas[1], date)); break;
+				case Calculation::minus: temp.push(_calculate(metas[0], date) - _calculate(metas[1], date)); break;
+				case Calculation::multi: temp.push(_calculate(metas[0], date) * _calculate(metas[1], date)); break;
+				case Calculation::divide: temp.push(_calculate(metas[0], date) / _calculate(metas[1], date)); break;
+
+				case Calculation::derivate:break;
+				case Calculation::pow: temp.push(::powl(_calculate(metas[0], date), _calculate(metas[1], date))); break;
+				case Calculation::log: temp.push(::logl(_calculate(metas[0], date) / ::logl(_calculate(metas[1], date)))); break;
+
+				case Calculation::sum: {
+					content.push(metas[2]);
+					for (; !temp.empty(); temp.pop())
+						content.push(temp.top());
+					long double sum = 0;
+					size_t i = _calculate(metas[1], date);
+					size_t n = _calculate(metas[0], date);
+					if (i < n) {
+						for (; i <= n; i++) {
+							std::stack<std::variant<Meta, Calculation>> stack = content;
+							date[*std::get<std::unique_ptr<Variable>>(metas[1].content)] = (long double)i;
+							sum += _calculate(stack, date);
+						}
+					}
+					else {
+						for (; i >= n;i--) {
+							std::stack<std::variant<Meta, Calculation>> stack = content;
+							date[*std::get<std::unique_ptr<Variable>>(metas[1].content)] = (long double)i;
+							sum += _calculate(stack , date);
+						}
+					}
+					temp.push(sum);
+					content = std::stack<std::variant<Meta, Calculation>>();
+					break;
+				}
+				case Calculation::multiply: {
+					content.push(metas[2]);
+					for (; !temp.empty(); temp.pop())
+						content.push(temp.top());
+					break;
+					long double multiply = 1;
+					size_t i = _calculate(metas[1], date);
+					size_t n = _calculate(metas[0], date);
+					if (i < n) {
+						for (; i <= n; i++) {
+							std::stack<std::variant<Meta, Calculation>> stack = content;
+							date[*std::get<std::unique_ptr<Variable>>(metas[1].content)] = (long double)i;
+							multiply *= _calculate(stack, date);
+						}
+					}
+					else {
+						for (; i >= n; i--) {
+							std::stack<std::variant<Meta, Calculation>> stack = content;
+							date[*std::get<std::unique_ptr<Variable>>(metas[1].content)] = (long double)i;
+							multiply *= _calculate(stack, date);
+						}
+					}
+				}
+				case Calculation::intergeral: break;
+				}
+			}
+		}
+		return _calculate(temp.top(),date);
 	}
+	long double Meta::_calculate(Meta& meta, std::map<Variable, long double>& date) {
+		switch (meta.content.index()) {
+		case 0: return std::get<long double>(meta.content);
+		case 1: return date.at(*std::get<std::unique_ptr<Variable>>(meta.content));
+		case 2: return _calculate(std::get<2>(meta.content)->second, date);
+		}
+	}
+
+	long double Meta::calculate(const std::map<Variable, long double>& date) const {
+		switch (content.index()) {
+		case 0: return std::get<long double>(content);
+		case 1: return date.at(*std::get<std::unique_ptr<Variable>>(content));
+		case 2: {
+			if (content.index() == 2 && std::get<2>(content)->first.size() > date.size()) throw error::Math::variable_num_error();
+			std::map<Variable, long double> temp_date = date;
+			std::stack<std::variant<Meta, Calculation>> temp_content = std::get<2>(content)->second;
+			return _calculate(temp_content, temp_date);
+		}
+		}
+	}
+
+	Meta& Meta::pow(const Meta& meta) { CalculationAdd(Calculation::pow, { meta }); return *this; }
+	Meta& Meta::log(const Meta& meta) { CalculationAdd(Calculation::log, { meta }); return *this; }
+	Meta& Meta::plus(const Meta& meta) { CalculationAdd(Calculation::plus, { meta }); return *this; }
+	Meta& Meta::minus(const Meta& meta) { CalculationAdd(Calculation::minus, { meta }); return *this; }
+	Meta& Meta::multi(const Meta& meta) { CalculationAdd(Calculation::multi, { meta }); return *this; }
+	Meta& Meta::divide(const Meta& meta) { CalculationAdd(Calculation::divide, { meta }); return *this; }
+	Meta& Meta::sum(const std::pair<Meta, Meta>& pair) { CalculationAdd(Calculation::sum, { pair.first,pair.second }); return *this; }
+	Meta& Meta::fac() { CalculationAdd(Calculation::fac); return *this; }
+	Meta& Meta::sin() { CalculationAdd(Calculation::sin); return *this; }
+	Meta& Meta::cos() { CalculationAdd(Calculation::cos); return *this; }
+
+	Meta& Meta::operator+(const Meta& meta) { plus(meta); return *this; }
+	Meta& Meta::operator-(const Meta& meta) { minus(meta); return *this; }
+	Meta& Meta::operator*(const Meta& meta) { multi(meta); return *this; }
+	Meta& Meta::operator/(const Meta& meta) { divide(meta); return *this; }
+	Meta& Meta::operator+=(const Meta& meta) { plus(meta); return *this; }
+	Meta& Meta::operator-=(const Meta& meta) { minus(meta); return *this; }
+	Meta& Meta::operator*=(const Meta& meta) { multi(meta); return *this; }
+	Meta& Meta::operator/=(const Meta& meta) { divide(meta); return *this; }
+
+	void Meta::CalculationAdd(Calculation c,const std::vector<Meta>& meta) {
+		if (meta.size() != operation_parameter_number.at(c))
+			throw error::Math::expresssion_num_error();
+		std::vector<Variable>&& variables{};
+		for (Meta m : meta)
+			switch (m.content.index()) {
+			case 0: break;
+			case 1: variables.push_back(*std::get<1>(m.content)); break;
+			case 2: variables.insert(variables.end(), std::get<2>(m.content)->first.begin(), std::get<2>(m.content)->first.end()); break;
+			}
+
+		switch (content.index()) {
+		case 0: {
+			std::stack<std::variant<Meta, Calculation>>&& stack{};
+			stack.push(c);
+			for (size_t i = 0;i < meta.size();i++)
+				stack.push(meta[i]);
+			stack.push(std::get<long double>(content));
+			content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
+				std::pair<std::vector<Variable>,std::stack<std::variant<Meta,Calculation>>>{ variables,stack });
+			break;
+		}
+		case 1: {
+			std::stack<std::variant<Meta, Calculation>>&& stack{};
+			Variable v = *std::get<std::unique_ptr<Variable>>(content);
+			stack.push(c);
+			for (size_t i = 0; i < meta.size(); i++)
+				stack.push(meta[i]);
+			stack.push(v);
+			if (std::find(variables.begin(), variables.end(), v) == variables.end())
+				variables.push_back(v);
+			content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
+				std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>{ variables, stack });
+			break;
+		}
+		case 2: {
+			std::vector<Variable>& content_variables = std::get<2>(content)->first;
+			for (Variable v : variables)
+				if (std::find(content_variables.begin(), content_variables.end(), v) == content_variables.end())
+					content_variables.push_back(v);
+
+			std::stack<std::variant<Meta, Calculation>>& stack = std::get<2>(content)->second;
+			std::stack<std::variant<Meta, Calculation>> temp;
+			for (; !stack.empty(); stack.pop()) {
+				if (auto i = std::get_if<Calculation>(&stack.top()); i) {
+					if (opera.at(c) > opera.at(*i)) {
+						for (size_t j = 0; j < meta.size(); j++)
+							temp.push(meta[j]);
+						temp.push(c);
+						break;
+					}
+				}
+				temp.push(stack.top());
+			}
+			for (; !temp.empty(); temp.pop())
+				stack.push(temp.top());
+			break;
+		}
+		}
+	}
+
+	long double Meta::operator()(const std::map<Variable, long double>& m) { return calculate(m); }
+
 	Meta& Meta::operator=(const Meta& meta) {
-		all_variables = meta.all_variables;
-		coefficient = meta.coefficient;
-		operator_calculation = meta.operator_calculation;
-		Content = meta.Content;
-		operation = meta.operation;
-		return *this;
-	}
-	bool Meta::operator==(const Meta& meta) const {
-		if (coefficient != meta.coefficient) return false;
-		else if (all_variables != meta.all_variables) return false;
-		else if (Content != meta.Content) return false;
-		else return true;
-	}
-	std::partial_ordering Meta::operator<=>(const Meta& meta) const{
-		if (coefficient == meta.coefficient) {
-			if (all_variables == meta.all_variables) {
-				if (Content == meta.Content) return std::partial_ordering::equivalent;
-				else return std::partial_ordering::unordered;
-			}
-			else return std::partial_ordering::unordered;
-		}
-		else return std::partial_ordering::unordered;
-	}
-
-	Meta& Meta::operator<<(Calculation&& c) {
-		switch (c)
-		{
-		case Calculation::fac:
-			fac();
-			break;
-		default:
-			operator_calculation = c;
-			break;
+		switch (meta.content.index()){
+			case 0: content = std::get<long double>(meta.content); break;
+			case 1: content = std::make_unique<Variable>(*std::get<std::unique_ptr<Variable>>(meta.content));
+				break;
+			case 2: content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
+				*std::get<2>(meta.content));
+				break;
 		}
 		return *this;
-	}
-	Meta& Meta::operator>>(const Meta& meta) {
-		if (operator_calculation) {
-			switch (operator_calculation.value())
-			{
-			case Calculation::derivate:
-				if (const size_t* k = std::get_if<size_t>(&meta.coefficient); k) {
-					if (meta.Content.empty()) {
-						operation.push_back({ operator_calculation.value(), meta.all_variables[*k] });
-						operator_calculation.reset();
-					}
-					else throw error::Math::operator_error();
-				}
-				else throw error::Math::no_variable();
-				break;
-			case Calculation::sum:
-				throw error::Math::variable_num_error();
-			default:
-				Content.push_back(std::pair<Calculation, Meta>{operator_calculation.value(), meta});
-				operator_calculation.reset();
-				break;
-			}
-			Add(meta);
-		}
-		else throw error::Math::operator_error();
-		return *this;
-	}
-	Meta& Meta::operator>>(const std::array<Character, 2>& a) {
-		if (operator_calculation) {
-			switch (operator_calculation.value()) {
-			case Calculation::sum:
-				if (a.size() == 2) {
-					for (Variable i : a) {
-						bool have = false;
-						for (Variable j : all_variables)
-							if (i == j) {
-								have = true;
-								break;
-							}
-						if (!have) all_variables.push_back(i);
-					}
-					operation.push_back({ operator_calculation.value(), a });
-					operator_calculation.reset();
-				}
-				else throw error::Math::variable_num_error();
-				break;
-			default:
-				throw error::Math::operator_error();
-				break;
-			}
-		}
-		else throw error::Math::operator_error();
 	}
 }

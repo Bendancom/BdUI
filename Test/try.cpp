@@ -20,8 +20,10 @@ int main(int argv, char** args)
 	menu.SetMenuInfo(info);
 	window.PopMenu = menu;*/
 
-	Bezier b{ {0,0,0},{1,0,1},{0,0,2} };
-	auto c = b.calculate(0.5);
+	auto a = sizeof(Meta);
+
+	Meta b("(1+2)*8");
+	auto c = b.calculate();
 	window.Create();
 	window.PopMenuKey.push_back(KeyList{Control,M});
 	window.PopMenuKey.push_back(RButton);

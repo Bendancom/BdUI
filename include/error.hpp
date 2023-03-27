@@ -31,6 +31,9 @@ namespace BdUI{
             ERRORTYPE(operator_error, "Unkonwn Operator");
             ERRORTYPE(variable_num_error, "The number of variables is error");
             ERRORTYPE(no_variable, "This doesn't have any variable");
+            ERRORTYPE(variable_string_error, "The variable's string is invalid");
+            ERRORTYPE(latex_string_invalid, "The Latex expression is error");
+            ERRORTYPE(expresssion_num_error, "The Num of expression is error");
             ERRORTYPE(variable_subscript_error, "The variable's subscript is invalid");
         }
     }
