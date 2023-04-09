@@ -36,7 +36,7 @@ namespace BdUI {
 		FontType(const std::filesystem::path&);
 		FontType(const FontType&);
 
-		std::pair<FontSize, Shape> GetFont(const Character&,const Unit&);
+		std::pair<FontSize, Shape> GetFont(const Character&,const long long& pixel_height);
 
 		virtual void OpenFile(const std::filesystem::path& filename);
 		virtual void LoadFromFile();

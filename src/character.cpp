@@ -11,6 +11,11 @@ namespace BdUI {
 		}
 	}
 
+	Character::Character(const char* c) {
+		if (*c >= 0x80) unicode = Character(std::array<char, 2>{*c, * (c + 1)}).unicode;
+		else unicode = Character(*c).unicode;
+	}
+
 	Character::Character(wchar_t c) {
 		unicode = WCharToUnicode(c);
 	}

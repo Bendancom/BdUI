@@ -2,6 +2,8 @@
 #define BDUI_UNIT
 
 #include <cmath>
+#include <map>
+#include <regex>
 #include "error.hpp"
 
 #ifdef WIN32
@@ -9,46 +11,36 @@
 #endif
 
 namespace BdUI {
-	namespace UnitType {
-		enum UnitType {
-			Unknown = 0,
-			Pixel = 1,
-			inch = 2,
-			mm = 3,
-			cm = 4,
-			dm = 5,
-			m = 6,
-			PixelHorizon = 7,
-			PixelVertical = 8,
-		};
-	}
-	
+	enum class UnitType {
+		inch,
+		mm, 
+		cm,
+		dm,
+		m,
+
+		px,
+	};
 	class Unit{
 	private:
-		double Number = 0;
-		UnitType::UnitType unitType;
-		char Power;
-		struct {
-			double X = 0;
-			double Y = 0;
-		}DPI;//Pixel per Millimeter
-		void GetDPI();
+		long double Number;
+		UnitType Type;
+
+		friend class Point;
+		friend class Size;
+		static const std::map<std::string, UnitType>& stringToUnitType();
+		static const std::regex& unit_regex();
+		static long double ToUnit(long double, UnitType, UnitType);
 	public:
-		Unit(double n, UnitType::UnitType u = UnitType::Unknown, char power = 1) : Number(n), unitType(u), Power(power) {
-			GetDPI();
-		}
-		Unit(const Unit& u) : Number(u.Number), unitType(u.unitType),Power(u.Power),DPI(u.DPI) {}
+		Unit(const char*);
+		Unit(const std::string&);
+		Unit(long double, UnitType = UnitType::mm);
+		Unit(const Unit& unit) : Number(unit.Number),Type(unit.Type) {}
 
-		void ChangeUnit(UnitType::UnitType);
+		UnitType GetType() const;
+		long double GetData(UnitType) const;
+		void SetData(long double, UnitType);
 
-		UnitType::UnitType GetType() const;
-		char GetPow() const;
-		double GetData(UnitType::UnitType) const;
-
-		void SetData(double, UnitType::UnitType);
-		void SetMonitor();
-
-		operator double() const;
+		operator long double();
 
 		Unit& operator+(Unit&);
 		Unit& operator-(Unit&);

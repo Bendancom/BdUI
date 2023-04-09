@@ -6,8 +6,8 @@ namespace BdUI{
         WindowEventDefaultBind();
         WindowCursorDefaultBind();
 
-        Size = BdUI::Size(1000, 800, UnitType::Pixel);
-        Location = Point(5, 5, 0, UnitType::cm);
+        Size = BdUI::Size(10, 8, UnitType::cm);
+        Location = Point(5, 5, UnitType::cm);
         BackgroundColor = RGBA{ 255, 255, 255,0 };
         Focus = this;
         keylist.first = this;

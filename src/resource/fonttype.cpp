@@ -23,16 +23,16 @@ namespace BdUI {
 		height = yMax - yMin;
 		lineHeight = height + lineGap;
 	}
-	std::pair<FontSize, Shape> FontType::GetFont(const Character& character,const Unit& height) {
+	std::pair<FontSize, Shape> FontType::GetFont(const Character& character,const long long& pixel_height) {
 		FontSize&& font_size{ 0 };
 		char32_t code = character.GetUTF_32();
 		stbtt_GetCodepointBox(&font_info, code, &font_size.xMin, &font_size.yMin, &font_size.xMax, &font_size.yMax);
 		stbtt_GetCodepointHMetrics(&font_info, code, (int*)&font_size.advance, &font_size.xMin);
-		float scale = this->height / height.GetData(UnitType::PixelVertical);
+		float scale = this->height / pixel_height;
 		font_size.scale = scale;
 		font_size.lineGap = lineGap * scale;
 		font_size.lineHeight = lineHeight * scale;
-		font_size.height = height * scale;
+		font_size.height = pixel_height * scale;
 		font_size.yMax *= scale;
 		font_size.yMin *= scale;
 		font_size.xMax *= scale;
@@ -43,7 +43,8 @@ namespace BdUI {
 		stbtt_vertex* vertex_ptr = nullptr;
 		unsigned int vercount = 0;
 		vercount = stbtt_GetGlyphShape(&font_info, code, &vertex_ptr);
-		std::vector<Vertex> vertexs;
+		std::vector<Point> vertexs;
+		/*
 		Vertex vertex;
 		for (int i = 0; i < vercount; i++) {
 			switch (vertex_ptr->type)
@@ -63,5 +64,6 @@ namespace BdUI {
 		}
 		Shape&& shape = Shape();
 		return { font_size,shape };
+		*/
 	}
 }

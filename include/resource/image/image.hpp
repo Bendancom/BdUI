@@ -46,7 +46,7 @@ namespace BdUI {
 		Image(const Image&);
 		~Image();
 
-		Image& Resize(BdUI::Size);
+		Image& Resize(long long width,long long height);
 
 		void SetImageType(ImageType);
 

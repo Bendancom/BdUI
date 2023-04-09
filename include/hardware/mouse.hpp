@@ -16,7 +16,7 @@ namespace BdUI {
     };
 
     struct Mouse {
-        Point Location = { 0,0,0 };
+        Point Location = { 0,0, UnitType::px};
         //Up = 0, Down = 1;
         MouseButton Button{ 0,0,0,0,0,0,0,0 };
         enum MouseContent {

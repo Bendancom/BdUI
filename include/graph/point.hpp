@@ -1,29 +1,27 @@
 #ifndef BDUI_POINT
 #define BDUI_POINT
 
-#include "unit.hpp"
+#include <graph/unit.hpp>
+#include <hardware/monitor.hpp>
 #include <array>
-#include <initializer_list>
 
 namespace BdUI {
-	class Point {
+	class Point : public std::array<long double, 2>{
 	private:
-		UnitType::UnitType Type = UnitType::Unknown;
+		UnitType Type;
 	public:
-		float X = 0;
-		float Y = 0;
-		float Z = 0;
+		Point(const std::array<long double, 2>& array, UnitType type = UnitType::px) : std::array<long double, 2>(array),Type(type) {}
+		Point(const long double& x, const long double& y, UnitType type = UnitType::px) : std::array<long double, 2>{x,y},Type(type) {}
 
-		Point(){}
-		Point(const std::array<float,3>&);
-		Point(const float& x,const float& y,const float& z,const UnitType::UnitType& type = UnitType::Unknown) : X(x),Y(y),Z(z), Type(type) {}
-		
-		Point& ChangeUnit(const UnitType::UnitType&);
-		std::array<float, 3> GetData(const UnitType::UnitType&) const;
-		UnitType::UnitType GetType() const;
-		float* GetPointPtr();
+		long double& X = this->at(0);
+		long double& Y = this->at(1);
 
-		Point& operator=(const std::array<float,3>&);
+		std::array<long double, 2> GetData(UnitType) const;
+		std::array<long double, 2> GetPixel(const Monitor& = Monitor()) const;
+		UnitType GetType() const;
+		void SetData(const std::array<long double, 2>&, UnitType);
+		using std::array<long double, 2>::operator=;
+
 		Point& operator=(const Point&);
 
 		Point& operator+(Point&);
@@ -31,6 +29,5 @@ namespace BdUI {
 		Point& operator-(Point&);
 		Point& operator-=(Point&);
 	};
-	typedef Point Vertex;
 }
 #endif

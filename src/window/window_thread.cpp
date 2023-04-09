@@ -23,10 +23,10 @@ namespace BdUI {
 
         if (!RegisterClassEx(&Windowclass)) throw error::Function::CarryOut_Faild("Faild to Register WindowClass");
 
-        Point location = Location.get().ChangeUnit(UnitType::Pixel);
-        BdUI::Size size = Size.get().GetData(UnitType::Pixel);
+        std::array<long double,2> location = Location.get().GetPixel(Monitor());
+        std::array<long double,2> size = Size.get().GetPixel(Monitor());
 
-        hWnd = CreateWindowEx(dwExStyle, Windowclass.lpszClassName, "Window", dwStyle, location.X, location.Y, size.Width, size.Height, NULL, NULL, Windowclass.hInstance, NULL);
+        hWnd = CreateWindowEx(dwExStyle, Windowclass.lpszClassName, "Window", dwStyle, location[0], location[1], size[0], size[1], NULL, NULL, Windowclass.hInstance, NULL);
         if (hWnd == NULL) throw error::Function::CarryOut_Faild("Faild to create Window");
 
         Render = new Renderer(hWnd);
@@ -67,19 +67,21 @@ namespace BdUI {
         if (w == nullptr) return DefWindowProc(hWnd, msg, wParam, lParam);
         switch (msg) {
         case WM_MOVE: {
-            w->Location.setOnly(Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, UnitType::Pixel));
+            w->Location.setOnly(Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), UnitType::px));
             break;
         }
         case WM_SIZE: {
-            w->Size.setOnly(BdUI::Size(LOWORD(lParam), HIWORD(lParam), UnitType::Pixel));
+            w->Size.setOnly(BdUI::Size(LOWORD(lParam), HIWORD(lParam), UnitType::px));
+            //TODO: VulkanÌæ»»
             w->Render->Push(glViewport,0, 0, LOWORD(lParam), HIWORD(lParam));
             w->GraphChanged = true;
             break;
         }
         case WM_SIZING: {
             RECT* rect = reinterpret_cast<RECT*>(lParam);
-            w->Size.setOnly(BdUI::Size((double)(rect->right - rect->left), (double)(rect->bottom - rect->top), UnitType::Pixel));
-            w->Location.setOnly(Point(rect->left, rect->top, 0, UnitType::Pixel));
+            w->Size.setOnly(BdUI::Size((double)(rect->right - rect->left), (double)(rect->bottom - rect->top), UnitType::px));
+            w->Location.setOnly(Point(rect->left, rect->top,UnitType::px));
+            //TODO: VulkanÌæ»»
             w->Render->Push(glViewport, 0, 0, rect->right - rect->left, rect->bottom - rect->top);
             //w->Render.PushMessage();
             w->GraphChanged = true;
@@ -87,7 +89,7 @@ namespace BdUI {
         }
         case WM_MOVING: {
             RECT* r = reinterpret_cast<RECT*>(lParam);
-            w->Location.setOnly(Point(r->left, r->top, 0, UnitType::Pixel));
+            w->Location.setOnly(Point(r->left, r->top, UnitType::px));
             break;
         }
         case WM_DESTROY: {
@@ -292,7 +294,7 @@ namespace BdUI {
         }
         case WM_MOUSEHOVER: {
             mouse.Content = Mouse::Hover;
-            mouse.Location = Point{ (float)GET_X_LPARAM(lParam),(float)GET_Y_LPARAM(lParam),0,UnitType::Pixel };
+            mouse.Location = Point((long double)GET_X_LPARAM(lParam),(long double)GET_Y_LPARAM(lParam),UnitType::px);
             break;
         }
         case WM_MOUSEMOVE: {
@@ -305,7 +307,7 @@ namespace BdUI {
                 TrackMouseEvent(&tme);
             }
             mouse.Content = Mouse::Move;
-            mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, UnitType::Pixel);
+            mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, UnitType::px);
             break;
         }
         default: {

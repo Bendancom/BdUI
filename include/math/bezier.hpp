@@ -1,6 +1,7 @@
 #ifndef BDUI_BEZIER
 #define BDUI_BEZIER
 
+#include <math/meta.hpp>
 #include <math/function.hpp>
 #include <graph/point.hpp>
 
@@ -11,7 +12,7 @@ namespace BdUI {
 	public:
 		using std::list<Point>::list;
 		using std::list<Point>::operator=;
-		std::array<std::pair<Character, double>, 3> calculate(double t) const;
+		std::array<std::pair<Character, double>, 2> calculate(double t) const;
 	};
 }
 

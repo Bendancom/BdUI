@@ -18,6 +18,8 @@ namespace BdUI {
 		Unicode unicode;
 		Unicode WCharToUnicode(const wchar_t&);
 	public:
+		Character(const char*);
+
 		Character(wchar_t);
 		Character(char);
 		Character(char8_t);

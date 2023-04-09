@@ -36,6 +36,14 @@ namespace BdUI{
             ERRORTYPE(expresssion_num_error, "The Num of expression is error");
             ERRORTYPE(variable_subscript_error, "The variable's subscript is invalid");
         }
+        namespace Unit {
+            ERRORTYPE(string_error, "The string is invalid");
+            ERRORTYPE(unit_error, "The unit's type is invalid");
+        }
+        namespace Monitor {
+            ERRORTYPE(point_error, "The Point is invalid");
+            ERRORTYPE(window_error, "The Window is invalid");
+        }
     }
 }
 #undef ERRORTYPE

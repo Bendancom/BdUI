@@ -1,93 +1,48 @@
 #include "graph/point.hpp"
 
 namespace BdUI {
-	Point::Point(const std::array<float,3>& list) {
-		const float* p = list.data();
-		X = *p;
-		Y = *(p + 1);
-		Z = *(p + 2);
+	std::array<long double, 2> Point::GetData(UnitType type) const { 
+		return { Unit(X,Type).GetData(type),Unit(Y,Type).GetData(type)};
 	}
-
-	Point& Point::ChangeUnit(const UnitType::UnitType& type) { // TODO: 实现Z的转换
-		if (type == UnitType::PixelHorizon || type == UnitType::PixelVertical) throw error::Function::ParamError();
-		else if (type == Type) return *this;
-		else if (type == UnitType::Pixel) {
-			X = Unit(X, Type).GetData(UnitType::PixelHorizon);
-			Y = Unit(Y, Type).GetData(UnitType::PixelVertical);
-			Z = Z;
-		}
+	std::array<long double, 2> Point::GetPixel(const Monitor& monitor) const {
+		if (Type == UnitType::px) return *this;
 		else {
-			X = Unit(X, Type).GetData(type);
-			Y = Unit(Y, Type).GetData(type);
-			Z = Z;
-		}
-		return *this;
-	}
-	UnitType::UnitType Point::GetType() const {
-		return Type;
-	}
-	std::array<float, 3> Point::GetData(const UnitType::UnitType& type) const {
-		if (type == UnitType::PixelHorizon || type == UnitType::PixelVertical) throw error::Function::ParamError();
-		else if (type == Type) return std::array<float, 3>{X, Y, Z};
-		else if (type == UnitType::Pixel) {
-			float x = Unit(X, Type).GetData(UnitType::PixelHorizon);
-			float y = Unit(Y, Type).GetData(UnitType::PixelVertical);
-			float z = Z;
-			return std::array<float, 3>{x, y, z};
-		}
-		else {
-			float x = Unit(X,Type).GetData(type);
-			float y = Unit(Y, Type).GetData(type);
-			float z = Z;
-			return std::array<float, 3>{x, y, z};
+			std::array<long double, 2> dpi = monitor.GetDPI();
+			return { Unit::ToUnit(X,Type,UnitType::inch) * dpi[0],Unit::ToUnit(Y,Type,UnitType::inch) * dpi[1] };
 		}
 	}
-	float* Point::GetPointPtr() {
-		return &X;
+	UnitType Point::GetType() const { return Type; }
+
+	void Point::SetData(const std::array<long double, 2>& list, UnitType u) {
+		this->at(0) = list[0];
+		this->at(1) = list[1];
+		Type = u;
 	}
 
-
-	Point& Point::operator=(const std::array<float,3>& list) {
-		const float* a = list.data();
-		X = *a;
-		Y = *(a+1);
-		Z = *(a + 2);
-		return *this;
-	}
-	Point& Point::operator=(const Point& p) {
-		X = p.X;
-		Y = p.Y;
-		Z = p.Z;
-		Type = p.Type;
-		return *this;
+	Point& Point::operator=(const Point& point) {
+		X = point.X;
+		Y = point.Y;
+		Type = point.Type;
 	}
 
 	Point& Point::operator+(Point& p) {
-		p.ChangeUnit(Type);
-		X += p.X;
-		Y += p.Y;
-		Z += p.Z;
+		X += Unit::ToUnit(p.X,p.Type,Type);
+		Y += Unit::ToUnit(p.Y, p.Type, Type);
 		return *this;
 	}
 	Point& Point::operator+=(Point& p) {
-		p.ChangeUnit(Type);
-		X += p.X;
-		Y += p.Y;
-		Z += p.Z;
+		X += Unit::ToUnit(p.X, p.Type, Type);
+		Y += Unit::ToUnit(p.Y, p.Type, Type);
 		return *this;
 	}
 	Point& Point::operator-(Point& p) {
-		p.ChangeUnit(Type);
-		X -= p.X;
-		Y -= p.Y;
-		Z -= p.Z;
+		X -= Unit::ToUnit(p.X, p.Type, Type);
+		Y -= Unit::ToUnit(p.Y, p.Type, Type);
 		return *this;
 	}
 	Point& Point::operator-=(Point& p) {
-		p.ChangeUnit(Type);
-		X -= p.X;
-		Y -= p.Y;
-		Z -= p.Z;
+		X -= Unit::ToUnit(p.X, p.Type, Type);
+		Y -= Unit::ToUnit(p.Y, p.Type, Type);
 		return *this;
 	}
 }

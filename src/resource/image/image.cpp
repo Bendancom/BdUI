@@ -125,16 +125,15 @@ namespace BdUI {
 		CreateHBitmap();
 #endif
 	}
-
-	Image& Image::Resize(BdUI::Size size) {
-		size.ChangeUnit(UnitType::Pixel);
-		Size = size.Width * size.Height * BitCount / 8;
+	//TODO: Ìæ»»Size
+	Image& Image::Resize(long long width,long long height) {
+		Size = width * height * BitCount / 8;
 		unsigned char* output = (unsigned char*)malloc(Size);
-		stbir_resize_uint8(Data, Width, Height, 0, output, size.Width, size.Height, 0, BitCount / 8);
+		stbir_resize_uint8(Data, Width, Height, 0, output, width, height, 0, BitCount / 8);
 		delete[] Data;
 		Data = output;
-		_Width = size.Width;
-		_Height = size.Height;
+		_Width = width;
+		_Height = height;
 		CreateHBitmap();
 		return *this;
 	}

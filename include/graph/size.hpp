@@ -1,25 +1,28 @@
 #ifndef BDUI_SIZE
 #define BDUI_SIZE
-#include "unit.hpp"
+
+#include <graph/unit.hpp>
+#include <hardware/monitor.hpp>
 #include <array>
 
 namespace BdUI {
-	class Size {
+	class Size : public std::array<long double,2>{
 	private:
-		UnitType::UnitType Type = UnitType::Unknown;
+		UnitType Type;
 	public:
-		double Width = 0;
-		double Height = 0;
+		Size(const std::array<long double,2>& list,UnitType type = UnitType::px) : std::array<long double, 2>(list),Type(type) {}
+		Size(const long double& width, const long double& height, UnitType type = UnitType::px) : std::array<long double, 2>{width,height},Type(type) {}
 
-		Size() {}
-		Size(const std::array<double,2>&);
-		Size(const double& width, const double& height, const UnitType::UnitType& type = UnitType::Unknown) : Width(width), Height(height), Type(type) {}
+		long double& Width = this->at(0);
+		long double& Height = this->at(1);
 
-		Size& ChangeUnit(const UnitType::UnitType& type);
-		UnitType::UnitType GetType() const;
-		std::array<double, 2> GetData(UnitType::UnitType) const;
+		std::array<long double, 2> GetData(UnitType) const;
+		UnitType GetType() const;
+		std::array<long double, 2> GetPixel(const Monitor&) const;
+		void SetData(const std::array<long double, 2>&, UnitType);
 
-		Size& operator=(const std::array<double,2>&);
+		using std::array<long double, 2>::operator=;
+
 		Size& operator=(const Size&);
 
 		Size& operator+(Size&);

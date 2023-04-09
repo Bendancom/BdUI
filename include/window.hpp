@@ -44,6 +44,7 @@ namespace BdUI{
             std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 #endif
     private:
+        friend class Monitor;
         std::pair<UI*, KeyList> keylist;
         Mouse mouse;
         std::promise<bool> Creation;

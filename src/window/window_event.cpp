@@ -17,18 +17,18 @@ namespace BdUI {
     bool Window::SizeChange(BdUI::Size size, BdUI::Size*& old) {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
-        size.ChangeUnit(UnitType::Pixel);
 #ifdef WIN32
-        if (hWnd != nullptr) SetWindowPos(hWnd, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
+        std::array<long double, 2> pixel = size.GetPixel(Monitor(*this));
+        if (hWnd != nullptr) SetWindowPos(hWnd, NULL, 0, 0, pixel[0], pixel[1], SWP_NOMOVE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
 #endif
         return true;
     }
     bool Window::LocationChange(Point location, Point*& old) {
         if (old == nullptr) old = new BdUI::Point(location);
         else *old = location;
-        location.ChangeUnit(UnitType::Pixel);
+        std::array<long double, 2> pixel = location.GetPixel(Monitor(*this));
 #ifdef WIN32
-        if (hWnd != nullptr) SetWindowPos(hWnd, NULL, location.X, location.Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
+        if (hWnd != nullptr) SetWindowPos(hWnd, NULL, pixel[0], pixel[1], 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
 #endif
         return true;
     }
@@ -36,6 +36,7 @@ namespace BdUI {
         if (old == nullptr) old = new BdUI::Color(n);
         else *old = n;
         GLRGBA color = n.GetGLRGBA();
+        // TODO: VulkanÌæ»»
         if (Render != nullptr) Render->Push(glClearColor, color.R, color.G, color.B, color.A);
         GraphChanged = true;
         return true;
@@ -44,6 +45,7 @@ namespace BdUI {
         if (old == nullptr) old = new bool(n);
         else *old = n;
 #ifdef _WIN32
+        // TODO: VulkanÌæ»»
         if (Render != nullptr) Render->Push(wglSwapIntervalEXT,n);
 #endif
         return true;
@@ -69,6 +71,7 @@ namespace BdUI {
     bool Window::SetClientSize(BdUI::Size size, BdUI::Size*& old) {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
+        // TODO: VulkanÌæ»»
         if (Render != nullptr) Render->Push(glViewport, 0, 0, size.Width, size.Height);
         return true;
     }
