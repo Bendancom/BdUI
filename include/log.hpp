@@ -36,7 +36,7 @@ namespace BdUI {
 		~Log(){}
 
 		/*
-		@brief 可动态显示如下变量
+		@brief 锟缴讹拷态锟斤拷示锟斤拷锟铰憋拷锟斤拷
 		@brief these variable can be showed dynamically
 		@param Line:\@line
 		@param Column:\@column
@@ -54,7 +54,7 @@ namespace BdUI {
 		};
 
 		/*
-		@brief 时间显示格式
+		@brief 时锟斤拷锟斤拷示锟斤拷式
 		@brief Layout of the time;
 		@param Year:\@year
 		@param Month:\@month
@@ -66,14 +66,14 @@ namespace BdUI {
 		std::atomic<const char*> Time_Layout = "@year/@month/@day,@hour:@minute:@second";
 
 		/*
-			最大日志输出等级
+			锟斤拷锟斤拷锟街撅拷锟斤拷锟饺硷拷
 			the max level that the data is output;
 		*/
 		std::atomic<LogLevel> LevelMax = Debug;
 
 		/*
-		* @brief 设置日志存储位置
-		* @param FilePath	日志存储位置,若为string.empty()则输出至命令行|the filepath log store,if string is empty it output to the command line
+		* @brief 锟斤拷锟斤拷锟斤拷志锟芥储位锟斤拷
+		* @param FilePath	锟斤拷志锟芥储位锟斤拷,锟斤拷为string.empty()锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟絴the filepath log store,if string is empty it output to the command line
 		*/
 		void SetLogFile(std::string&& FilePath);
 		void write(LogLevel Level, std::string msg, std::source_location&& source_location = std::source_location::current());

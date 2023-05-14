@@ -44,26 +44,15 @@ namespace BdUI {
 		unsigned int vercount = 0;
 		vercount = stbtt_GetGlyphShape(&font_info, code, &vertex_ptr);
 		std::vector<Point> vertexs;
-		/*
-		Vertex vertex;
-		for (int i = 0; i < vercount; i++) {
-			switch (vertex_ptr->type)
-			{
+		for (unsigned int i = 0; i < vercount; i++) {
+			switch (vertex_ptr->type) {
 			case STBTT_vmove:
-				vertex = Vertex{ (float)vertex_ptr->x,(float)vertex_ptr->y,0 };
-				break;
-			case STBTT_vline:
-				vertexs.push_back(vertex);
-				vertex = Vertex{ (float)vertex_ptr->x,(float)vertex_ptr->y,0 };
 				break;
 			case STBTT_vcurve:
-				vertexs.push_back(vertex);
+				break;
+			case STBTT_vline:
 				break;
 			}
-			vertex_ptr++;
 		}
-		Shape&& shape = Shape();
-		return { font_size,shape };
-		*/
 	}
 }

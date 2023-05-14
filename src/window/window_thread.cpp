@@ -307,7 +307,7 @@ namespace BdUI {
                 TrackMouseEvent(&tme);
             }
             mouse.Content = Mouse::Move;
-            mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, UnitType::px);
+            mouse.Location = Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), UnitType::px);
             break;
         }
         default: {

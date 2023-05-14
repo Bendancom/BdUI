@@ -375,55 +375,94 @@ namespace BdUI {
 			case 1: variables.push_back(*std::get<1>(m.content)); break;
 			case 2: variables.insert(variables.end(), std::get<2>(m.content)->first.begin(), std::get<2>(m.content)->first.end()); break;
 			}
-
-		switch (content.index()) {
-		case 0: {
-			std::stack<std::variant<Meta, Calculation>>&& stack{};
-			stack.push(c);
-			for (size_t i = 0;i < meta.size();i++)
-				stack.push(meta[i]);
-			stack.push(std::get<long double>(content));
-			content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
-				std::pair<std::vector<Variable>,std::stack<std::variant<Meta,Calculation>>>{ variables,stack });
+		switch (c) {
+		case Calculation::derivate: {
+			Meta m(*this);
+			std::stack<std::variant<Meta, Calculation>> stack;
+			stack.push(m);
+			stack.push(meta[0]);
+			stack.push(Calculation::derivate);
 			break;
 		}
-		case 1: {
-			std::stack<std::variant<Meta, Calculation>>&& stack{};
-			Variable v = *std::get<std::unique_ptr<Variable>>(content);
-			stack.push(c);
-			for (size_t i = 0; i < meta.size(); i++)
-				stack.push(meta[i]);
-			stack.push(v);
-			if (std::find(variables.begin(), variables.end(), v) == variables.end())
-				variables.push_back(v);
-			content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
-				std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>{ variables, stack });
+		case Calculation::intergeral: {
+			Meta m(*this);
+			std::stack<std::variant<Meta, Calculation>> stack;
+			stack.push(m);
+			stack.push(meta[0]);
+			stack.push(Calculation::intergeral);
 			break;
 		}
-		case 2: {
-			std::vector<Variable>& content_variables = std::get<2>(content)->first;
-			for (Variable v : variables)
-				if (std::find(content_variables.begin(), content_variables.end(), v) == content_variables.end())
-					content_variables.push_back(v);
-
-			std::stack<std::variant<Meta, Calculation>>& stack = std::get<2>(content)->second;
-			std::stack<std::variant<Meta, Calculation>> temp;
-			for (; !stack.empty(); stack.pop()) {
-				if (auto i = std::get_if<Calculation>(&stack.top()); i) {
-					if (opera().at(c) > opera().at(*i)) {
-						for (size_t j = 0; j < meta.size(); j++)
-							temp.push(meta[meta.size() - 1 - j]);
-						temp.push(c);
-						break;
-					}
-				}
-				temp.push(stack.top());
+		case Calculation::sum: {
+			Meta m(*this);
+			std::stack<std::variant<Meta, Calculation>> stack;
+			stack.push(m);
+			stack.push(meta[0]);
+			stack.push(meta[1]);
+			stack.push(Calculation::sum);
+			break;
+		}
+		case Calculation::multiply: {
+			Meta m(*this);
+			std::stack<std::variant<Meta, Calculation>> stack;
+			stack.push(m);
+			stack.push(meta[0]);
+			stack.push(meta[1]);
+			stack.push(Calculation::multiply);
+			break;
+		}
+		default: {
+			switch (content.index()) {
+			case 0: {
+				std::stack<std::variant<Meta, Calculation>>&& stack{};
+				stack.push(c);
+				for (size_t i = 0; i < meta.size(); i++)
+					stack.push(meta[i]);
+				stack.push(std::get<long double>(content));
+				content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
+					std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>{ variables, stack });
+				break;
 			}
-			for (; !temp.empty(); temp.pop())
-				stack.push(temp.top());
+			case 1: {
+				std::stack<std::variant<Meta, Calculation>>&& stack{};
+				Variable v = *std::get<std::unique_ptr<Variable>>(content);
+				stack.push(c);
+				for (size_t i = 0; i < meta.size(); i++)
+					stack.push(meta[i]);
+				stack.push(v);
+				if (std::find(variables.begin(), variables.end(), v) == variables.end())
+					variables.push_back(v);
+				content = std::make_unique<std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>>(
+					std::pair<std::vector<Variable>, std::stack<std::variant<Meta, Calculation>>>{ variables, stack });
+				break;
+			}
+			case 2: {
+				std::vector<Variable>& content_variables = std::get<2>(content)->first;
+				for (Variable v : variables)
+					if (std::find(content_variables.begin(), content_variables.end(), v) == content_variables.end())
+						content_variables.push_back(v);
+
+				std::stack<std::variant<Meta, Calculation>>& stack = std::get<2>(content)->second;
+				std::stack<std::variant<Meta, Calculation>> temp;
+				for (; !stack.empty(); stack.pop()) {
+					if (auto i = std::get_if<Calculation>(&stack.top()); i) {
+						if (opera().at(c) > opera().at(*i)) {
+							for (size_t j = 0; j < meta.size(); j++)
+								temp.push(meta[meta.size() - 1 - j]);
+							temp.push(c);
+							break;
+						}
+					}
+					temp.push(stack.top());
+				}
+				for (; !temp.empty(); temp.pop())
+					stack.push(temp.top());
+				break;
+			}
+			}
 			break;
 		}
 		}
+
 	}
 
 	long double Meta::operator()(const std::map<Variable, long double>& m) { return calculate(m); }

@@ -66,7 +66,7 @@ namespace BdUI{
         bool SetVisible(bool, bool*&);
         bool SetIcon(BdUI::Icon, BdUI::Icon*&);
 
-        UI* CurrentMouseAtUI = this;
+        UI* CurrentMouseAtUI = dynamic_cast<UI*>(this);
         BdUI::Cursor CurrentCursor = Cursor.Client;
         
         void _Render();

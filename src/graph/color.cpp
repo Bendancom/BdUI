@@ -189,7 +189,7 @@ namespace BdUI {
 		Type = ColorType_HSVA;
 	}
 	void Color::SetColor(const GLRGBA& glrgba) {
-		SetColor(RGBA{ unsigned char(glrgba.R * 255),unsigned char(glrgba.G * 255),unsigned char(glrgba.B * 255),unsigned char(glrgba.A * 255) });
+		SetColor(RGBA{ (unsigned char)(glrgba.R * 255),(unsigned char)(glrgba.G * 255),(unsigned char)(glrgba.B * 255),(unsigned char)(glrgba.A * 255) });
 	}
 
 	Color& Color::operator=(const RGBA& rgb) {
