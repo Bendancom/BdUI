@@ -54,7 +54,7 @@ namespace BdUI {
 			flags |= TPM_BOTTOMALIGN;
 			break;
 		}
-		std::array<float, 3>p = menuinfo.Origin.GetData(UnitType::Pixel);
+		std::array<long double, 2>p = menuinfo.Origin.GetPixel();
 		switch (menuinfo.relative)
 		{
 		case MenuInfo::ScreenPosition: {
@@ -134,8 +134,6 @@ namespace BdUI {
 	void PopMenu::DrawItem(UINT id) {
 		if (auto color = std::get_if<Color>(&menuinfo.background); color) {
 			GLRGBA c = color->GetGLRGBA();
-			glClearColor(c.R, c.G, c.B, c.A);
-			glClear(GL_COLOR_BUFFER_BIT);
 		}
 		else {
 

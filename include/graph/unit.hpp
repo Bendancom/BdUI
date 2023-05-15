@@ -32,7 +32,7 @@ namespace BdUI {
 	public:
 		Unit(const char*);
 		Unit(const std::string&);
-		Unit(long double, UnitType = UnitType::mm);
+		Unit(long double number, UnitType type = UnitType::mm):Type(type),Number(number) {};
 		Unit(const Unit& unit) : Number(unit.Number),Type(unit.Type) {}
 
 		UnitType GetType() const;

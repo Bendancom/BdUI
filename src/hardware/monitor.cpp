@@ -29,10 +29,10 @@ namespace BdUI {
 		if (monitor == NULL) throw error::Monitor::point_error();
 #endif
 	}
-	Monitor::Monitor(const Window& window) {
 #ifdef _WIN32
-		monitor = MonitorFromWindow(window.hWnd, MONITOR_DEFAULTTONULL);
-		if (monitor == NULL) throw error::Monitor::window_error();
-#endif
+	Monitor::Monitor(HWND hWnd) {
+		monitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONULL);
+		if (monitor == NULL) monitor = (HMONITOR)GetDC(NULL);
 	}
+#endif
 }

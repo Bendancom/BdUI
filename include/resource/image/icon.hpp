@@ -65,7 +65,7 @@ namespace BdUI {
 		Icon(const Icon&);
 		~Icon();
 
-		Icon& Resize(BdUI::Size);
+		Icon& Resize(long long Width,long long Height);
 
 		virtual void OpenFile(const std::filesystem::path&);
 		virtual void SaveToFile();

@@ -20,9 +20,6 @@ int main(int argv, char** args)
 	menu.SetMenuInfo(info);
 	window.PopMenu = menu;*/
 
-	Meta t("i");
-	t.sum(1, 10);
-	auto c = t.calculate({ {'i',0},{'n',100} });
 	window.Create();
 	window.PopMenuKey.push_back(KeyList{Control,M});
 	window.PopMenuKey.push_back(RButton);

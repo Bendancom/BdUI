@@ -191,8 +191,8 @@ namespace BdUI {
 		else return Image::SaveToMemory();
 	}
 
-	Icon& Icon::Resize(BdUI::Size size) {
-		Image::Resize(size);
+	Icon& Icon::Resize(long long width,long long height) {
+		Image::Resize(width,height);
 		GetMask();
 #ifdef _WIN32
 		CreateHIcon();

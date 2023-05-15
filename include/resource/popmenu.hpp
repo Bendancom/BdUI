@@ -55,7 +55,7 @@ namespace BdUI {
 			MousePosition = 1,
 			WindowPosition = 2,
 		} relative = MousePosition;
-		Point Origin = {0,0};
+		Point Origin = Point(0,0);
 	};
 	
 

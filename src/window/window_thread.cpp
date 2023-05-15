@@ -73,7 +73,6 @@ namespace BdUI {
         case WM_SIZE: {
             w->Size.setOnly(BdUI::Size(LOWORD(lParam), HIWORD(lParam), UnitType::px));
             //TODO: VulkanÌæ»»
-            w->Render->Push(glViewport,0, 0, LOWORD(lParam), HIWORD(lParam));
             w->GraphChanged = true;
             break;
         }
@@ -82,7 +81,6 @@ namespace BdUI {
             w->Size.setOnly(BdUI::Size((double)(rect->right - rect->left), (double)(rect->bottom - rect->top), UnitType::px));
             w->Location.setOnly(Point(rect->left, rect->top,UnitType::px));
             //TODO: VulkanÌæ»»
-            w->Render->Push(glViewport, 0, 0, rect->right - rect->left, rect->bottom - rect->top);
             //w->Render.PushMessage();
             w->GraphChanged = true;
             break;

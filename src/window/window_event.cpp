@@ -18,7 +18,7 @@ namespace BdUI {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
 #ifdef WIN32
-        std::array<long double, 2> pixel = size.GetPixel(Monitor(*this));
+        std::array<long double, 2> pixel = size.GetPixel(Monitor(hWnd));
         if (hWnd != nullptr) SetWindowPos(hWnd, NULL, 0, 0, pixel[0], pixel[1], SWP_NOMOVE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
 #endif
         return true;
@@ -26,7 +26,7 @@ namespace BdUI {
     bool Window::LocationChange(Point location, Point*& old) {
         if (old == nullptr) old = new BdUI::Point(location);
         else *old = location;
-        std::array<long double, 2> pixel = location.GetPixel(Monitor(*this));
+        std::array<long double, 2> pixel = location.GetPixel(Monitor(hWnd));
 #ifdef WIN32
         if (hWnd != nullptr) SetWindowPos(hWnd, NULL, pixel[0], pixel[1], 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
 #endif
@@ -36,8 +36,7 @@ namespace BdUI {
         if (old == nullptr) old = new BdUI::Color(n);
         else *old = n;
         GLRGBA color = n.GetGLRGBA();
-        // TODO: Vulkan�滻
-        if (Render != nullptr) Render->Push(glClearColor, color.R, color.G, color.B, color.A);
+        // TODO: Vulkan�滻
         GraphChanged = true;
         return true;
     }
@@ -45,8 +44,7 @@ namespace BdUI {
         if (old == nullptr) old = new bool(n);
         else *old = n;
 #ifdef _WIN32
-        // TODO: Vulkan�滻
-        if (Render != nullptr) Render->Push(wglSwapIntervalEXT,n);
+        // TODO: Vulkan�滻
 #endif
         return true;
     }
@@ -71,8 +69,7 @@ namespace BdUI {
     bool Window::SetClientSize(BdUI::Size size, BdUI::Size*& old) {
         if (old == nullptr) old = new BdUI::Size(size);
         else *old = size;
-        // TODO: Vulkan�滻
-        if (Render != nullptr) Render->Push(glViewport, 0, 0, size.Width, size.Height);
+        // TODO: Vulkan�滻
         return true;
     }
 

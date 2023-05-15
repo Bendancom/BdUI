@@ -192,17 +192,16 @@ namespace BdUI {
 		else return Image::SaveToMemory();
 	}
 
-	void Cursor::SetHotPoint(Point point) {
-		point.ChangeUnit(UnitType::Pixel);
-		_X = point.X;
-		_Y = point.Y;
+	void Cursor::SetHotPoint(long long x,long long y) {
+		_X = x;
+		_Y = y;
 #ifdef _WIN32
 		CreateHCursor();
 #endif
 	}
 
-	Cursor& Cursor::Resize(BdUI::Size size) {
-		Image::Resize(size);
+	Cursor& Cursor::Resize(long long width,long long height) {
+		Image::Resize(width,height);
 		GetMask();
 #ifdef _WIN32
 		CreateHCursor();

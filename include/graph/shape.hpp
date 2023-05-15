@@ -4,19 +4,12 @@
 #include <vector>
 #include <variant>
 #include <any>
-#include <graph/point.hpp>
-#include <graph/color.hpp>
-#include <graph/size.hpp>
-#include <graph/unit.hpp>
+#include "graph/point.hpp"
+#include "graph/color.hpp"
+#include "graph/size.hpp"
+#include "graph/unit.hpp"
 #include <memory>
-
-#include <OpenGL/glad/glad.h>
-
 #include <math/bezier.hpp>
-
-#ifdef _WIN32
-#include <OpenGL/glad/glad_wgl.h>
-#endif
 
 namespace BdUI {
 	class Shape : public std::vector<Bezier> {

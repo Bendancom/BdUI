@@ -1,9 +1,9 @@
 #ifndef BDUI_BEZIER
 #define BDUI_BEZIER
 
-#include <math/meta.hpp>
-#include <math/function.hpp>
-#include <graph/point.hpp>
+#include "math/meta.hpp"
+#include "math/function.hpp"
+#include "graph/point.hpp"
 
 namespace BdUI {
 	class Bezier : public std::list<Point> {

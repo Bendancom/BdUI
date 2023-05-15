@@ -5,20 +5,21 @@
 #include <Windows.h>
 #endif
 #include <array>
-#include <graph/point.hpp>
-#include <window.hpp>
+#include <error.hpp>
 
 namespace BdUI {
+	class Window;
 	class Monitor {
 	private:
 #ifdef _WIN32
 		HMONITOR monitor = nullptr;
 #endif
 	public:
-		//Ö÷ÆÁÄ»
 		Monitor();
 		Monitor(const long long& Pixel_X,const long long& Pixel_Y);
-		Monitor(const Window&);
+		#ifdef _WIN32
+		Monitor(HWND);
+		#endif
 		std::array<long double, 2> GetDPI() const;
 		static unsigned char GetMonitorNumber();
 	};

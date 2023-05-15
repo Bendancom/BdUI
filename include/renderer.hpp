@@ -3,9 +3,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
-#include <OpenGL/glad/glad_wgl.h>
 #endif
-#include <ui.hpp>
+#include "ui.hpp"
 #include <mutex>
 #include <condition_variable>
 #include <thread>
@@ -13,7 +12,6 @@
 #include <functional>
 #include <error.hpp>
 #include <atomic>
-#include <OpenGL/glad/glad.h>
 
 namespace BdUI {
     class Window;
@@ -32,7 +30,7 @@ namespace BdUI {
                 RendeMessage_Queue.push(std::bind(gl_func, args...));
                 condition.notify_all();
             }
-            else throw error::OpenGL::UnInitialization();
+            //else throw error::OpenGL::UnInitialization();
             Mutex.unlock();
         }
         void join();
@@ -52,7 +50,6 @@ namespace BdUI {
 #ifdef _WIN32
         HWND hWnd = nullptr;
 		HDC hDC = nullptr;
-        HGLRC hRC = nullptr;
         PIXELFORMATDESCRIPTOR Pfd{
             sizeof(PIXELFORMATDESCRIPTOR),
             1,

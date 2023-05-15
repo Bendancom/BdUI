@@ -54,5 +54,6 @@ namespace BdUI {
 				break;
 			}
 		}
+		return { font_size,Shape() };
 	}
 }

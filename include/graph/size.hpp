@@ -1,8 +1,8 @@
 #ifndef BDUI_SIZE
 #define BDUI_SIZE
 
-#include <graph/unit.hpp>
-#include <hardware/monitor.hpp>
+#include "graph/unit.hpp"
+#include "hardware/monitor.hpp"
 #include <array>
 
 namespace BdUI {

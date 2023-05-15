@@ -3,7 +3,7 @@
 
 #include <shared_mutex>
 #include <vector>
-#include <delegate.hpp>
+#include "delegate.hpp"
 #include <event.hpp>
 
 namespace BdUI {
@@ -33,7 +33,7 @@ namespace BdUI {
             if (!Vector.empty()) return Vector[n];
             else throw error::Class::Uninitialize();
         }
-        std::vector<Data>::size_type size() {
+        size_t size() {
             std::shared_lock<std::shared_mutex> lock(Mutex);
             return Vector.size();
         }

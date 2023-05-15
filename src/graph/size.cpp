@@ -1,5 +1,4 @@
 #include "graph/size.hpp"
-#include <initializer_list>
 
 namespace BdUI {
 	std::array<long double, 2> Size::GetData(UnitType type) const {
@@ -15,6 +14,7 @@ namespace BdUI {
 		Width = size.Width;
 		Height = size.Height;
 		Type = size.Type;
+		return *this;
 	}
 
 	void Size::SetData(const std::array<long double, 2>& list, UnitType type) {

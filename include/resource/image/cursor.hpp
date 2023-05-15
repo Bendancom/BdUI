@@ -33,7 +33,7 @@ namespace BdUI {
 		Cursor(const Cursor&);
 		~Cursor();
 
-		void SetHotPoint(Point);
+		void SetHotPoint(long long X,long long Y);
 
 		virtual void OpenFile(const std::filesystem::path&);
 		virtual void SaveToFile();
@@ -41,7 +41,7 @@ namespace BdUI {
 		virtual void LoadFromFile();
 		virtual void LoadFromMemory(void*, unsigned long long);
 
-		Cursor& Resize(BdUI::Size);
+		Cursor& Resize(long long Width, long long Height);
 		Cursor& operator=(const Cursor&);
 #ifdef WIN32
 		Cursor(HCURSOR);

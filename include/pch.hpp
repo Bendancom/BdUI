@@ -16,12 +16,10 @@
 #include <WinBase.h>
 #include <windowsx.h>
 #include <wingdi.h>
-#include <OpenGL/glad/glad_wgl.h>
 #endif
 
-#include <OpenGL/glad/glad.h>
-#include <graph/unit.hpp>
-#include <graph/point.hpp>
+#include "graph/unit.hpp"
+#include "graph/point.hpp"
 #include <graph/color.hpp>
 #include <graph/shape.hpp>
 #include <graph/size.hpp>

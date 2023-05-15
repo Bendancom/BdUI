@@ -18,7 +18,7 @@ namespace BdUI {
         join();
         delete Renderer_Thread;
 #ifdef _WIN32
-        wglDeleteContext(hRC);
+        //wglDeleteContext(hRC);
         if(hWnd != nullptr) ReleaseDC(hWnd, hDC);
 #endif
     }
@@ -37,12 +37,10 @@ namespace BdUI {
 
     void Renderer::Initialize() {
 #ifdef _WIN32
+/*
         if (hDC == nullptr) hDC = GetDC(hWnd);
         int&& render = ChoosePixelFormat(hDC, &Pfd);
         if (render == 0) throw error::Class::Initialize_Failed("PixelFormat initialization faild");
-        SetPixelFormat(hDC, render, &Pfd);
-        DescribePixelFormat(hDC, render, sizeof(PIXELFORMATDESCRIPTOR), &Pfd);
-        hRC = wglCreateContext(hDC);
         if (hRC == 0) {
             Pfd.dwFlags &= ~PFD_DOUBLEBUFFER;
             Pfd.dwFlags |= PFD_SUPPORT_GDI;
@@ -55,23 +53,11 @@ namespace BdUI {
         Renderer_Thread = new std::thread(&Renderer::RenderMessageLoop, this);
         Renderer_Thread->detach();
         Initialization.get_future().get();
+        */
 #endif
     }
 
     void Renderer::RenderMessageLoop() {
-#ifdef _WIN32
-        wglMakeCurrent(hDC, hRC);
-#endif
-        if (!IsLoadOpenGL) {
-#ifdef _WIN32
-            if (!gladLoadWGL(hDC))
-                throw error::OpenGL::Initialization_Failed("gladLoadWGL faild");
-#endif
-            if (!gladLoadGL())
-                throw error::OpenGL::Initialization_Failed("gladLoad faild");
-            IsLoadOpenGL = true;
-        }
-
         Initialization.set_value(true);
         std::unique_lock<std::mutex> unique_lock(Mutex);
         while (true) {
