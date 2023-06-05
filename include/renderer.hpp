@@ -47,6 +47,8 @@ namespace BdUI {
         void RenderMessageLoop();
         void Initialize();
 
+
+
 #ifdef _WIN32
         HWND hWnd = nullptr;
 		HDC hDC = nullptr;

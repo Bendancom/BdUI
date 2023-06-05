@@ -12,7 +12,7 @@ namespace BdUI {
 			{Calculation::plus,0},	{Calculation::minus,0},
 			{Calculation::multi,1},	{Calculation::divide,1},
 			{Calculation::log,2},	{Calculation::pow,2},	
-			{Calculation::sin,3},	{Calculation::cos,3},	{Calculation::fac,3},
+			{Calculation::sin,3},	{Calculation::cos,3},	{Calculation::fac,3},{Calculation::ceil,3},{Calculation::floor,3},{Calculation::abs,3},
 			{Calculation::sum,4},	{Calculation::intergeral,4},	{Calculation::derivate,4},	{Calculation::multiply,4}
 		};
 		return o;
@@ -20,7 +20,9 @@ namespace BdUI {
 	
 	const std::map<std::string, Meta::Calculation>& Meta::function_name(){
 		static const std::map<std::string, Calculation> f{
-			{"sum",Calculation::sum}, {"cos",Calculation::cos}, {"sin",Calculation::sin}
+			{"sum",Calculation::sum}, {"cos",Calculation::cos}, {"sin",Calculation::sin},
+			{"abs",Calculation::abs},{"floor",Calculation::floor},{"ceil",Calculation::ceil},
+			{"pow",Calculation::pow},{"fac",Calculation::fac}
 		};
 		return f;
 	}
@@ -37,7 +39,7 @@ namespace BdUI {
 	
 	const std::map<Meta::Calculation, unsigned char>& Meta::operation_parameter_number(){
 		static const std::map<Calculation, unsigned char> o{
-			{Calculation::fac,0},{Calculation::sin,0},{Calculation::cos,0},
+			{Calculation::fac,0},{Calculation::sin,0},{Calculation::cos,0},{Calculation::floor,0},{Calculation::ceil,0},{Calculation::abs,0},
 			{Calculation::plus,1}, {Calculation::multi,1}, {Calculation::divide,1}, {Calculation::minus,1},
 			{Calculation::derivate,1}, {Calculation::pow,1}, {Calculation::log,1},
 			{Calculation::sum,2},{Calculation::multiply,2},{Calculation::intergeral,2}
@@ -257,6 +259,9 @@ namespace BdUI {
 				}
 				case Calculation::sin: temp.push(::sinl(_calculate(metas[0], date))); break;
 				case Calculation::cos: temp.push(::cosl(_calculate(metas[0], date))); break;
+				case Calculation::floor: temp.push(::floorl(_calculate(metas[0], date))); break;
+				case Calculation::ceil: temp.push(::ceill(_calculate(metas[0], date))); break;
+				case Calculation::abs: temp.push(::abs(_calculate(metas[0], date))); break;
 
 				case Calculation::plus: temp.push(_calculate(metas[1], date) + _calculate(metas[0], date)); break;
 				case Calculation::minus: temp.push(_calculate(metas[1], date) - _calculate(metas[0], date)); break;
@@ -353,6 +358,9 @@ namespace BdUI {
 	Meta& Meta::fac() { MetaAdd(Calculation::fac); return *this; }
 	Meta& Meta::sin() { MetaAdd(Calculation::sin); return *this; }
 	Meta& Meta::cos() { MetaAdd(Calculation::cos); return *this; }
+	Meta& Meta::floor() { MetaAdd(Calculation::floor); return *this; }
+	Meta& Meta::ceil() { MetaAdd(Calculation::ceil); return *this; }
+	Meta& Meta::abs() { MetaAdd(Calculation::abs); return *this; }
 
 	Meta& Meta::operator+(const Meta& meta) { plus(meta); return *this; }
 	Meta& Meta::operator-(const Meta& meta) { minus(meta); return *this; }

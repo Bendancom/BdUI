@@ -1,0 +1,6 @@
+[submodule "vulkan/vulkan-header"]
+	path = vulkan/vulkan-header
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "vulkan/vulkan-loader"]
+	path = vulkan/vulkan-loader
+	url = https://github.com/KhronosGroup/Vulkan-Loader.git

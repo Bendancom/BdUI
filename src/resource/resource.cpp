@@ -1,4 +1,4 @@
-#include "resource/resource.hpp"
+#include <resource/resource.hpp>
 
 namespace BdUI
 {
@@ -68,7 +68,7 @@ namespace BdUI
     void Resource::SaveToFile()
     {
         if (FilePath.empty() == true) throw error::File::Open_Failed("Haven't opened the File");
-        std::fstream fstream(FilePath, std::ios::out || std::ios::binary);
+        std::fstream fstream(FilePath.string(), std::ios::out | std::ios::binary);
         fstream.write((char*)Data, Size);
     }
     std::pair<void*,unsigned long long> Resource::SaveToMemory() {

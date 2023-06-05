@@ -20,6 +20,10 @@ int main(int argv, char** args)
 	menu.SetMenuInfo(info);
 	window.PopMenu = menu;*/
 
+	Meta a("\\abs{-1.23234}");
+	auto b = a.calculate();
+	a.floor();
+	auto c = a.calculate();
 	window.Create();
 	window.PopMenuKey.push_back(KeyList{Control,M});
 	window.PopMenuKey.push_back(RButton);

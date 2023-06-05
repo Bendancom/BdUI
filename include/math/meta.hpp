@@ -56,6 +56,9 @@ namespace BdUI{
 			fac,		// 阶乘运算
 			cos,		// 余弦运算
 			sin,		// 正弦运算
+			floor,		// 向下取整
+			ceil,		// 向上取整
+			abs,		// 取绝对值
 
 			derivate,	// 求导运算
 			intergeral,	// 积分运算
@@ -106,6 +109,9 @@ namespace BdUI{
 		Meta& fac();
 		Meta& sin();
 		Meta& cos();
+		Meta& floor();
+		Meta& ceil();
+		Meta& abs();
 
 		Meta& sum(const Meta& i,const Meta& n);
 		

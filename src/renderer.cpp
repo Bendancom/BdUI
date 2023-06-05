@@ -37,10 +37,10 @@ namespace BdUI {
 
     void Renderer::Initialize() {
 #ifdef _WIN32
-/*
         if (hDC == nullptr) hDC = GetDC(hWnd);
         int&& render = ChoosePixelFormat(hDC, &Pfd);
         if (render == 0) throw error::Class::Initialize_Failed("PixelFormat initialization faild");
+        /*
         if (hRC == 0) {
             Pfd.dwFlags &= ~PFD_DOUBLEBUFFER;
             Pfd.dwFlags |= PFD_SUPPORT_GDI;
@@ -49,11 +49,10 @@ namespace BdUI {
             SetPixelFormat(hDC, ren, &Pfd);
             DescribePixelFormat(hDC, ren, sizeof(PIXELFORMATDESCRIPTOR), &Pfd);
             hRC = wglCreateContext(hDC);
-        }
+        }*/
         Renderer_Thread = new std::thread(&Renderer::RenderMessageLoop, this);
         Renderer_Thread->detach();
         Initialization.get_future().get();
-        */
 #endif
     }
 

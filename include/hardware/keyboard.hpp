@@ -1,14 +1,15 @@
 #ifndef BDUI_KEYBOARD
 #define BDUI_KEYBOARD
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #endif
 #include <vector>
+#include <algorithm>
 
 namespace BdUI {
     enum KeyType {
-#ifdef WIN32
+#ifdef _WIN32
         LButton = VK_LBUTTON,
         RButton = VK_RBUTTON,
         MButton = VK_MBUTTON,
