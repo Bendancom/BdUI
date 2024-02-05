@@ -1,4 +1,6 @@
-#include "window.hpp"
+#include <window.hpp>
+
+#include <iostream>
 
 using namespace std;
 using namespace BdUI;
@@ -8,7 +10,7 @@ Window window;
 int main(int argv, char** args)
 {
 	/*
-	std::shared_ptr<Image> i(new Image("C:\\Users\\ʩ껹�\\Downloads\\favicon.png"));
+	std::shared_ptr<Image> i(new Image("C:\\Users\\ʩ껹�\\Downloads\\favicon.png"));
 	i->LoadFromFile();
 	PopMenu menu;
 	MenuItem item;
@@ -20,10 +22,12 @@ int main(int argv, char** args)
 	menu.SetMenuInfo(info);
 	window.PopMenu = menu;*/
 
-	Meta a("\\abs{-1.23234}");
-	auto b = a.calculate();
-	a.floor();
-	auto c = a.calculate();
+	for(const auto& i : avaiable){
+		std::cout<< i.layerName << endl;
+	}
+	for(const auto& i : Extention){
+		std::cout<< i.extensionName << endl;
+	}
 	window.Create();
 	window.PopMenuKey.push_back(KeyList{Control,M});
 	window.PopMenuKey.push_back(RButton);

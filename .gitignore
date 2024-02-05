@@ -1,7 +1,3 @@
 build/
-.vscode/
-*.code-workspace
-out/
-.vs/
-CMakePresets.json
-CMakeSettings.json
+.xmake
+.cache
